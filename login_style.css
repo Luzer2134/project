@@ -1,0 +1,52 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f7f7f9;
+    margin: 0;
+    padding: 0;
+    color: #333;
+    }
+header {
+    background-color: #dd2222;
+    color: white;
+    padding: 15px 20px;
+    text-align: center;
+    font-size: 24px;
+}
+    
+ main {
+      padding: 40px;
+      text-align: center;
+      padding: 40px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    }    
+    
+.button_login {
+      background-color: #dd2222;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 14px 28px;
+      margin: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+      text-align: center;
+    }
+.button_anon {
+    background-color: #dd2222;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 14px 28px;
+      margin: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+      text-align: center;
+}
+    
+   
+ 
