@@ -13,14 +13,12 @@
   </header>
 
   <nav>
-    <a href="#">Главная</a>
-    <a href="#">Тренажёр</a>
-    <a href="#">Симуляция экзамена</a>
-    <a href="#">Прогресс</a>
-    <a href="#">История попыток</a>
-    <a href="#">База вопросов</a>
-    <a href="#">Выйти</a>
-    <a href="#">Профиль</a>
+    <button class="button_simulation" onclick="navigateTo('simulation.html')">Симуляция экзамена</button>
+    <button class="button_trainer" onclick="navigateTo('trainer.html')">Тренажёр</button>
+    <button class="button_progress" onclick="navigateTo('progress.html')">Прогресс</button>
+    <button class="button_history" onclick="navigateTo('history.html')">История попыток</button>
+    <button class="button_base" onclick="navigateTo('base.html')">База вопросов</button>
+    <button class="button_quit" onclick="navigateTo('login.html')">Выйти</button>
   </nav>
 
   <main>
@@ -29,22 +27,23 @@
       <div class="block">
         <h4>Блок 1</h4>
         <p>Описание блока 1. Основные темы и задачи.</p>
-        <button class="button">Выбрать</button>
+        <button class="button" onclick="navigateTo('block1.html')">Выбрать</button>
       </div>
       <div class="block">
         <h4>Блок 2</h4>
         <p>Описание блока 2. Практические навыки и тесты.</p>
-        <button class="button">Выбрать</button>
+        <button class="button" onclick="navigateTo('block2.html')">Выбрать</button>
       </div>
       <div class="block">
         <h4>Блок 3</h4>
         <p>Описание блока 3. Теоретические основы.</p>
-        <button class="button">Выбрать</button>
+        <button class="button" onclick="navigateTo('block3.html')">Выбрать</button>
       </div>
       <div class="block">
         <h4>Блок 4</h4>
         <p>Описание блока 4. Продвинутая практика.</p>
-        <button class="button">Выбрать</button>
+        <button class="button" onclick="navigateTo('block4.html')">Выбрать</button>
+
       </div>
     </div>
   </main>
@@ -52,6 +51,6 @@
   <footer>
     © 2025 Веб‑платформа подготовки специалистов Яндекс Алиса
   </footer>
-  <script src="script.js"></script>
+  <script src="quit_script.js"></script>
 </body>
 </html>
