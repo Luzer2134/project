@@ -345,8 +345,13 @@ def main():
             return jsonify(response)
 
         # Выбор темы
+        # Выбор темы
         for sheet_name in sheet_names:
-            if command == sheet_name.lower():
+            # Проверяем все варианты названий
+            if (command == sheet_name.lower() or
+                    (sheet_name == "Первая помощь" and command in ["1 помощь", "первая помощь", "1помощь",
+                                                                   "перваяпомощь"])):
+
                 topic = sheet_name
                 question = get_random_question(topic)
                 if not question:
@@ -493,7 +498,6 @@ def home():
         "active_sessions": len(user_sessions),
         "topics_loaded": list(quizzes.keys())
     })
-
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
