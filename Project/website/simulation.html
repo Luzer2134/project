@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Симуляция экзамена</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    Симуляция экзамена: <span id="current-block-name">Блок 1</span>
+  </header>
+
+  <nav>
+    <button class="button_quit" onclick="confirmExit()">Завершить досрочно</button>
+    <div id="timer">Осталось времени: 60:00</div>
+  </nav>
+
+  <main>
+    <div id="exam-container">
+      <div id="question-number">Вопрос 1 из 30</div>
+      <div id="question-text"></div>
+      <div id="question-image"></div>
+      <div id="options-container"></div>
+      <button id="next-btn" class="button" onclick="nextQuestion()">Следующий вопрос</button>
+      <button id="finish-btn" class="button" style="display:none;" onclick="finishExam()">Завершить экзамен</button>
+    </div>
+    
+    <div id="results-container" style="display:none;">
+      <h2>Результаты симуляции</h2>
+      <p>Правильных ответов: <span id="correct-answers">0</span> из <span id="total-questions">30</span></p>
+      <p>Оценка: <span id="grade">0</span></p>
+      <button class="button" onclick="saveAttempt()">Сохранить и выйти</button>
+    </div>
+  </footer>
+
+  <script src="simulation.js"></script>
+</body>
+</html>
