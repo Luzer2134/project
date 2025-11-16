@@ -10,37 +10,47 @@ let startTime = null;
 
 // Инициализация экзамена
 function initExam() {
-    console.log('🚀 Инициализация экзамена...');
+    console.log('Инициализация экзамена...');
     
     // Получаем выбранный блок
-    currentBlock = localStorage.getItem('selectedBlock');
+    const selectedBlock = localStorage.getItem('selectedBlock');
     
-    if (!currentBlock) {
+    if (!selectedBlock) {
         alert('Блок не выбран! Возвращаем на главную страницу.');
-        window.location.href = 'index.html';
+        setTimeout(() => {
+            window.location.href = 'index.html';
+        }, 2000);
         return;
     }
 
+    currentBlock = selectedBlock;
     console.log(`Выбран блок: ${currentBlock}`);
     document.getElementById('current-block-name').textContent = currentBlock;
     
     // Проверяем загружены ли вопросы
     if (typeof questionsData === 'undefined') {
-        alert('Ошибка: вопросы не загружены!');
+        alert('Ошибка: вопросы не загружены! Возвращаем на главную.');
+        setTimeout(() => {
+            window.location.href = 'index.html';
+        }, 2000);
         return;
     }
     
     if (!questionsData[currentBlock]) {
-        alert(`Вопросы для блока "${currentBlock}" не найдены!`);
-        window.location.href = 'index.html';
+        alert(`Вопросы для блока "${currentBlock}" не найдены! Возвращаем на главную.`);
+        setTimeout(() => {
+            window.location.href = 'index.html';
+        }, 2000);
         return;
     }
     
     const blockQuestions = questionsData[currentBlock];
     
     if (blockQuestions.length === 0) {
-        alert(`Для блока "${currentBlock}" нет вопросов!`);
-        window.location.href = 'index.html';
+        alert(`Для блока "${currentBlock}" нет вопросов! Возвращаем на главную.`);
+        setTimeout(() => {
+            window.location.href = 'index.html';
+        }, 2000);
         return;
     }
     
@@ -242,7 +252,7 @@ function calculateResults() {
             questionNumber: index + 1
         });
         
-        console.log(`Вопрос ${index + 1}: ${isCorrect ? '✅' : '❌'}`);
+        console.log(`Вопрос ${index + 1}: ${isCorrect ? 'ВЕРНЫЙ' : 'НЕВЕРНЫЙ'}`);
     });
     
     const percentage = (correctCount / currentQuestions.length) * 100;
@@ -341,7 +351,7 @@ function confirmExit() {
 
 // Запускаем экзамен при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Simulation page loaded');
+    console.log('Simulation page loaded');
     setTimeout(initExam, 100); // Даем время на загрузку данных
 });
 

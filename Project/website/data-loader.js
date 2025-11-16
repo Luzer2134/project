@@ -10,7 +10,7 @@ let isLoading = true;
 
 async function loadAllBlocks() {
     try {
-        console.log('🔄 Начинаю загрузку вопросов...');
+        console.log('Начинаю загрузку вопросов...');
         
         // Загружаем все блоки
         const [block1, block2, block3, block4] = await Promise.all([
@@ -27,19 +27,19 @@ async function loadAllBlocks() {
         
         isLoading = false;
         
-        console.log('✅ Все вопросы загружены!');
+        console.log('Все вопросы загружены!');
         showLoadingStats();
         
     } catch (error) {
         isLoading = false;
-        console.error('❌ Ошибка загрузки вопросов:', error);
+        console.error('Ошибка загрузки вопросов:', error);
     }
 }
 
 // Функция загрузки одного блока
 async function loadBlock(filename, blockName) {
     try {
-        console.log(`📥 Загружаю ${blockName} из ${filename}...`);
+        console.log(`Загружаю ${blockName} из ${filename}...`);
         const response = await fetch(filename);
         
         if (!response.ok) {
@@ -100,11 +100,11 @@ async function loadBlock(filename, blockName) {
             }
         }).filter(question => question !== null); // Убираем null вопросы
         
-        console.log(`✅ ${blockName}: загружено ${questions.length} вопросов`);
+        console.log(`${blockName}: загружено ${questions.length} вопросов`);
         return questions;
         
     } catch (error) {
-        console.warn(`❌ Ошибка загрузки ${blockName}:`, error.message);
+        console.warn(`Ошибка загрузки ${blockName}:`, error.message);
         return [];
     }
 }
@@ -177,7 +177,7 @@ function getBlockQuestions(blockName) {
 
 // Статистика
 function showLoadingStats() {
-    console.log('📊 Статистика загрузки:');
+    console.log('Статистика загрузки:');
     Object.keys(questionsData).forEach(block => {
         console.log(`   ${block}: ${questionsData[block].length} вопросов`);
     });

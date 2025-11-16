@@ -152,3 +152,24 @@ body {
     background: #fff9c4 !important;
     color: #f57f17 !important;
 }
+
+.button_simulation:disabled {
+    opacity: 0.5;
+    cursor: not-allowed !important;
+    background-color: #cccccc !important;
+}
+
+.button_simulation:disabled:hover {
+    background-color: #cccccc !important;
+    transform: none;
+}
+
+/* Стили для выбранного блока */
+.block-selected {
+    border: 2px solid #4CAF50;
+    background-color: #f8fff8;
+}
+
+.block-selected h4 {
+    color: #2e7d32;
+}

@@ -1,26 +1,50 @@
 // navigation.js
-
+function updateSimulationButton() {
+    const simulationBtn = document.getElementById('simulation-btn');
+    const selectedBlock = localStorage.getItem('selectedBlock');
+    
+    if (simulationBtn) {
+        if (selectedBlock && isQuestionsReady()) {
+            const blockQuestions = getBlockQuestions(selectedBlock);
+            if (blockQuestions && blockQuestions.length > 0) {
+                // Блок выбран и есть вопросы - кнопка активна
+                simulationBtn.disabled = false;
+                simulationBtn.style.opacity = '1';
+                simulationBtn.style.cursor = 'pointer';
+                simulationBtn.title = 'Начать симуляцию экзамена';
+            } else {
+                // Блок выбран, но нет вопросов
+                simulationBtn.disabled = true;
+                simulationBtn.style.opacity = '0.5';
+                simulationBtn.style.cursor = 'not-allowed';
+                simulationBtn.title = 'Для выбранного блока нет вопросов';
+            }
+        } else {
+            // Блок не выбран
+            simulationBtn.disabled = true;
+            simulationBtn.style.opacity = '0.5';
+            simulationBtn.style.cursor = 'not-allowed';
+            simulationBtn.title = 'Сначала выберите блок для обучения';
+        }
+    }
+}
 // Функция для выбора блока
 function selectBlock(blockName) {
-    console.log(`Пытаюсь выбрать блок: ${blockName}`);
-    
-    // Проверяем готовность данных
-    if (!isQuestionsReady()) {
-        alert('Вопросы еще загружаются... Пожалуйста, подождите несколько секунд.');
+    // Проверяем, что вопросы загружены
+    if (typeof questionsData === 'undefined') {
+        alert('Вопросы еще загружаются... Пожалуйста, подождите.');
         return;
     }
     
-    const blockQuestions = getBlockQuestions(blockName);
-    console.log(`Вопросов в блоке ${blockName}:`, blockQuestions.length);
+    const blockQuestions = questionsData[blockName];
     
-    if (blockQuestions.length === 0) {
-        alert(`Для блока "${blockName}" нет вопросов. Проверьте файл data/block${blockName.slice(-1)}.json`);
+    if (!blockQuestions || blockQuestions.length === 0) {
+        alert(`Для блока "${blockName}" пока нет вопросов.`);
         return;
     }
     
     // Сохраняем выбранный блок
     localStorage.setItem('selectedBlock', blockName);
-    console.log(`Блок "${blockName}" сохранен в localStorage`);
     
     // Показываем информацию о выбранном блоке
     showSelectedBlockInfo(blockName, blockQuestions.length);
@@ -28,7 +52,10 @@ function selectBlock(blockName) {
     // Обновляем стили кнопок
     updateBlockButtons(blockName);
     
-    console.log(`✅ Блок "${blockName}" выбран! Вопросов: ${blockQuestions.length}`);
+    // Обновляем состояние кнопки симуляции
+    updateSimulationButton();
+    
+    console.log(`Блок "${blockName}" выбран! Вопросов: ${blockQuestions.length}`);
 }
 
 // Показать информацию о выбранном блоке
@@ -88,9 +115,28 @@ function checkBlockSelected() {
 // Запуск симуляции
 function startSimulation() {
     console.log('Запуск симуляции...');
-    if (!checkBlockSelected()) {
+    
+    const selectedBlock = localStorage.getItem('selectedBlock');
+    
+    if (!selectedBlock) {
+        alert('Пожалуйста, сначала выберите блок для обучения!');
         return;
     }
+    
+    // Проверяем что вопросы загружены и в блоке есть вопросы
+    if (typeof questionsData === 'undefined') {
+        alert('Вопросы еще загружаются... Пожалуйста, подождите.');
+        return;
+    }
+    
+    const blockQuestions = questionsData[selectedBlock];
+    
+    if (!blockQuestions || blockQuestions.length === 0) {
+        alert(`Для блока "${selectedBlock}" нет вопросов! Выберите другой блок.`);
+        return;
+    }
+    
+    console.log(`Запуск симуляции для блока: ${selectedBlock}`);
     window.location.href = 'simulation.html';
 }
 
@@ -173,9 +219,22 @@ document.addEventListener('DOMContentLoaded', function() {
     // Если данные уже загружены, обновляем интерфейс
     if (isQuestionsReady()) {
         updateUIAfterLoad();
+        updateSimulationButton();
     } else {
         // Иначе ждем загрузки данных
-        window.onQuestionsLoaded = updateUIAfterLoad;
+        window.onQuestionsLoaded = function() {
+            updateUIAfterLoad();
+            updateSimulationButton();
+        };
+    }
+    
+    // Восстанавливаем выбранный блок если есть
+    const selectedBlock = localStorage.getItem('selectedBlock');
+    if (selectedBlock) {
+        const questionCount = getBlockQuestions(selectedBlock).length;
+        showSelectedBlockInfo(selectedBlock, questionCount);
+        updateBlockButtons(selectedBlock);
+        updateSimulationButton();
     }
     
     console.log('Навигация инициализирована');
