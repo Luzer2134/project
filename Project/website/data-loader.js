@@ -64,12 +64,32 @@ async function loadBlock(filename, blockName) {
             }
             
             try {
+                // Обрабатываем варианты ответов - поддерживаем разные форматы переносов
+                const optionsText = item['Варианты ответа'].toString();
+                let options = [];
+                
+                // Пробуем разные разделители
+                if (optionsText.includes('\r\n')) {
+                    options = optionsText.split('\r\n');
+                } else if (optionsText.includes('\n')) {
+                    options = optionsText.split('\n');
+                } else if (optionsText.includes(';')) {
+                    // Если варианты разделены точкой с запятой
+                    options = optionsText.split(';').filter(opt => opt.trim() !== '');
+                } else {
+                    // Если всё в одной строке, пробуем разделить по буквам вариантов
+                    options = splitOptionsByLetters(optionsText);
+                }
+                
+                // Очищаем и форматируем варианты
+                options = options
+                    .filter(opt => opt && opt.trim() !== '')
+                    .map(opt => cleanOptionText(opt.trim()));
+                
                 return {
                     id: (index + 1).toString(),
                     question: item['Вопрос'].toString().trim(),
-                    options: item['Варианты ответа'].toString().split('\r\n')
-                        .filter(opt => opt && opt.trim() !== '')
-                        .map(opt => opt.trim()),
+                    options: options,
                     correctAnswers: extractLetters(item['Правильный вариант']),
                     comment: item['Комментарий'] ? item['Комментарий'].toString() : '',
                     image: item['Картинка'] || ''
@@ -87,6 +107,47 @@ async function loadBlock(filename, blockName) {
         console.warn(`❌ Ошибка загрузки ${blockName}:`, error.message);
         return [];
     }
+}
+
+// Функция для очистки текста варианта
+function cleanOptionText(text) {
+    if (!text) return '';
+    
+    let cleaned = text
+        .replace(/^[-—]\s*/, '') // Убираем дефисы в начале
+        .replace(/\s+/g, ' ')    // Убираем лишние пробелы
+        .trim();
+    
+    // Добавляем точку с запятой если её нет в конце
+    if (!cleaned.endsWith(';') && !cleaned.endsWith('.') && !cleaned.endsWith('.;')) {
+        cleaned += ';';
+    }
+    
+    return cleaned;
+}
+
+// Функция для разделения вариантов по буквам (если всё в одной строке)
+function splitOptionsByLetters(text) {
+    const options = [];
+    const regex = /([А-Г])\)/g;
+    let lastIndex = 0;
+    let match;
+    
+    while ((match = regex.exec(text)) !== null) {
+        if (lastIndex !== match.index) {
+            const option = text.substring(lastIndex, match.index).trim();
+            if (option) options.push(option);
+        }
+        lastIndex = match.index;
+    }
+    
+    // Добавляем последний вариант
+    if (lastIndex < text.length) {
+        const lastOption = text.substring(lastIndex).trim();
+        if (lastOption) options.push(lastOption);
+    }
+    
+    return options;
 }
 
 // Функция для извлечения букв из правильных ответов
