@@ -137,6 +137,7 @@ ALICE_IMAGE_IDS = {
   "1111": "1652229/265d7e92d1185f55adf2"
 }
 
+
 def parse_options(options_str):
     """Парсинг строки с вариантами ответов"""
     if not options_str:
@@ -247,24 +248,44 @@ def parse_multiple_answers(command):
 
 # Хранилище сессий пользователей
 user_sessions = {}
+user_stats = {}  # Отдельное хранилище для статистики
+
+
+def init_user_stats(session_id):
+    """Инициализация статистики пользователя"""
+    user_stats[session_id] = {
+        "total_answered": 0,
+        "correct_answers": 0,
+        "incorrect_answers": 0,
+        "skipped_questions": 0,
+        "current_topic": None
+    }
+    return user_stats[session_id]
 
 
 def get_user_stats(session_id):
     """Получение статистики пользователя"""
-    if session_id not in user_sessions:
-        user_sessions[session_id] = {
-            "total_answered": 0,
-            "correct_answers": 0,
-            "incorrect_answers": 0,
-            "skipped_questions": 0,
-            "current_topic": None
-        }
-    return user_sessions[session_id]
+    if session_id not in user_stats:
+        return init_user_stats(session_id)
+    return user_stats[session_id]
 
 
 def update_user_stats(session_id, result_type):
     """Обновление статистики пользователя"""
     stats = get_user_stats(session_id)
+
+    # Гарантируем, что все ключи существуют
+    if "total_answered" not in stats:
+        stats["total_answered"] = 0
+    if "correct_answers" not in stats:
+        stats["correct_answers"] = 0
+    if "incorrect_answers" not in stats:
+        stats["incorrect_answers"] = 0
+    if "skipped_questions" not in stats:
+        stats["skipped_questions"] = 0
+    if "current_topic" not in stats:
+        stats["current_topic"] = None
+
     if result_type == "correct":
         stats["correct_answers"] += 1
         stats["total_answered"] += 1
@@ -278,10 +299,12 @@ def update_user_stats(session_id, result_type):
 def get_progress_text(session_id):
     """Формирование текста с прогрессом"""
     stats = get_user_stats(session_id)
-    total_attempted = stats["total_answered"]
-    correct = stats["correct_answers"]
-    incorrect = stats["incorrect_answers"]
-    skipped = stats["skipped_questions"]
+
+    # Гарантируем, что все ключи существуют
+    total_attempted = stats.get("total_answered", 0)
+    correct = stats.get("correct_answers", 0)
+    incorrect = stats.get("incorrect_answers", 0)
+    skipped = stats.get("skipped_questions", 0)
 
     if total_attempted == 0:
         return "Вы еще не ответили ни на один вопрос."
@@ -289,7 +312,7 @@ def get_progress_text(session_id):
     accuracy = (correct / total_attempted * 100) if total_attempted > 0 else 0
 
     progress_text = (
-        f" Ваш прогресс:\n"
+        f"📊 Ваш прогресс:\n"
         f"• Всего решено: {total_attempted} вопросов\n"
         f"• Правильных ответов: {correct}\n"
         f"• Неправильных ответов: {incorrect}\n"
@@ -315,7 +338,7 @@ def main():
         logger.info(f"Запрос: команда='{command}', session_id={session_id}")
 
         user_state = user_sessions.get(session_id, {})
-        user_stats = get_user_stats(session_id)
+        user_statistics = get_user_stats(session_id)
 
         response = {
             "version": req["version"],
@@ -339,6 +362,7 @@ def main():
         # Обработка новой сессии
         if session.get("new", False):
             user_sessions[session_id] = {}
+            init_user_stats(session_id)  # Инициализируем статистику для новой сессии
             buttons = [{"title": name} for name in sheet_names] + [{"title": "Прогресс"}]
             response["response"]["text"] = "Привет! Выберите тему для тестирования:"
             response["response"]["buttons"] = buttons
@@ -387,7 +411,7 @@ def main():
                         "previous_questions": updated_previous_questions,
                         "mode": "question"
                     }
-                    user_stats["current_topic"] = topic
+                    user_statistics["current_topic"] = topic
                 else:
                     response["response"]["text"] = "Вопросы в этой теме закончились."
                     user_sessions[session_id] = {}
@@ -454,7 +478,7 @@ def main():
                     "previous_questions": [question["Вопрос"]],
                     "mode": "question"
                 }
-                user_stats["current_topic"] = topic
+                user_statistics["current_topic"] = topic
 
                 logger.info(f"Выбрана тема '{topic}'")
                 return jsonify(response)
@@ -532,7 +556,7 @@ def main():
                     "previous_questions": updated_previous_questions,
                     "mode": "question"
                 }
-                user_stats["current_topic"] = topic
+                user_statistics["current_topic"] = topic
             else:
                 text += "\n\nВопросы в этой теме закончились."
                 user_sessions[session_id] = {}
