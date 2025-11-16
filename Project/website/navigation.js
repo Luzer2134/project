@@ -54,6 +54,9 @@ function selectBlock(blockName) {
     
     // Обновляем состояние кнопки симуляции
     updateSimulationButton();
+
+    updateSimulationButton();
+    updateTrainerButton();
     
     console.log(`Блок "${blockName}" выбран! Вопросов: ${blockQuestions.length}`);
 }
@@ -143,15 +146,33 @@ function startSimulation() {
 // Запуск тренажёра
 function startTraining() {
     console.log('Запуск тренажёра...');
-    if (!checkBlockSelected()) {
+    
+    const selectedBlock = localStorage.getItem('selectedBlock');
+    
+    if (!selectedBlock) {
+        alert('Пожалуйста, сначала выберите блок для обучения!');
         return;
     }
+    
+    // Проверяем что вопросы загружены и в блоке есть вопросы
+    if (typeof questionsData === 'undefined') {
+        alert('Вопросы еще загружаются... Пожалуйста, подождите.');
+        return;
+    }
+    
+    const blockQuestions = questionsData[selectedBlock];
+    
+    if (!blockQuestions || blockQuestions.length === 0) {
+        alert(`Для блока "${selectedBlock}" нет вопросов! Выберите другой блок.`);
+        return;
+    }
+    
+    console.log(`Запуск тренажёра для блока: ${selectedBlock}`);
     window.location.href = 'trainer.html';
 }
 
 // Общая навигация
 function navigateTo(page) {
-    console.log('Навигация на:', page);
     switch(page) {
         case 'simulation.html':
             startSimulation();
@@ -163,7 +184,6 @@ function navigateTo(page) {
             window.location.href = page;
     }
 }
-
 // Выход из системы
 function logout() {
     if (confirm('Вы уверены, что хотите выйти?')) {
@@ -239,3 +259,31 @@ document.addEventListener('DOMContentLoaded', function() {
     
     console.log('Навигация инициализирована');
 });
+
+//Функция   для обновления кнопки тренажёра
+function updateTrainerButton() {
+    const trainerBtn = document.getElementById('trainer-btn');
+    const selectedBlock = localStorage.getItem('selectedBlock');
+    
+    if (trainerBtn) {
+        if (selectedBlock && isQuestionsReady()) {
+            const blockQuestions = getBlockQuestions(selectedBlock);
+            if (blockQuestions && blockQuestions.length > 0) {
+                trainerBtn.disabled = false;
+                trainerBtn.style.opacity = '1';
+                trainerBtn.style.cursor = 'pointer';
+                trainerBtn.title = 'Открыть тренажёр';
+            } else {
+                trainerBtn.disabled = true;
+                trainerBtn.style.opacity = '0.5';
+                trainerBtn.style.cursor = 'not-allowed';
+                trainerBtn.title = 'Для выбранного блока нет вопросов';
+            }
+        } else {
+            trainerBtn.disabled = true;
+            trainerBtn.style.opacity = '0.5';
+            trainerBtn.style.cursor = 'not-allowed';
+            trainerBtn.title = 'Сначала выберите блок для обучения';
+        }
+    }
+}
