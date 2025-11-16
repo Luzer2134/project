@@ -151,10 +151,13 @@ function splitOptionsByLetters(text) {
 }
 
 // Функция для извлечения букв из правильных ответов
+// data-loader.js - исправленная функция extractLetters
 function extractLetters(text) {
     if (!text) return [];
     try {
-        const matches = text.toString().match(/[А-Г]/g);
+        // ИСПРАВЛЕНИЕ: ищем кириллические буквы А-Е
+        const matches = text.toString().match(/[А-Е]/g);
+        console.log(`Извлечение букв из "${text}":`, matches);
         return matches ? matches : [];
     } catch (error) {
         console.warn('Ошибка извлечения букв:', error);

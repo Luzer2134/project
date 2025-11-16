@@ -132,12 +132,19 @@ function displayQuestion() {
         optionElement.style.borderRadius = '5px';
         optionElement.style.cursor = 'pointer';
         
-        const input = document.createElement('input');
+            const input = document.createElement('input');
         input.type = question.correctAnswers.length > 1 ? 'checkbox' : 'radio';
         input.name = 'answer';
-        input.value = String.fromCharCode(65 + index); // A, B, C, D
+        
+        const cyrillicLetters = ['А', 'Б', 'В', 'Г', 'Д', 'Е'];
+        input.value = cyrillicLetters[index]; // А, Б, В, Г, Д, Е
+        
         input.checked = userAnswers[currentQuestionIndex]?.includes(input.value) || false;
-        input.style.marginRight = '10px';
+        input.style.cssText = `
+            margin-right: 12px;
+            transform: scale(1.2);
+            cursor: pointer;
+        `;
         
         const label = document.createElement('label');
         label.textContent = option;
@@ -198,20 +205,58 @@ function finishExam() {
 }
 
 // Подсчёт результатов
+// simulation.js - полностью переписанная функция calculateResults
+// simulation.js - добавьте отладочную информацию
 function calculateResults() {
     let correctCount = 0;
     
+    console.log('=== ПОДСЧЕТ РЕЗУЛЬТАТОВ (КИРИЛЛИЦА) ===');
+    
     currentQuestions.forEach((question, index) => {
         const userAnswer = userAnswers[index] || [];
-        const correctAnswer = question.correctAnswers;
+        const correctAnswer = question.correctAnswers || [];
         
-        // Сравниваем массивы (порядок не важен)
-        const isCorrect = 
-            userAnswer.length === correctAnswer.length &&
-            userAnswer.every(answer => correctAnswer.includes(answer));
+        console.log(`\n--- Вопрос ${index + 1} ---`);
+        console.log('Вопрос:', question.question.substring(0, 50) + '...');
+        console.log('Правильные ответы:', correctAnswer, 'тип:', typeof correctAnswer[0]);
+        console.log('Ответ пользователя:', userAnswer, 'тип:', typeof userAnswer[0]);
         
-        if (isCorrect) correctCount++;
+        // Проверяем что используем кириллицу
+        if (correctAnswer.length > 0) {
+            const firstChar = correctAnswer[0].charCodeAt(0);
+            console.log('Код первого символа правильного ответа:', firstChar, 'символ:', String.fromCharCode(firstChar));
+        }
+        
+        if (userAnswer.length > 0) {
+            const firstChar = userAnswer[0].charCodeAt(0);
+            console.log('Код первого символа ответа пользователя:', firstChar, 'символ:', String.fromCharCode(firstChar));
+        }
+        
+        let isCorrect = false;
+        
+        // Простая проверка для отладки
+        if (userAnswer.length === 0 && correctAnswer.length === 0) {
+            isCorrect = true; // Если оба пустые
+        } else if (userAnswer.length !== correctAnswer.length) {
+            isCorrect = false; // Разное количество ответов
+        } else {
+            // Сравниваем массивы
+            const userSorted = [...userAnswer].sort().join('');
+            const correctSorted = [...correctAnswer].sort().join('');
+            isCorrect = userSorted === correctSorted;
+            
+            console.log('Сравнение строк:', `"${userSorted}" === "${correctSorted}"`, isCorrect);
+        }
+        
+        if (isCorrect) {
+            correctCount++;
+            console.log('✅ ПРАВИЛЬНО!');
+        } else {
+            console.log('❌ НЕПРАВИЛЬНО!');
+        }
     });
+    
+    console.log(`\n=== ИТОГО: ${correctCount} из ${currentQuestions.length} ===`);
     
     const percentage = (correctCount / currentQuestions.length) * 100;
     const grade = percentage >= 80 ? '5' : 
