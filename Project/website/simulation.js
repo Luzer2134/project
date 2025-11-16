@@ -1,207 +1,278 @@
 // simulation.js
+// Убедитесь что эти переменные объявлены только один раз!
 let currentQuestions = [];
 let currentQuestionIndex = 0;
 let userAnswers = [];
 let timer;
 let timeLeft = 60 * 60;
 let currentBlock = '';
+let startTime = null;
 
 // Инициализация экзамена
-async function initExam() {
-  // Получаем выбранный блок из URL или localStorage
-  const urlParams = new URLSearchParams(window.location.search);
-  currentBlock = urlParams.get('block') || localStorage.getItem('selectedBlock');
-  
-  if (!currentBlock) {
-    alert('Сначала выберите блок обучения');
-    window.location.href = 'index.html';
-    return;
-  }
+function initExam() {
+    console.log('🚀 Инициализация экзамена...');
+    
+    // Получаем выбранный блок
+    currentBlock = localStorage.getItem('selectedBlock');
+    
+    if (!currentBlock) {
+        alert('Блок не выбран! Возвращаем на главную страницу.');
+        window.location.href = 'index.html';
+        return;
+    }
 
-  document.getElementById('current-block-name').textContent = currentBlock;
-  
-  // Загружаем вопросы
-  try {
-    const response = await fetch('questions.json');
-    const allQuestions = await response.json();
-    const blockQuestions = allQuestions[currentBlock];
+    console.log(`Выбран блок: ${currentBlock}`);
+    document.getElementById('current-block-name').textContent = currentBlock;
+    
+    // Проверяем загружены ли вопросы
+    if (typeof questionsData === 'undefined') {
+        alert('Ошибка: вопросы не загружены!');
+        return;
+    }
+    
+    if (!questionsData[currentBlock]) {
+        alert(`Вопросы для блока "${currentBlock}" не найдены!`);
+        window.location.href = 'index.html';
+        return;
+    }
+    
+    const blockQuestions = questionsData[currentBlock];
+    
+    if (blockQuestions.length === 0) {
+        alert(`Для блока "${currentBlock}" нет вопросов!`);
+        window.location.href = 'index.html';
+        return;
+    }
+    
+    console.log(`Загружено вопросов для "${currentBlock}": ${blockQuestions.length}`);
     
     // Выбираем 30 случайных вопросов
-    currentQuestions = getRandomQuestions(blockQuestions, 30);
+    const questionsCount = Math.min(30, blockQuestions.length);
+    currentQuestions = getRandomQuestions(blockQuestions, questionsCount);
     userAnswers = new Array(currentQuestions.length).fill(null);
     
+    console.log(`Выбрано ${currentQuestions.length} случайных вопросов`);
+    
+    startTime = new Date();
     startTimer();
     displayQuestion();
-  } catch (error) {
-    console.error('Ошибка загрузки вопросов:', error);
-    alert('Ошибка загрузки вопросов');
-  }
 }
 
 // Выбор случайных вопросов
 function getRandomQuestions(questions, count) {
-  const shuffled = [...questions].sort(() => 0.5 - Math.random());
-  return shuffled.slice(0, count);
+    const shuffled = [...questions].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, count);
 }
 
 // Таймер
 function startTimer() {
-  timer = setInterval(() => {
-    timeLeft--;
-    updateTimerDisplay();
-    
-    if (timeLeft <= 0) {
-      finishExam();
-    }
-  }, 1000);
+    timer = setInterval(() => {
+        timeLeft--;
+        updateTimerDisplay();
+        
+        if (timeLeft <= 0) {
+            finishExam();
+        }
+    }, 1000);
 }
 
 function updateTimerDisplay() {
-  const minutes = Math.floor(timeLeft / 60);
-  const seconds = timeLeft % 60;
-  document.getElementById('timer').textContent = 
-    `Осталось времени: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    document.getElementById('timer').textContent = 
+        `Осталось времени: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 }
 
 // Отображение вопроса
 function displayQuestion() {
-  const question = currentQuestions[currentQuestionIndex];
-  const questionNumber = currentQuestionIndex + 1;
-  
-  document.getElementById('question-number').textContent = `Вопрос ${questionNumber} из ${currentQuestions.length}`;
-  document.getElementById('question-text').textContent = question.question;
-  
-  // Отображение изображения (если есть)
-  const imageContainer = document.getElementById('question-image');
-  imageContainer.innerHTML = '';
-  if (question.image) {
-    const img = document.createElement('img');
-    img.src = question.image;
-    img.alt = 'Иллюстрация к вопросу';
-    img.style.maxWidth = '100%';
-    imageContainer.appendChild(img);
-  }
-  
-  // Отображение вариантов ответа
-  const optionsContainer = document.getElementById('options-container');
-  optionsContainer.innerHTML = '';
-  
-  question.options.forEach((option, index) => {
-    const optionElement = document.createElement('div');
-    optionElement.className = 'option';
+    if (!currentQuestions || currentQuestions.length === 0) {
+        console.error('Нет вопросов для отображения!');
+        return;
+    }
     
-    const input = document.createElement('input');
-    input.type = question.correctAnswers.length > 1 ? 'checkbox' : 'radio';
-    input.name = 'answer';
-    input.value = String.fromCharCode(65 + index); // A, B, C, D
-    input.checked = userAnswers[currentQuestionIndex]?.includes(input.value) || false;
+    const question = currentQuestions[currentQuestionIndex];
     
-    const label = document.createElement('label');
-    label.textContent = option;
+    if (!question) {
+        console.error('Вопрос не найден!');
+        return;
+    }
     
-    optionElement.appendChild(input);
-    optionElement.appendChild(label);
-    optionsContainer.appendChild(optionElement);
-  });
-  
-  // Показываем/скрываем кнопки
-  document.getElementById('next-btn').style.display = 
-    currentQuestionIndex < currentQuestions.length - 1 ? 'block' : 'none';
-  document.getElementById('finish-btn').style.display = 
-    currentQuestionIndex === currentQuestions.length - 1 ? 'block' : 'none';
+    const questionNumber = currentQuestionIndex + 1;
+    
+    document.getElementById('question-number').textContent = `Вопрос ${questionNumber} из ${currentQuestions.length}`;
+    document.getElementById('question-text').textContent = question.question;
+    
+    // Отображение изображения
+    const imageContainer = document.getElementById('question-image');
+    imageContainer.innerHTML = '';
+    if (question.image) {
+        const img = document.createElement('img');
+        img.src = question.image;
+        img.alt = 'Иллюстрация к вопросу';
+        img.style.maxWidth = '100%';
+        img.style.maxHeight = '300px';
+        imageContainer.appendChild(img);
+    }
+    
+    // Отображение вариантов ответа
+    const optionsContainer = document.getElementById('options-container');
+    optionsContainer.innerHTML = '';
+    
+    if (!question.options || question.options.length === 0) {
+        optionsContainer.innerHTML = '<p>Нет вариантов ответа</p>';
+        return;
+    }
+    
+    question.options.forEach((option, index) => {
+        const optionElement = document.createElement('div');
+        optionElement.className = 'option';
+        optionElement.style.padding = '10px';
+        optionElement.style.margin = '5px 0';
+        optionElement.style.border = '1px solid #ddd';
+        optionElement.style.borderRadius = '5px';
+        optionElement.style.cursor = 'pointer';
+        
+        const input = document.createElement('input');
+        input.type = question.correctAnswers.length > 1 ? 'checkbox' : 'radio';
+        input.name = 'answer';
+        input.value = String.fromCharCode(65 + index); // A, B, C, D
+        input.checked = userAnswers[currentQuestionIndex]?.includes(input.value) || false;
+        input.style.marginRight = '10px';
+        
+        const label = document.createElement('label');
+        label.textContent = option;
+        label.style.cursor = 'pointer';
+        label.style.flex = '1';
+        
+        optionElement.appendChild(input);
+        optionElement.appendChild(label);
+        
+        // Клик по всему блоку опции
+        optionElement.addEventListener('click', function(e) {
+            if (e.target !== input) {
+                input.checked = !input.checked;
+            }
+        });
+        
+        optionsContainer.appendChild(optionElement);
+    });
+    
+    // Управление кнопками
+    document.getElementById('prev-btn').style.display = currentQuestionIndex > 0 ? 'inline-block' : 'none';
+    document.getElementById('next-btn').style.display = currentQuestionIndex < currentQuestions.length - 1 ? 'inline-block' : 'none';
+    document.getElementById('finish-btn').style.display = currentQuestionIndex === currentQuestions.length - 1 ? 'inline-block' : 'none';
 }
 
-// Следующий вопрос
+// Навигация по вопросам
 function nextQuestion() {
-  saveCurrentAnswer();
-  currentQuestionIndex++;
-  displayQuestion();
+    saveCurrentAnswer();
+    if (currentQuestionIndex < currentQuestions.length - 1) {
+        currentQuestionIndex++;
+        displayQuestion();
+    }
+}
+
+function prevQuestion() {
+    saveCurrentAnswer();
+    if (currentQuestionIndex > 0) {
+        currentQuestionIndex--;
+        displayQuestion();
+    }
 }
 
 // Сохранение текущего ответа
 function saveCurrentAnswer() {
-  const selectedOptions = Array.from(document.querySelectorAll('input[name="answer"]:checked'))
-    .map(input => input.value);
-  userAnswers[currentQuestionIndex] = selectedOptions;
+    const selectedOptions = Array.from(document.querySelectorAll('input[name="answer"]:checked'))
+        .map(input => input.value);
+    userAnswers[currentQuestionIndex] = selectedOptions;
 }
 
 // Завершение экзамена
 function finishExam() {
-  clearInterval(timer);
-  saveCurrentAnswer();
-  
-  // Подсчёт результатов
-  const results = calculateResults();
-  
-  // Показываем результаты
-  document.getElementById('exam-container').style.display = 'none';
-  document.getElementById('results-container').style.display = 'block';
-  
-  document.getElementById('correct-answers').textContent = results.correct;
-  document.getElementById('total-questions').textContent = currentQuestions.length;
-  document.getElementById('grade').textContent = results.grade;
-  
-  // Сохраняем попытку
-  saveAttemptToStorage(results);
+    clearInterval(timer);
+    saveCurrentAnswer();
+    
+    const results = calculateResults();
+    showResults(results);
+    saveAttemptToStorage(results);
 }
 
 // Подсчёт результатов
 function calculateResults() {
-  let correctCount = 0;
-  
-  currentQuestions.forEach((question, index) => {
-    const userAnswer = userAnswers[index] || [];
-    const correctAnswer = question.correctAnswers;
+    let correctCount = 0;
     
-    // Сравниваем массивы ответов (порядок не важен)
-    const isCorrect = 
-      userAnswer.length === correctAnswer.length &&
-      userAnswer.every(answer => correctAnswer.includes(answer));
+    currentQuestions.forEach((question, index) => {
+        const userAnswer = userAnswers[index] || [];
+        const correctAnswer = question.correctAnswers;
+        
+        // Сравниваем массивы (порядок не важен)
+        const isCorrect = 
+            userAnswer.length === correctAnswer.length &&
+            userAnswer.every(answer => correctAnswer.includes(answer));
+        
+        if (isCorrect) correctCount++;
+    });
     
-    if (isCorrect) correctCount++;
-  });
-  
-  const percentage = (correctCount / currentQuestions.length) * 100;
-  const grade = percentage >= 80 ? '5' : 
-                percentage >= 60 ? '4' : 
-                percentage >= 40 ? '3' : '2';
-  
-  return {
-    correct: correctCount,
-    total: currentQuestions.length,
-    percentage: percentage,
-    grade: grade
-  };
+    const percentage = (correctCount / currentQuestions.length) * 100;
+    const grade = percentage >= 80 ? '5' : 
+                  percentage >= 60 ? '4' : 
+                  percentage >= 40 ? '3' : '2';
+    
+    return {
+        correct: correctCount,
+        total: currentQuestions.length,
+        percentage: percentage,
+        grade: grade
+    };
+}
+
+// Показ результатов
+function showResults(results) {
+    document.getElementById('exam-container').style.display = 'none';
+    document.getElementById('results-container').style.display = 'block';
+    
+    document.getElementById('correct-answers').textContent = results.correct;
+    document.getElementById('total-questions').textContent = results.total;
+    document.getElementById('grade').textContent = results.grade;
+    
+    const timeSpent = 60 * 60 - timeLeft;
+    const minutes = Math.floor(timeSpent / 60);
+    const seconds = timeSpent % 60;
+    document.getElementById('time-spent').textContent = 
+        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 }
 
 // Сохранение попытки
 function saveAttemptToStorage(results) {
-  const attempt = {
-    block: currentBlock,
-    date: new Date().toISOString(),
-    correctAnswers: results.correct,
-    totalQuestions: results.total,
-    grade: results.grade,
-    timeSpent: (60 * 60 - timeLeft),
-    userAnswers: userAnswers,
-    questions: currentQuestions
-  };
-  
-  // Получаем существующие попытки из localStorage
-  const existingAttempts = JSON.parse(localStorage.getItem('examAttempts') || '[]');
-  existingAttempts.push(attempt);
-  localStorage.setItem('examAttempts', JSON.stringify(existingAttempts));
+    const attempt = {
+        block: currentBlock,
+        date: new Date().toISOString(),
+        correctAnswers: results.correct,
+        totalQuestions: results.total,
+        grade: results.grade,
+        percentage: results.percentage,
+        timeSpent: (60 * 60 - timeLeft),
+        userAnswers: userAnswers,
+        questions: currentQuestions.map(q => ({ id: q.id, question: q.question })) // Сохраняем только ID и текст вопросов
+    };
+    
+    const existingAttempts = JSON.parse(localStorage.getItem('examAttempts') || '[]');
+    existingAttempts.push(attempt);
+    localStorage.setItem('examAttempts', JSON.stringify(existingAttempts));
 }
 
 function saveAttempt() {
-  window.location.href = 'history.html';
+    window.location.href = 'history.html';
 }
 
 function confirmExit() {
-  if (confirm('Вы уверены, что хотите завершить экзамен досрочно? Результаты будут сохранены.')) {
-    finishExam();
-  }
+    if (confirm('Вы уверены, что хотите завершить экзамен досрочно? Результаты будут сохранены.')) {
+        finishExam();
+    }
 }
 
 // Запускаем экзамен при загрузке страницы
-document.addEventListener('DOMContentLoaded', initExam);
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Simulation page loaded');
+    setTimeout(initExam, 100); // Даем время на загрузку данных
+});
