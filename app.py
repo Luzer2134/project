@@ -137,8 +137,6 @@ ALICE_IMAGE_IDS = {
   "1111": "1652229/265d7e92d1185f55adf2"
 }
 
-
-
 def parse_options(options_str):
     """Парсинг строки с вариантами ответов"""
     if not options_str:
@@ -251,6 +249,57 @@ def parse_multiple_answers(command):
 user_sessions = {}
 
 
+def get_user_stats(session_id):
+    """Получение статистики пользователя"""
+    if session_id not in user_sessions:
+        user_sessions[session_id] = {
+            "total_answered": 0,
+            "correct_answers": 0,
+            "incorrect_answers": 0,
+            "skipped_questions": 0,
+            "current_topic": None
+        }
+    return user_sessions[session_id]
+
+
+def update_user_stats(session_id, result_type):
+    """Обновление статистики пользователя"""
+    stats = get_user_stats(session_id)
+    if result_type == "correct":
+        stats["correct_answers"] += 1
+        stats["total_answered"] += 1
+    elif result_type == "incorrect":
+        stats["incorrect_answers"] += 1
+        stats["total_answered"] += 1
+    elif result_type == "skipped":
+        stats["skipped_questions"] += 1
+
+
+def get_progress_text(session_id):
+    """Формирование текста с прогрессом"""
+    stats = get_user_stats(session_id)
+    total_attempted = stats["total_answered"]
+    correct = stats["correct_answers"]
+    incorrect = stats["incorrect_answers"]
+    skipped = stats["skipped_questions"]
+
+    if total_attempted == 0:
+        return "Вы еще не ответили ни на один вопрос."
+
+    accuracy = (correct / total_attempted * 100) if total_attempted > 0 else 0
+
+    progress_text = (
+        f" Ваш прогресс:\n"
+        f"• Всего решено: {total_attempted} вопросов\n"
+        f"• Правильных ответов: {correct}\n"
+        f"• Неправильных ответов: {incorrect}\n"
+        f"• Пропущено вопросов: {skipped}\n"
+        f"• Точность: {accuracy:.1f}%"
+    )
+
+    return progress_text
+
+
 @app.route("/", methods=["POST"])
 def main():
     """Основной обработчик запросов от Алисы"""
@@ -266,6 +315,7 @@ def main():
         logger.info(f"Запрос: команда='{command}', session_id={session_id}")
 
         user_state = user_sessions.get(session_id, {})
+        user_stats = get_user_stats(session_id)
 
         response = {
             "version": req["version"],
@@ -274,10 +324,22 @@ def main():
             "session_state": {}
         }
 
+        # Обработка команды прогресса
+        if any(progress_cmd in command for progress_cmd in
+               ["прогресс", "статистика", "стата", "результаты", "сколько"]):
+            progress_text = get_progress_text(session_id)
+            response["response"]["text"] = progress_text
+            response["response"]["buttons"] = [
+                {"title": "Продолжить"},
+                {"title": "Назад в меню"}
+            ]
+            logger.info("Показана статистика")
+            return jsonify(response)
+
         # Обработка новой сессии
         if session.get("new", False):
             user_sessions[session_id] = {}
-            buttons = [{"title": name} for name in sheet_names]
+            buttons = [{"title": name} for name in sheet_names] + [{"title": "Прогресс"}]
             response["response"]["text"] = "Привет! Выберите тему для тестирования:"
             response["response"]["buttons"] = buttons
             logger.info("Новая сессия")
@@ -286,7 +348,7 @@ def main():
         # Обработка команды возврата в меню
         if any(nav_cmd in command for nav_cmd in ["назад", "меню", "главная", "выход"]):
             user_sessions[session_id] = {}
-            buttons = [{"title": name} for name in sheet_names]
+            buttons = [{"title": name} for name in sheet_names] + [{"title": "Прогресс"}]
             response["response"]["text"] = "Вы вернулись в главное меню. Выберите тему:"
             response["response"]["buttons"] = buttons
             logger.info("Возврат в меню")
@@ -295,12 +357,14 @@ def main():
         # Обработка пропуска вопроса
         if any(skip_cmd in command for skip_cmd in ["пропустить", "следующий", "дальше", "skip", "next"]):
             if user_state.get("mode") == "question" and user_state.get("topic"):
+                update_user_stats(session_id, "skipped")
                 topic = user_state["topic"]
                 previous_questions = user_state.get("previous_questions", [])
 
                 next_question = get_random_question(topic, previous_questions)
                 if next_question:
-                    options_text = "\n".join([f"{opt}" for opt in next_question["Варианты"]]) if next_question["Варианты"] else ""
+                    options_text = "\n".join([f"{opt}" for opt in next_question["Варианты"]]) if next_question[
+                        "Варианты"] else ""
 
                     if next_question["Изображение"]:
                         response["response"]["card"] = {
@@ -323,13 +387,15 @@ def main():
                         "previous_questions": updated_previous_questions,
                         "mode": "question"
                     }
+                    user_stats["current_topic"] = topic
                 else:
                     response["response"]["text"] = "Вопросы в этой теме закончились."
                     user_sessions[session_id] = {}
 
                 response["response"]["buttons"] = [
                     {"title": "Пропустить"},
-                    {"title": "Назад в меню"}
+                    {"title": "Назад в меню"},
+                    {"title": "Прогресс"}
                 ]
                 logger.info("Вопрос пропущен")
                 return jsonify(response)
@@ -337,17 +403,17 @@ def main():
         # Обработка команды помощи
         if command in ["помощь", "help", "что делать", "правила"]:
             if user_state.get("mode") == "question":
-                response["response"]["text"] = f"Вы в режиме вопроса по теме '{user_state['topic']}'. Произнесите номер ответа (1-6) или букву (А-Е). Можно несколько ответов через пробел. Скажите 'пропустить' для перехода к следующему вопросу. Или скажите 'назад' для возврата в меню."
+                response["response"][
+                    "text"] = f"Вы в режиме вопроса по теме '{user_state['topic']}'. Произнесите номер ответа (1-6) или букву (А-Е). Можно несколько ответов через пробел. Скажите 'пропустить' для перехода к следующему вопросу. Или скажите 'назад' для возврата в меню. Также можете посмотреть свой прогресс, сказав 'прогресс'."
             else:
-                response["response"]["text"] = "Я помогу вам подготовиться к экзамену. Выберите тему для тестирования или скажите 'назад' в любой момент. Во время тестирования можно пропускать вопросы командой 'пропустить'."
-            response["response"]["buttons"] = [{"title": "Назад в меню"}]
+                response["response"][
+                    "text"] = "Я помогу вам подготовиться к экзамену. Выберите тему для тестирования или скажите 'назад' в любой момент. Во время тестирования можно пропускать вопросы командой 'пропустить'. Скажите 'прогресс' чтобы увидеть свою статистику."
+            response["response"]["buttons"] = [{"title": "Назад в меню"}, {"title": "Прогресс"}]
             logger.info("Показана помощь")
             return jsonify(response)
 
         # Выбор темы
-        # Выбор темы
         for sheet_name in sheet_names:
-            # Проверяем все варианты названий
             if (command == sheet_name.lower() or
                     (sheet_name == "Первая помощь" and command in ["1 помощь", "первая помощь", "1помощь",
                                                                    "перваяпомощь"])):
@@ -356,7 +422,7 @@ def main():
                 question = get_random_question(topic)
                 if not question:
                     response["response"]["text"] = f"В теме '{topic}' нет вопросов."
-                    response["response"]["buttons"] = [{"title": "Назад в меню"}]
+                    response["response"]["buttons"] = [{"title": "Назад в меню"}, {"title": "Прогресс"}]
                     logger.warning(f"В теме '{topic}' нет вопросов")
                     return jsonify(response)
 
@@ -378,7 +444,8 @@ def main():
 
                 response["response"]["buttons"] = [
                     {"title": "Пропустить"},
-                    {"title": "Назад в меню"}
+                    {"title": "Назад в меню"},
+                    {"title": "Прогресс"}
                 ]
 
                 user_sessions[session_id] = {
@@ -387,6 +454,7 @@ def main():
                     "previous_questions": [question["Вопрос"]],
                     "mode": "question"
                 }
+                user_stats["current_topic"] = topic
 
                 logger.info(f"Выбрана тема '{topic}'")
                 return jsonify(response)
@@ -406,10 +474,12 @@ def main():
             logger.info(f"Правильные ответы: {correct_answers_normalized}")
 
             if not user_answers:
-                response["response"]["text"] = f"Не понял ответ '{command}'. Используйте цифры 1-6 или буквы А-Е. Пример: '1', 'а', '1 2', 'а б'. Скажите 'пропустить' для перехода к следующему вопросу. Или скажите 'назад' для возврата в меню."
+                response["response"][
+                    "text"] = f"Не понял ответ '{command}'. Используйте цифры 1-6 или буквы А-Е. Пример: '1', 'а', '1 2', 'а б'. Скажите 'пропустить' для перехода к следующему вопросу. Или скажите 'назад' для возврата в меню."
                 response["response"]["buttons"] = [
                     {"title": "Пропустить"},
-                    {"title": "Назад в меню"}
+                    {"title": "Назад в меню"},
+                    {"title": "Прогресс"}
                 ]
                 user_sessions[session_id] = user_state
                 return jsonify(response)
@@ -417,23 +487,29 @@ def main():
             correct_given = [ans for ans in user_answers if ans in correct_answers_normalized]
             incorrect_given = [ans for ans in user_answers if ans not in correct_answers_normalized]
 
+            # Определение результата и обновление статистики
             if not incorrect_given and len(correct_given) == len(correct_answers_normalized):
                 text = "Верно!"
+                update_user_stats(session_id, "correct")
             elif not incorrect_given and len(correct_given) > 0:
                 missing = [ans for ans in correct_answers_normalized if ans not in user_answers]
                 missing_text = ", ".join([f"{ans.upper()})" for ans in missing])
                 text = f"Частично верно! Вы выбрали правильные ответы, но не хватает: {missing_text}\n\n{current_question['Пояснение']}"
+                update_user_stats(session_id, "incorrect")
             elif len(correct_given) > 0 and len(incorrect_given) > 0:
                 correct_text = ", ".join([f"{ans.upper()})" for ans in correct_given])
                 incorrect_text = ", ".join([f"{ans.upper()})" for ans in incorrect_given])
                 text = f"Частично верно! Правильные: {correct_text}, неправильные: {incorrect_text}\n\n{current_question['Пояснение']}"
+                update_user_stats(session_id, "incorrect")
             else:
                 correct_text = ", ".join(current_question["Правильный"])
                 text = f"Неверно.\nПравильный ответ: {correct_text}\n\n{current_question['Пояснение']}"
+                update_user_stats(session_id, "incorrect")
 
             next_question = get_random_question(topic, previous_questions)
             if next_question:
-                options_text = "\n".join([f"{opt}" for opt in next_question["Варианты"]]) if next_question["Варианты"] else ""
+                options_text = "\n".join([f"{opt}" for opt in next_question["Варианты"]]) if next_question[
+                    "Варианты"] else ""
 
                 if next_question["Изображение"]:
                     response["response"]["card"] = {
@@ -456,6 +532,7 @@ def main():
                     "previous_questions": updated_previous_questions,
                     "mode": "question"
                 }
+                user_stats["current_topic"] = topic
             else:
                 text += "\n\nВопросы в этой теме закончились."
                 user_sessions[session_id] = {}
@@ -463,13 +540,15 @@ def main():
             response["response"]["text"] = text
             response["response"]["buttons"] = [
                 {"title": "Пропустить"},
-                {"title": "Назад в меню"}
+                {"title": "Назад в меню"},
+                {"title": "Прогресс"}
             ]
             return jsonify(response)
 
         # Команда не распознана
-        buttons = [{"title": name} for name in sheet_names]
-        response["response"]["text"] = "Пожалуйста, выберите тему из предложенных ниже."
+        buttons = [{"title": name} for name in sheet_names] + [{"title": "Прогресс"}]
+        response["response"][
+            "text"] = "Пожалуйста, выберите тему из предложенных ниже или скажите 'прогресс' для просмотра статистики."
         response["response"]["buttons"] = buttons
         return jsonify(response)
 
@@ -492,12 +571,17 @@ def jsonify_error(message):
 @app.route("/", methods=["GET"])
 def home():
     """Обработчик GET запросов для проверки работы сервера"""
+    total_sessions = len(user_sessions)
+    active_sessions = sum(1 for session in user_sessions.values() if session.get("mode") == "question")
+
     return jsonify({
         "status": "success",
         "message": "Навык Алисы работает.",
-        "active_sessions": len(user_sessions),
+        "active_sessions": active_sessions,
+        "total_sessions": total_sessions,
         "topics_loaded": list(quizzes.keys())
     })
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
