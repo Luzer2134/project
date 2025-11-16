@@ -119,4 +119,36 @@ body {
       
     }
 
-    
+    /* Добавьте в style.css */
+.question-review.correct {
+    border-left: 5px solid #4CAF50;
+    background: #f1f8e9;
+}
+
+.question-review.incorrect {
+    border-left: 5px solid #f44336;
+    background: #ffebee;
+}
+
+#detailed-results {
+    max-height: 60vh;
+    overflow-y: auto;
+    margin-top: 20px;
+    padding: 10px;
+}
+
+/* Стили для подсветки ответов */
+.correct-answer {
+    background: #c8e6c9 !important;
+    color: #2e7d32 !important;
+}
+
+.wrong-answer {
+    background: #ffcdd2 !important;
+    color: #c62828 !important;
+}
+
+.missed-correct {
+    background: #fff9c4 !important;
+    color: #f57f17 !important;
+}
