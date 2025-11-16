@@ -312,7 +312,7 @@ def get_progress_text(session_id):
     accuracy = (correct / total_attempted * 100) if total_attempted > 0 else 0
 
     progress_text = (
-        f"📊 Ваш прогресс:\n"
+        f" Ваш прогресс:\n"
         f"• Всего решено: {total_attempted} вопросов\n"
         f"• Правильных ответов: {correct}\n"
         f"• Неправильных ответов: {incorrect}\n"
@@ -356,8 +356,50 @@ def main():
                 {"title": "Продолжить"},
                 {"title": "Назад в меню"}
             ]
+            # Сохраняем состояние, что пользователь просматривает прогресс
+            user_sessions[session_id] = {**user_state, "viewing_progress": True}
             logger.info("Показана статистика")
             return jsonify(response)
+
+        # Обработка команды "Продолжить" после прогресса
+        if command == "продолжить" and user_state.get("viewing_progress"):
+            # Убираем флаг просмотра прогресса
+            user_state.pop("viewing_progress", None)
+
+            # Если был активный вопрос, возвращаемся к нему
+            if user_state.get("mode") == "question" and user_state.get("question"):
+                current_question = user_state["question"]
+                topic = user_state["topic"]
+                options_text = "\n".join([f"{opt}" for opt in current_question["Варианты"]]) if current_question[
+                    "Варианты"] else ""
+
+                if current_question["Изображение"]:
+                    response["response"]["card"] = {
+                        "type": "BigImage",
+                        "image_id": current_question["Изображение"],
+                        "title": f"Тема: {topic}",
+                        "description": f"{current_question['Вопрос']}\n\n{options_text}"
+                    }
+                    response["response"]["text"] = f"Возвращаемся к вопросу. Смотрите на картинке выше."
+                else:
+                    response_text = f'Тема: "{topic}"\n\n{current_question["Вопрос"]}\n\n{options_text}'
+                    if len(response_text) > 1000:
+                        response_text = response_text[:997] + "..."
+                    response["response"]["text"] = response_text
+
+                response["response"]["buttons"] = [
+                    {"title": "Пропустить"},
+                    {"title": "Назад в меню"},
+                    {"title": "Прогресс"}
+                ]
+                logger.info("Возврат к вопросу после прогресса")
+                return jsonify(response)
+            else:
+                # Если нет активного вопроса, возвращаем в меню
+                buttons = [{"title": name} for name in sheet_names] + [{"title": "Прогресс"}]
+                response["response"]["text"] = "Выберите тему для тестирования:"
+                response["response"]["buttons"] = buttons
+                return jsonify(response)
 
         # Обработка новой сессии
         if session.get("new", False):
