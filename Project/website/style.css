@@ -26,6 +26,7 @@ body {
     align-items: center;
     padding: 15px 0;
     margin-bottom: 40px;
+    background-color: #F2F4F8;
 }
 
 .top-bar-right {
@@ -143,20 +144,7 @@ body {
     transform: translateY(-2px);
 }
 
-/* Информация о выбранном блоке */
-#selected-block-info {
-    display: none;
-    background: #e8f4fd;
-    padding: 15px;
-    margin: 20px 0;
-    border-radius: 8px;
-    border-left: 4px solid #2196F3;
-}
 
-#current-selected-block {
-    color: #2196F3;
-    font-weight: bold;
-}
 
 /* Адаптивность */
 @media (max-width: 768px) {
@@ -462,3 +450,165 @@ body {
       box-shadow: 0 3px 10px rgba(0,0,0,0.2);
     }
     
+
+    /* Дополнительные стили для страницы выбора программы */
+        .program-selection {
+            margin-top: 30px;
+            text-align: center;
+            padding: 0 20px;
+        }
+        
+        .program-title {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            font-size: 32px;
+            color: #333;
+            margin-bottom: 30px;
+            line-height: 1.2;
+        }
+        
+        .program-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .program-item {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            font-style: medium;
+            font-size: 36px;
+            line-height: 100%;
+            letter-spacing: 0%;
+            width: 1094.018798828125px;
+            height: 111px;
+            top: 271px;
+            left: 172.98px;
+            background-color: #F2F4F8;
+            border-radius: 77px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+
+        }
+        
+        .program-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+        
+        .program-item.selected {
+            border-left: 4px solid #F2F4F8;
+            background-color: #e8f4fd;
+        }
+        
+        .program-button {
+            width: 200px;
+            height: 40px;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            border: none;
+            cursor: pointer;
+            background-color: transparent;
+        }
+        
+        .program-description {
+            flex: 1;
+            text-align: left;
+            margin-left: 20px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            color: #555;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .action-button {
+            min-width: 150px;
+            height: 45px;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            border: none;
+            cursor: pointer;
+            background-color: transparent;
+            transition: transform 0.2s ease;
+        }
+        
+        .action-button:hover {
+            transform: scale(1.05);
+        }        
+        
+        
+        /* Дополнительная кнопка для В если есть */
+        .program-btn-v {
+            background-image: url('buttons/btnV.png');
+            width: 200px;
+            height: 40px;
+        }
+        
+        /* Стили для action кнопок */
+        .action-btn-start {
+            background-image: url('buttons/start.png');
+            width: 200px;
+            height: 60px;
+        }
+        
+        .action-btn-exam {
+            background-image: url('buttons/exam.png');
+            width: 150px;
+            height: 45px;
+        }
+        
+        .action-btn-trainer {
+            background-image: url('buttons/trainer.png');
+            width: 170px;
+            height: 45px;
+        }
+        
+        @media (max-width: 768px) {
+            .program-item {
+                flex-direction: column;
+                text-align: center;
+                padding: 20px;
+            }
+            
+            .program-description {
+                margin-left: 0;
+                margin-top: 15px;
+                text-align: center;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .action-button {
+                width: 200px;
+                margin-bottom: 10px;
+            }
+        }
+
+        .greeting2 {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 500;
+      font-size: 48px;
+      line-height: 100%;
+      letter-spacing: 0;
+      color: #262626;
+      width: 980px;
+      height: 48px;
+      top: 193px;
+      left: 230px;
+      
+      
+    }

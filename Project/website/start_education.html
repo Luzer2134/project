@@ -1,46 +1,183 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Выбор программы обучения</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body>
-    <main>
-    <h3 style="margin-top:40px;">Выберите блок для обучения:</h3>
-    
-    <div id="selected-block-info" style="display:none; background:#e8f4fd; padding:15px; margin:20px 0; border-radius:8px; border-left:4px solid #2196F3;">
-      <strong>Выбран блок: <span id="current-selected-block">-</span></strong>
-      <p style="margin:5px 0 0 0; font-size:14px; color:#666;">Теперь вы можете запустить симуляцию экзамена</p>
+<body class="design-mode">
+    <div class="design-container">
+        <!-- Верхняя панель -->
+        <div class="top-bar">
+            <div class="top-bar-right">
+                <button class="btn-documentation" onclick="navigateTo('documentation.html')"></button>
+                <button class="btn-exam" id="exam-btn" onclick="checkBlockAndNavigate('simulation.html')"></button>
+                <button class="btn-trainer" onclick="navigateTo('trainer.html')"></button>
+                <button class="btn-alisa" onclick="navigateTo('alisa.html')"></button>
+                <button class="btn-profile" onclick="navigateTo('profile.html')"></button>
+            </div>
+        </div>
+        
+        <!-- Основной контент -->
+        <div class="main-content">
+            <h1 class="greeting2">Выберите программу для тренировки</h1>
+            
+            <div class="program-selection">
+                <div class="program-grid" id="programs-container">
+                    <!-- Программа А -->
+                    <div class="program-item" onclick="selectProgram('program-a', this)">
+                        <button class="program-button program-btn-a"></button>
+                        <div class="program-description">
+                            Программа А — общие вопросы охраны труда и функционирования СУОТ
+                        </div>
+                    </div>
+                    
+                    <!-- Программа Б -->
+                    <div class="program-item" onclick="selectProgram('program-b', this)">
+                        <button class="program-button program-btn-b"></button>
+                        <div class="program-description">
+                            Программа Б — безопасные методы работы при воздействии вредных факторов
+                        </div>
+                    </div>
+                    
+                    <!-- Программа В -->
+                    <div class="program-item" onclick="selectProgram('program-v', this)">
+                        <button class="program-button program-btn-v"></button>
+                        <div class="program-description">
+                            Программа В — безопасные методы и приемы выполнения работ повышенной опасности
+                        </div>
+                    </div>
+                    
+                    <!-- Первая помощь -->
+                    <div class="program-item" onclick="selectProgram('program-help', this)">
+                        <button class="program-button program-btn-help"></button>
+                        <div class="program-description">
+                            Первая помощь — обучение по оказанию первой помощи пострадавшим
+                        </div>
+                    </div>
+                    
+                    <!-- СИЗ -->
+                    <div class="program-item" onclick="selectProgram('program-siz', this)">
+                        <button class="program-button program-btn-siz"></button>
+                        <div class="program-description">
+                            СИЗ — использование средств индивидуальной защиты
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
     </div>
     
-    <div class="blocks">
-      <div class="block">
-        <h4>СИЗ</h4>
-        <p>Основные темы и задачи. Вопросы по нормативной документации.</p>
-        <button class="button select-block-btn" data-block="Блок 1" onclick="selectBlock('Блок 1')">Выбрать блок</button>
-      </div>
-      <div class="block">
-        <h4>А</h4>
-        <p>Практические навыки и тесты. Применение СИЗ на практике.</p>
-        <button class="button select-block-btn" data-block="Блок 2" onclick="selectBlock('Блок 2')">Выбрать блок</button>
-      </div>
-      <div class="block">
-        <h4>ОПП</h4>
-        <p>Теоретические основы. Классификация и требования к СИЗ.</p>
-        <button class="button select-block-btn" data-block="Блок 3" onclick="selectBlock('Блок 3')">Выбрать блок</button>
-      </div>
-      <div class="block">
-        <h4>Б</h4>
-        <p>Продвинутая практика. Сложные случаи и исключения.</p>
-        <button class="button select-block-btn" data-block="Блок 4" onclick="selectBlock('Блок 4')">Выбрать блок</button>
-      </div>
-      <div class="block">
-        <h4>В</h4>
-        <p>Блок 5.</p>
-        <button class="button select-block-btn" data-block="Блок 5" onclick="selectBlock('Блок 5')">Выбрать блок</button>
-      </div>
-    </div>
-  </main>
+    <script>
+        // Текущая выбранная программа
+        let selectedProgram = null;
+        
+        // Функция выбора программы
+        function selectProgram(programId, element) {
+            // Сбрасываем выбор у всех элементов
+            const allItems = document.querySelectorAll('.program-item');
+            allItems.forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            // Выделяем выбранный элемент
+            element.classList.add('selected');
+            
+            // Сохраняем выбранную программу
+            selectedProgram = programId;
+            
+            // Получаем название программы
+            let programName = '';
+            switch(programId) {
+                case 'program-a':
+                    programName = 'Программа А';
+                    break;
+                case 'program-b':
+                    programName = 'Программа Б';
+                    break;
+                case 'program-v':
+                    programName = 'Программа В';
+                    break;
+                case 'program-help':
+                    programName = 'Первая помощь';
+                    break;
+                case 'program-siz':
+                    programName = 'СИЗ';
+                    break;
+            }
+            
+            // Обновляем информацию о выборе
+            document.getElementById('selected-program-name').textContent = programName;
+            document.getElementById('current-selection').classList.add('show');
+            
+            // Активируем кнопку экзамена
+            document.getElementById('program-exam-btn').disabled = false;
+            
+            // Сохраняем выбор в localStorage для использования на других страницах
+            localStorage.setItem('selectedProgram', programId);
+            localStorage.setItem('selectedProgramName', programName);
+        }
+        
+        // Функция начала обучения
+        function startTraining() {
+            if (!selectedProgram) {
+                alert('Пожалуйста, выберите программу для обучения');
+                return;
+            }
+            
+            // Перенаправляем на страницу блоков
+            navigateTo('education_blocks.html');
+        }
+        
+        // Функция проверки программы и перехода
+        function checkProgramAndNavigate(page) {
+            if (!selectedProgram) {
+                alert('Пожалуйста, выберите программу перед началом экзамена');
+                return;
+            }
+            
+            navigateTo(page);
+        }
+        
+        // Базовая функция навигации (должна быть в navigation.js)
+        function navigateTo(page) {
+            window.location.href = page;
+        }
+        
+        // Функция проверки блока и перехода (для совместимости)
+        function checkBlockAndNavigate(page) {
+            if (!selectedProgram) {
+                alert('Пожалуйста, выберите программу перед началом экзамена');
+                return;
+            }
+            
+            navigateTo(page);
+        }
+        
+        // Загрузка сохраненного выбора при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedProgram = localStorage.getItem('selectedProgram');
+            const savedProgramName = localStorage.getItem('selectedProgramName');
+            
+            if (savedProgram && savedProgramName) {
+                selectedProgram = savedProgram;
+                document.getElementById('selected-program-name').textContent = savedProgramName;
+                document.getElementById('current-selection').classList.add('show');
+                document.getElementById('program-exam-btn').disabled = false;
+                
+                // Выделяем сохраненную программу
+                const programItems = document.querySelectorAll('.program-item');
+                programItems.forEach(item => {
+                    const button = item.querySelector('.program-button');
+                    if (button.classList.contains('program-btn-' + savedProgram.split('-')[1])) {
+                        item.classList.add('selected');
+                    }
+                });
+            }
+        });
+    </script>
+    <script src="navigation.js"></script>
 </body>
 </html>
