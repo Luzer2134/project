@@ -297,7 +297,15 @@ function updateProgress() {
 }
 
 // Сохранение прогресса в localStorage
+// trainer.js - обновляем функцию saveProgress
 function saveProgress() {
+    const isAuthorized = localStorage.getItem('isAuthorized') === 'true';
+    
+    if (!isAuthorized) {
+        console.log('Гостевой режим - прогресс не сохраняется');
+        return;
+    }
+    
     const progressData = {
         block: currentBlock,
         userAnswers: userAnswers,
@@ -309,8 +317,15 @@ function saveProgress() {
     console.log('Прогресс сохранен');
 }
 
-// Загрузка прогресса из localStorage
+// Обновляем функцию loadProgress
 function loadProgress() {
+    const isAuthorized = localStorage.getItem('isAuthorized') === 'true';
+    
+    if (!isAuthorized) {
+        console.log('Гостевой режим - прогресс не загружается');
+        return;
+    }
+    
     const savedProgress = localStorage.getItem(`trainerProgress_${currentBlock}`);
     
     if (savedProgress) {

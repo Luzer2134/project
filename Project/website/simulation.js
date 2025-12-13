@@ -1,5 +1,41 @@
-// simulation.js
-// Убедитесь что эти переменные объявлены только один раз!
+function checkAuthAndSave() {
+    const isAuthorized = localStorage.getItem('isAuthorized') === 'true';
+    return isAuthorized; // Возвращает true если пользователь авторизован через Яндекс
+}
+
+// Обновляем функцию saveAttemptToStorage
+function saveAttemptToStorage(results) {
+    const isAuthorized = localStorage.getItem('isAuthorized') === 'true';
+    
+    if (!isAuthorized) {
+        console.log('Гостевой режим - попытка не сохраняется');
+        return;
+    }
+    
+    const attempt = {
+        block: currentBlock,
+        date: new Date().toISOString(),
+        correctAnswers: results.correct,
+        totalQuestions: results.total,
+        grade: results.grade,
+        percentage: results.percentage,
+        isPassed: results.isPassed,
+        timeSpent: (45 * 60 - timeLeft),
+        userAnswers: userAnswers,
+        questions: currentQuestions.map(q => ({ 
+            id: q.id, 
+            question: q.question,
+            correctAnswers: q.correctAnswers
+        }))
+    };
+    
+    const existingAttempts = JSON.parse(localStorage.getItem('examAttempts') || '[]');
+    existingAttempts.push(attempt);
+    localStorage.setItem('examAttempts', JSON.stringify(existingAttempts));
+    
+    console.log('Попытка сохранена в историю');
+}
+
 let currentQuestions = [];
 let currentQuestionIndex = 0;
 let userAnswers = [];

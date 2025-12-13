@@ -1,4 +1,36 @@
 // navigation.js
+// navigation.js - добавляем в начало файла
+function checkAuth() {
+    const isAuthorized = localStorage.getItem('isAuthorized');
+    if (!isAuthorized && window.location.pathname !== '/login.html') {
+        window.location.href = 'login.html';
+        return false;
+    }
+    return true;
+}
+
+// Обновляем функцию navigateTo для страниц прогресса и истории
+function navigateTo(page) {
+    if (!checkAuth()) return;
+    
+    switch(page) {
+        case 'simulation.html':
+            startSimulation();
+            break;
+        case 'trainer.html':
+            startTraining();
+            break;
+        case 'progress.html':
+            window.location.href = 'progress.html';
+            break;
+        case 'history.html':
+            window.location.href = 'history.html';
+            break;
+        default:
+            window.location.href = page;
+    }
+}
+
 function updateSimulationButton() {
     const simulationBtn = document.getElementById('simulation-btn');
     const selectedBlock = localStorage.getItem('selectedBlock');

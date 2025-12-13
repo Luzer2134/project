@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>История попыток</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        История попыток экзамена
+    </header>
+
+    <nav>
+        <button class="button_quit" onclick="goToMain()">На главную</button>
+        <button class="button" onclick="clearHistory()" style="background-color: #f44336;">Очистить историю</button>
+    </nav>
+
+    <main>
+        <div id="user-info" style="background: #e8f4fd; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <h3>Информация о пользователе</h3>
+            <p><strong>Пользователь:</strong> <span id="user-name">-</span></p>
+            <p><strong>Всего попыток:</strong> <span id="total-attempts">0</span></p>
+            <p><strong>Успешных попыток:</strong> <span id="passed-attempts">0</span> (<span id="success-rate">0%</span>)</p>
+        </div>
+
+        <div id="attempts-list" style="margin-top: 20px;">
+            <h3>Список попыток</h3>
+            <div id="attempts-container">
+                <!-- Попытки будут загружены динамически -->
+            </div>
+            
+            <div id="no-attempts" style="display: none; text-align: center; padding: 40px; color: #666;">
+                <p>Пока нет попыток экзамена</p>
+                <p>Пройти симуляцию экзамена можно на главной странице</p>
+                <button class="button" onclick="goToMain()" style="margin-top: 20px;">На главную</button>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        © 2025 Веб‑платформа подготовки специалистов Яндекс Алиса
+    </footer>
+
+    <script src="history.js"></script>
+</body>
+</html>
