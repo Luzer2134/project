@@ -107,6 +107,15 @@ async function loadBlock(filename, blockName) {
         console.warn(`Ошибка загрузки ${blockName}:`, error.message);
         return [];
     }
+
+    return {
+        id: (index + 1).toString(),
+        question: item['Вопрос'].toString().trim(),
+        options: options,
+        correctAnswers: extractLetters(item['Правильный вариант']),
+        comment: item['Комментарий'] ? item['Комментарий'].toString() : '',
+        image: processImagePath(item['Картинка'])  // ← ОБРАБОТКА ПУТИ
+    };
 }
 
 // Функция для очистки текста варианта
@@ -181,6 +190,40 @@ function showLoadingStats() {
     Object.keys(questionsData).forEach(block => {
         console.log(`   ${block}: ${questionsData[block].length} вопросов`);
     });
+}
+
+// Функция для обработки пути к изображению
+function processImagePath(imageData) {
+    if (!imageData || imageData === 'null' || imageData === null) {
+        return '';
+    }
+    
+    const str = imageData.toString().trim();
+    
+    if (str.toLowerCase().startsWith('да')) {
+        // Извлекаем номер из строки типа "да 1414"
+        const match = str.match(/да\s*(\d+)/i);
+        if (match && match[1]) {
+            return `pictures/pictogram_${match[1]}.jpg`;
+        }
+        return '';
+    }
+    
+    // Если это уже путь или имя файла
+    if (str.includes('.jpg') || str.includes('.png') || str.includes('.gif')) {
+        // Если нет пути, добавляем папку pictures
+        if (!str.includes('/')) {
+            return `pictures/${str}`;
+        }
+        return str;
+    }
+    
+    // Если это просто число
+    if (/^\d+$/.test(str)) {
+        return `pictures/pictogram_${str}.jpg`;
+    }
+    
+    return '';
 }
 
 // Загружаем все блоки
