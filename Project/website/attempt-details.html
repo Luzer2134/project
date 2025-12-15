@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Детали попытки</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        Детали попытки экзамена
+    </header>
+
+    <nav>
+        <button class="button_quit" onclick="goToHistory()">Назад к истории</button>
+    </nav>
+
+    <main>
+        <div id="attempt-header" style="background: #e8f4fd; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <h3 id="attempt-title">Загрузка...</h3>
+            <div id="attempt-summary"></div>
+        </div>
+
+        <div id="questions-review">
+            <!-- Вопросы с ответами будут загружены динамически -->
+        </div>
+    </main>
+    <script src="attempt-details.js"></script>
+</body>
+</html>
