@@ -1,3 +1,41 @@
+function checkAuthAndSave() {
+    const isAuthorized = localStorage.getItem('isAuthorized') === 'true';
+    return isAuthorized; 
+}
+
+// Обновляем функцию saveAttemptToStorage
+function saveAttemptToStorage(results) {
+    const isAuthorized = localStorage.getItem('isAuthorized') === 'true';
+    
+    if (!isAuthorized) {
+        console.log('Гостевой режим - попытка не сохраняется');
+        return;
+    }
+    
+    const attempt = {
+        block: currentBlock,
+        date: new Date().toISOString(),
+        correctAnswers: results.correct,
+        totalQuestions: results.total,
+        grade: results.grade,
+        percentage: results.percentage,
+        isPassed: results.isPassed,
+        timeSpent: (45 * 60 - timeLeft),
+        userAnswers: userAnswers,
+        questions: currentQuestions.map(q => ({ 
+            id: q.id, 
+            question: q.question,
+            correctAnswers: q.correctAnswers
+        }))
+    };
+    
+    const existingAttempts = JSON.parse(localStorage.getItem('examAttempts') || '[]');
+    existingAttempts.push(attempt);
+    localStorage.setItem('examAttempts', JSON.stringify(existingAttempts));
+    
+    console.log('Попытка сохранена в историю');
+}
+
 let currentQuestions = [];
 let currentQuestionIndex = 0;
 let userAnswers = [];
@@ -7,120 +45,14 @@ let currentBlock = '';
 let startTime = null;
 
 // Инициализация экзамена
-// simulation.js (только ключевые функции)
-
-// Основная функция сохранения попытки
-// simulation.js (только ключевые функции)
-
-// Основная функция сохранения попытки
-async function saveAttemptToStorage(results) {
-    console.log('💾 СОХРАНЕНИЕ ПОПЫТКИ ЭКЗАМЕНА');
-    
-    const user = window.examAPI ? window.examAPI.getUserFromStorage() : null;
-    
-    if (!user) {
-        console.log('❌ Пользователь не найден, не могу сохранить попытку');
-        alert('❌ Ошибка: пользователь не найден. Попытка не сохранена.');
-        return;
-    }
-    
-    const attempt = {
-        block: currentBlock,
-        correctAnswers: results.correct,
-        totalQuestions: results.total,
-        grade: results.grade,
-        percentage: results.percentage,
-        isPassed: results.isPassed,
-        timeSpent: (45 * 60 - timeLeft),
-        userAnswers: userAnswers,
-        userId: user.id,
-        userName: user.name,
-        userType: user.userType,
-        questions: currentQuestions.map(q => ({ 
-            id: q.id, 
-            question: q.question,
-            correctAnswers: q.correctAnswers,
-            options: q.options
-        }))
-    };
-    
-    console.log('📋 Данные попытки:', {
-        пользователь: user.name,
-        тип: user.userType,
-        блок: attempt.block,
-        результат: `${attempt.correctAnswers}/${attempt.totalQuestions}`,
-        оценка: attempt.grade
-    });
-    
-    // 1. ВСЕГДА сохраняем локально
-    const localAttempt = {
-        ...attempt,
-        id: 'local_' + Date.now(),
-        date: new Date().toISOString()
-    };
-    
-    // Определяем ключ для localStorage
-    const storageKey = user.userType === 'guest' 
-        ? 'examAttempts_guest' 
-        : `examAttempts_${user.id}`;
-    
-    const existingAttempts = JSON.parse(localStorage.getItem(storageKey) || '[]');
-    existingAttempts.push(localAttempt);
-    localStorage.setItem(storageKey, JSON.stringify(existingAttempts));
-    
-    console.log('✅ Попытка сохранена локально в ключе:', storageKey);
-    
-    // 2. Для зарегистрированных - сохраняем на сервер
-    if (user.userType !== 'guest') {
-        console.log('👤 Зарегистрированный пользователь, сохраняем на сервер...');
-        
-        try {
-            const result = await window.examAPI.saveExamAttempt(attempt);
-            
-            if (result.success) {
-                if (result.local) {
-                    console.log('⚠️ Попытка сохранена локально (ошибка сервера)');
-                    alert('⚠️ Попытка сохранена локально. Сервер недоступен.');
-                } else {
-                    console.log('✅ Попытка успешно сохранена на сервере!');
-                    alert('✅ Результаты экзамена сохранены на сервере!');
-                }
-            } else {
-                console.log('❌ Ошибка сохранения:', result.error);
-                alert('❌ Ошибка сохранения: ' + result.error);
-            }
-        } catch (error) {
-            console.error('❌ Критическая ошибка при сохранении:', error);
-            alert('❌ Критическая ошибка при сохранении. Попытка сохранена только локально.');
-        }
-    } else {
-        console.log('👤 Гость - только локальное сохранение');
-        alert('✅ Результаты сохранены локально. Для синхронизации между устройствами зарегистрируйтесь.');
-    }
-}
-
-// Инициализация экзамена с проверкой авторизации
 function initExam() {
-    console.log('🚀 Инициализация экзамена...');
-    
-    // Проверяем авторизацию
-    const user = window.examAPI ? window.examAPI.getUserFromStorage() : null;
-    
-    if (!user) {
-        alert('❌ Вы не авторизованы! Перенаправляем на страницу входа.');
-        setTimeout(() => {
-            window.location.href = 'login.html';
-        }, 1000);
-        return;
-    }
-    
-    console.log('👤 Пользователь:', user.name, 'Тип:', user.userType);
+    console.log('Инициализация экзамена...');
     
     // Получаем выбранный блок
     const selectedBlock = localStorage.getItem('selectedBlock');
     
     if (!selectedBlock) {
-        alert('❌ Блок не выбран! Возвращаем на главную страницу.');
+        alert('Блок не выбран! Возвращаем на главную страницу.');
         setTimeout(() => {
             window.location.href = 'index.html';
         }, 2000);
@@ -128,11 +60,50 @@ function initExam() {
     }
 
     currentBlock = selectedBlock;
-    console.log(`📚 Выбран блок: ${currentBlock}`);
+    console.log(`Выбран блок: ${currentBlock}`);
+    document.getElementById('current-block-name').textContent = currentBlock;
     
-    // Продолжение инициализации...
-    // (остальной код остается без изменений)
+    // Проверяем загружены ли вопросы
+    if (typeof questionsData === 'undefined') {
+        alert('Ошибка: вопросы не загружены! Возвращаем на главную.');
+        setTimeout(() => {
+            window.location.href = 'index.html';
+        }, 2000);
+        return;
+    }
+    
+    if (!questionsData[currentBlock]) {
+        alert(`Вопросы для блока "${currentBlock}" не найдены! Возвращаем на главную.`);
+        setTimeout(() => {
+            window.location.href = 'index.html';
+        }, 2000);
+        return;
+    }
+    
+    const blockQuestions = questionsData[currentBlock];
+    
+    if (blockQuestions.length === 0) {
+        alert(`Для блока "${currentBlock}" нет вопросов! Возвращаем на главную.`);
+        setTimeout(() => {
+            window.location.href = 'index.html';
+        }, 2000);
+        return;
+    }
+    
+    console.log(`Загружено вопросов для "${currentBlock}": ${blockQuestions.length}`);
+    
+    // Выбираем 30 случайных вопросов
+    const questionsCount = Math.min(30, blockQuestions.length);
+    currentQuestions = getRandomQuestions(blockQuestions, questionsCount);
+    userAnswers = new Array(currentQuestions.length).fill(null);
+    
+    console.log(`Выбрано ${currentQuestions.length} случайных вопросов`);
+    
+    startTime = new Date();
+    startTimer();
+    displayQuestion();
 }
+
 // Выбор случайных вопросов
 function getRandomQuestions(questions, count) {
     const shuffled = [...questions].sort(() => 0.5 - Math.random());
@@ -158,9 +129,9 @@ function updateTimerDisplay() {
         `Осталось времени: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     
     // Меняем цвет при малом остатке времени
-    if (timeLeft < 300) {
+    if (timeLeft < 300) { // Меньше 5 минут
         document.getElementById('timer').style.color = '#ff0000';
-    } else if (timeLeft < 600) {
+    } else if (timeLeft < 600) { // Меньше 10 минут
         document.getElementById('timer').style.color = '#ff6b00';
     }
 }
@@ -168,14 +139,14 @@ function updateTimerDisplay() {
 // Отображение вопроса
 function displayQuestion() {
     if (!currentQuestions || currentQuestions.length === 0) {
-        console.error('❌ Нет вопросов для отображения!');
+        console.error('Нет вопросов для отображения!');
         return;
     }
     
     const question = currentQuestions[currentQuestionIndex];
     
     if (!question) {
-        console.error('❌ Вопрос не найден!');
+        console.error('Вопрос не найден!');
         return;
     }
     
@@ -208,22 +179,18 @@ function displayQuestion() {
     question.options.forEach((option, index) => {
         const optionElement = document.createElement('div');
         optionElement.className = 'option';
-        optionElement.style.cssText = `
-            padding: 10px;
-            margin: 5px 0;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-        `;
+        optionElement.style.padding = '10px';
+        optionElement.style.margin = '5px 0';
+        optionElement.style.border = '1px solid #ddd';
+        optionElement.style.borderRadius = '5px';
+        optionElement.style.cursor = 'pointer';
         
-        const input = document.createElement('input');
+            const input = document.createElement('input');
         input.type = question.correctAnswers.length > 1 ? 'checkbox' : 'radio';
         input.name = 'answer';
         
         const cyrillicLetters = ['А', 'Б', 'В', 'Г', 'Д', 'Е'];
-        input.value = cyrillicLetters[index];
+        input.value = cyrillicLetters[index]; // А, Б, В, Г, Д, Е
         
         input.checked = userAnswers[currentQuestionIndex]?.includes(input.value) || false;
         input.style.cssText = `
@@ -233,23 +200,19 @@ function displayQuestion() {
         `;
         
         const label = document.createElement('label');
-        label.textContent = `${cyrillicLetters[index]}) ${option}`;
-        label.style.cssText = `
-            cursor: pointer;
-            flex: 1;
-        `;
+        label.textContent = option;
+        label.style.cursor = 'pointer';
+        label.style.flex = '1';
         
         optionElement.appendChild(input);
         optionElement.appendChild(label);
         
+        // Клик по всему блоку опции
         optionElement.addEventListener('click', function(e) {
             if (e.target !== input) {
                 input.checked = !input.checked;
-                input.dispatchEvent(new Event('change'));
             }
         });
-        
-        input.addEventListener('change', saveCurrentAnswer);
         
         optionsContainer.appendChild(optionElement);
     });
@@ -258,13 +221,6 @@ function displayQuestion() {
     document.getElementById('prev-btn').style.display = currentQuestionIndex > 0 ? 'inline-block' : 'none';
     document.getElementById('next-btn').style.display = currentQuestionIndex < currentQuestions.length - 1 ? 'inline-block' : 'none';
     document.getElementById('finish-btn').style.display = currentQuestionIndex === currentQuestions.length - 1 ? 'inline-block' : 'none';
-}
-
-// Сохранение текущего ответа
-function saveCurrentAnswer() {
-    const selectedOptions = Array.from(document.querySelectorAll('input[name="answer"]:checked'))
-        .map(input => input.value);
-    userAnswers[currentQuestionIndex] = selectedOptions;
 }
 
 // Навигация по вопросам
@@ -284,9 +240,15 @@ function prevQuestion() {
     }
 }
 
+// Сохранение текущего ответа
+function saveCurrentAnswer() {
+    const selectedOptions = Array.from(document.querySelectorAll('input[name="answer"]:checked'))
+        .map(input => input.value);
+    userAnswers[currentQuestionIndex] = selectedOptions;
+}
+
 // Завершение экзамена
 function finishExam() {
-    console.log('⏱️ Завершение экзамена...');
     clearInterval(timer);
     saveCurrentAnswer();
     
@@ -296,16 +258,19 @@ function finishExam() {
 }
 
 // Подсчёт результатов
+// simulation.js - полностью переписанная функция calculateResults
+// simulation.js - добавьте отладочную информацию
 function calculateResults() {
     let correctCount = 0;
     const questionResults = [];
     
-    console.log('📊 Подсчет результатов...');
+    console.log('=== ПОДСЧЕТ РЕЗУЛЬТАТОВ ===');
     
     currentQuestions.forEach((question, index) => {
         const userAnswer = userAnswers[index] || [];
         const correctAnswer = question.correctAnswers || [];
         
+        // Сравниваем массивы
         const userSorted = [...userAnswer].sort().join('');
         const correctSorted = [...correctAnswer].sort().join('');
         const isCorrect = userSorted === correctSorted;
@@ -314,6 +279,7 @@ function calculateResults() {
             correctCount++;
         }
         
+        // Сохраняем детали по каждому вопросу для показа результатов
         questionResults.push({
             question: question,
             userAnswer: userAnswer,
@@ -321,13 +287,15 @@ function calculateResults() {
             isCorrect: isCorrect,
             questionNumber: index + 1
         });
+        
+        console.log(`Вопрос ${index + 1}: ${isCorrect ? 'ВЕРНЫЙ' : 'НЕВЕРНЫЙ'}`);
     });
     
     const percentage = (correctCount / currentQuestions.length) * 100;
+    
+    // Система зачет/незачет (от 80%)
     const isPassed = percentage >= 80;
     const grade = isPassed ? 'ЗАЧЕТ' : 'НЕЗАЧЕТ';
-    
-    console.log(`✅ Правильных ответов: ${correctCount}/${currentQuestions.length} (${percentage.toFixed(1)}%)`);
     
     return {
         correct: correctCount,
@@ -365,7 +333,7 @@ function showResults(results) {
     showDetailedResults(results.questionResults);
 }
 
-// Детальные результаты
+// Новая функция для показа детальных результатов
 function showDetailedResults(questionResults) {
     const detailsContainer = document.createElement('div');
     detailsContainer.id = 'detailed-results';
@@ -383,76 +351,31 @@ function showDetailedResults(questionResults) {
     `;
     
     document.getElementById('results-container').appendChild(detailsContainer);
+    
+    // Показываем вопросы с ответами
     showQuestionsReview(questionResults);
 }
 
-// === ОСНОВНАЯ ФУНКЦИЯ СОХРАНЕНИЯ ===
-async function saveAttemptToStorage(results) {
-    console.log('💾 СОХРАНЕНИЕ ПОПЫТКИ ЭКЗАМЕНА');
-    
+// Сохранение попытки
+function saveAttemptToStorage(results) {
     const attempt = {
         block: currentBlock,
+        date: new Date().toISOString(),
         correctAnswers: results.correct,
         totalQuestions: results.total,
         grade: results.grade,
         percentage: results.percentage,
-        isPassed: results.isPassed,
-        timeSpent: (45 * 60 - timeLeft),
+        timeSpent: (60 * 60 - timeLeft),
         userAnswers: userAnswers,
-        questions: currentQuestions.map(q => ({ 
-            id: q.id, 
-            question: q.question,
-            correctAnswers: q.correctAnswers
-        }))
+        questions: currentQuestions.map(q => ({ id: q.id, question: q.question })) // Сохраняем только ID и текст вопросов
     };
     
-    console.log('📋 Данные попытки:', {
-        block: attempt.block,
-        результат: `${attempt.correctAnswers}/${attempt.totalQuestions}`,
-        оценка: attempt.grade
-    });
-    
-    // 1. Сохраняем в localStorage (ВСЕГДА)
     const existingAttempts = JSON.parse(localStorage.getItem('examAttempts') || '[]');
-    const localAttempt = {
-        ...attempt,
-        id: 'local_' + Date.now(),
-        date: new Date().toISOString()
-    };
-    existingAttempts.push(localAttempt);
+    existingAttempts.push(attempt);
     localStorage.setItem('examAttempts', JSON.stringify(existingAttempts));
-    console.log('✅ Попытка сохранена в localStorage:', localAttempt.id);
-    
-    // 2. Сохраняем на сервер (только для зарегистрированных)
-    const user = window.examAPI ? window.examAPI.getUserFromStorage() : null;
-    
-    if (user && user.userType !== 'guest') {
-        console.log('👤 Зарегистрированный пользователь, сохраняем на сервер...');
-        console.log('ID пользователя:', user.id);
-        
-        try {
-            const result = await window.examAPI.saveExamAttempt(attempt);
-            
-            if (result.success) {
-                if (result.local) {
-                    console.log('⚠️ Попытка сохранена локально (ошибка сервера)');
-                } else {
-                    console.log('✅ Попытка успешно сохранена на сервере!');
-                }
-            } else {
-                console.log('❌ Ошибка сохранения:', result.error);
-            }
-        } catch (error) {
-            console.error('❌ Критическая ошибка при сохранении:', error);
-        }
-    } else {
-        console.log('👤 Гость или API не доступен - только локальное сохранение');
-    }
 }
 
-// Вспомогательные функции
 function saveAttempt() {
-    console.log('📋 Переход к истории попыток...');
     window.location.href = 'history.html';
 }
 
@@ -462,10 +385,15 @@ function confirmExit() {
     }
 }
 
-// Обзор вопросов
+// Запускаем экзамен при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Simulation page loaded');
+    setTimeout(initExam, 100); // Даем время на загрузку данных
+});
+
+// simulation.js - функция для показа обзора вопросов
 function showQuestionsReview(questionResults) {
     const reviewContainer = document.getElementById('questions-review');
-    reviewContainer.innerHTML = '';
     
     questionResults.forEach(result => {
         const questionElement = createQuestionReviewElement(result);
@@ -524,7 +452,7 @@ function createQuestionReviewElement(result) {
             <strong>Варианты ответов:</strong>
             <div style="margin-left: 20px;">
                 ${question.options.map((option, index) => {
-                    const letter = String.fromCharCode(1040 + index);
+                    const letter = String.fromCharCode(1040 + index); // Кириллические А, Б, В...
                     const isUserSelected = result.userAnswer.includes(letter);
                     const isCorrectOption = result.correctAnswer.includes(letter);
                     
@@ -537,7 +465,7 @@ function createQuestionReviewElement(result) {
                         style += 'background: #fff9c4; color: #f57f17;';
                     }
                     
-                    return `<div style="${style}">${letter}) ${option}</div>`;
+                    return `<div style="${style}">${option}</div>`;
                 }).join('')}
             </div>
         </div>
@@ -545,14 +473,3 @@ function createQuestionReviewElement(result) {
     
     return element;
 }
-
-// Запуск при загрузке страницы
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🎮 Страница симуляции загружена');
-    console.log('🔧 examAPI доступен:', !!window.examAPI);
-    
-    const user = window.examAPI ? window.examAPI.getUserFromStorage() : null;
-    console.log('👤 Текущий пользователь:', user ? `${user.name} (${user.userType})` : 'не авторизован');
-    
-    setTimeout(initExam, 100);
-});
