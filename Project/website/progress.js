@@ -1,56 +1,67 @@
-// progress.js
-function goToMain() {
-    window.location.href = 'index.html';
-}
+/// progress.js - основные функции статистики
 
-function loadUserInfo() {
-    const userName = localStorage.getItem('userName') || 'Гость';
-    const userType = localStorage.getItem('userType') || 'guest';
-    const isAuthorized = localStorage.getItem('isAuthorized') === 'true';
+async function calculateTrainerStats() {
+    const user = window.examAPI ? window.examAPI.getUserFromStorage() : null;
     
-    document.getElementById('user-name').textContent = userName;
-    document.getElementById('user-type').textContent = userType === 'yandex' ? 'Яндекс' : 'Гость';
-    document.getElementById('progress-status').textContent = isAuthorized ? 
-        'Включено' : 'Отключено (гостевой режим)';
+    if (!user) {
+        console.log('👤 Пользователь не найден');
+        displayEmptyStats('trainer');
+        return;
+    }
+    
+    console.log(`📊 Расчет статистики тренажера для: ${user.name} (${user.userType})`);
+    
+    if (user.userType === 'guest') {
+        calculateLocalTrainerStats(user);
+        return;
+    }
+    
+    // Для зарегистрированного - пробуем загрузить с сервера
+    try {
+        const result = await window.examAPI.getTrainerProgress();
+        
+        if (result.success && result.progress) {
+            calculateServerTrainerStats(result.progress);
+        } else {
+            console.log('⚠️ Нет данных на сервере, пробуем локально');
+            calculateLocalTrainerStats(user);
+        }
+    } catch (error) {
+        console.error('❌ Ошибка загрузки статистики с сервера:', error);
+        calculateLocalTrainerStats(user);
+    }
 }
 
-function calculateTrainerStats() {
+// Статистика с сервера
+function calculateServerTrainerStats(serverProgress) {
+    const blocks = ['Блок 1', 'Блок 2', 'Блок 3', 'Блок 4'];
     let totalCompleted = 0;
     let totalCorrect = 0;
-    let totalQuestions = 0;
-    
-    // Собираем статистику по всем блокам
-    const blocks = ['Блок 1', 'Блок 2', 'Блок 3', 'Блок 4'];
+    let totalQuestionsCount = 0;
     
     blocks.forEach(block => {
-        const savedProgress = localStorage.getItem(`trainerProgress_${block}`);
-        if (savedProgress) {
-            try {
-                const progressData = JSON.parse(savedProgress);
-                const userAnswers = progressData.userAnswers || [];
+        const blockProgress = serverProgress[block];
+        
+        if (blockProgress) {
+            const userAnswers = blockProgress.userAnswers || [];
+            const completed = userAnswers.filter(answer => answer !== null).length;
+            totalCompleted += completed;
+            
+            // Считаем правильные ответы
+            if (questionsData && questionsData[block]) {
+                const blockQuestions = questionsData[block];
+                totalQuestionsCount += blockQuestions.length;
                 
-                // Считаем пройденные вопросы
-                const completed = userAnswers.filter(answer => answer !== null).length;
-                totalCompleted += completed;
+                let correctInBlock = 0;
+                userAnswers.forEach((answer, index) => {
+                    if (answer !== null && blockQuestions[index]) {
+                        const question = blockQuestions[index];
+                        const isCorrect = checkSingleAnswer(question, answer);
+                        if (isCorrect) correctInBlock++;
+                    }
+                });
                 
-                // Считаем правильные ответы
-                if (questionsData && questionsData[block]) {
-                    const blockQuestions = questionsData[block];
-                    let correctInBlock = 0;
-                    
-                    userAnswers.forEach((answer, index) => {
-                        if (answer !== null && blockQuestions[index]) {
-                            const question = blockQuestions[index];
-                            const isCorrect = checkSingleAnswer(question, answer);
-                            if (isCorrect) correctInBlock++;
-                        }
-                    });
-                    
-                    totalCorrect += correctInBlock;
-                    totalQuestions += blockQuestions.length;
-                }
-            } catch (error) {
-                console.error(`Ошибка загрузки прогресса для блока ${block}:`, error);
+                totalCorrect += correctInBlock;
             }
         }
     });
@@ -60,240 +71,112 @@ function calculateTrainerStats() {
     document.getElementById('trainer-completed').textContent = totalCompleted;
     document.getElementById('trainer-correct').textContent = totalCorrect;
     document.getElementById('trainer-percentage').textContent = `${percentage}%`;
+    
+    console.log(`✅ Статистика тренажера: ${totalCompleted} пройдено, ${totalCorrect} правильно (${percentage}%)`);
 }
 
-function calculateExamStats() {
-    const examAttempts = JSON.parse(localStorage.getItem('examAttempts') || '[]');
-    
-    document.getElementById('exam-attempts').textContent = examAttempts.length;
-    
-    const passedAttempts = examAttempts.filter(attempt => attempt.isPassed).length;
-    document.getElementById('exam-passed').textContent = passedAttempts;
-    
-    if (examAttempts.length > 0) {
-        const totalPercentage = examAttempts.reduce((sum, attempt) => sum + attempt.percentage, 0);
-        const averagePercentage = Math.round(totalPercentage / examAttempts.length);
-        document.getElementById('exam-average').textContent = `${averagePercentage}%`;
-    } else {
-        document.getElementById('exam-average').textContent = '0%';
-    }
-}
-
-function calculateBlocksStats() {
+// Локальная статистика
+function calculateLocalTrainerStats(user) {
     const blocks = ['Блок 1', 'Блок 2', 'Блок 3', 'Блок 4'];
-    let studiedBlocks = 0;
+    let totalCompleted = 0;
+    let totalCorrect = 0;
     let totalQuestionsCount = 0;
-    let bestBlock = '';
-    let bestBlockPercentage = 0;
+    
+    // Определяем ключ для localStorage
+    const storageKey = user.userType === 'guest' 
+        ? 'trainerProgress_guest' 
+        : `trainerProgress_${user.id}`;
+    
+    const savedProgress = localStorage.getItem(storageKey);
+    const allProgress = savedProgress ? JSON.parse(savedProgress) : {};
     
     blocks.forEach(block => {
-        const savedProgress = localStorage.getItem(`trainerProgress_${block}`);
-        if (savedProgress) {
-            studiedBlocks++;
-            
-            // Считаем прогресс по блоку
-            try {
-                const progressData = JSON.parse(savedProgress);
-                const userAnswers = progressData.userAnswers || [];
+        const blockProgress = allProgress[block];
+        
+        if (blockProgress) {
+            // Проверяем принадлежность данных
+            if (blockProgress.userId === user.id || user.userType === 'guest') {
+                const userAnswers = blockProgress.userAnswers || [];
+                const completed = userAnswers.filter(answer => answer !== null).length;
+                totalCompleted += completed;
                 
+                // Считаем правильные ответы
                 if (questionsData && questionsData[block]) {
                     const blockQuestions = questionsData[block];
                     totalQuestionsCount += blockQuestions.length;
                     
-                    // Считаем процент правильных ответов для этого блока
                     let correctInBlock = 0;
-                    let answeredInBlock = 0;
-                    
                     userAnswers.forEach((answer, index) => {
                         if (answer !== null && blockQuestions[index]) {
-                            answeredInBlock++;
                             const question = blockQuestions[index];
-                            if (checkSingleAnswer(question, answer)) {
-                                correctInBlock++;
-                            }
+                            const isCorrect = checkSingleAnswer(question, answer);
+                            if (isCorrect) correctInBlock++;
                         }
                     });
                     
-                    if (answeredInBlock > 0) {
-                        const blockPercentage = Math.round((correctInBlock / answeredInBlock) * 100);
-                        if (blockPercentage > bestBlockPercentage) {
-                            bestBlockPercentage = blockPercentage;
-                            bestBlock = block;
-                        }
-                    }
+                    totalCorrect += correctInBlock;
                 }
-            } catch (error) {
-                console.error(`Ошибка расчета статистики для блока ${block}:`, error);
             }
         }
     });
     
-    document.getElementById('blocks-studied').textContent = studiedBlocks;
-    document.getElementById('total-questions').textContent = totalQuestionsCount;
-    document.getElementById('best-block').textContent = bestBlock ? 
-        `${bestBlock} (${bestBlockPercentage}%)` : '-';
+    const percentage = totalCompleted > 0 ? Math.round((totalCorrect / totalCompleted) * 100) : 0;
     
-    // Показываем детальный прогресс по блокам
-    displayBlocksProgress();
+    document.getElementById('trainer-completed').textContent = totalCompleted;
+    document.getElementById('trainer-correct').textContent = totalCorrect;
+    document.getElementById('trainer-percentage').textContent = `${percentage}%`;
+    
+    console.log(`✅ Локальная статистика тренажера: ${totalCompleted} пройдено`);
 }
 
-function displayBlocksProgress() {
-    const container = document.getElementById('blocks-progress');
-    const blocks = ['Блок 1', 'Блок 2', 'Блок 3', 'Блок 4'];
+async function calculateExamStats() {
+    const user = window.examAPI ? window.examAPI.getUserFromStorage() : null;
     
-    let html = '<div class="blocks-progress-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">';
+    if (!user) {
+        displayEmptyStats('exam');
+        return;
+    }
     
-    blocks.forEach(block => {
-        const savedProgress = localStorage.getItem(`trainerProgress_${block}`);
-        let progressPercentage = 0;
-        let correctPercentage = 0;
-        let answeredCount = 0;
-        let correctCount = 0;
+    console.log(`📊 Расчет статистики экзаменов для: ${user.name} (${user.userType})`);
+    
+    try {
+        const result = await window.examAPI.getExamAttempts();
         
-        if (savedProgress) {
-            try {
-                const progressData = JSON.parse(savedProgress);
-                const userAnswers = progressData.userAnswers || [];
+        if (result.success) {
+            const attempts = result.attempts || [];
+            
+            document.getElementById('exam-attempts').textContent = attempts.length;
+            
+            const passedAttempts = attempts.filter(attempt => attempt.isPassed).length;
+            document.getElementById('exam-passed').textContent = passedAttempts;
+            
+            if (attempts.length > 0) {
+                const totalPercentage = attempts.reduce((sum, attempt) => sum + attempt.percentage, 0);
+                const averagePercentage = Math.round(totalPercentage / attempts.length);
+                document.getElementById('exam-average').textContent = `${averagePercentage}%`;
                 
-                if (questionsData && questionsData[block]) {
-                    const blockQuestions = questionsData[block];
-                    answeredCount = userAnswers.filter(answer => answer !== null).length;
-                    
-                    // Считаем правильные ответы
-                    userAnswers.forEach((answer, index) => {
-                        if (answer !== null && blockQuestions[index]) {
-                            const question = blockQuestions[index];
-                            if (checkSingleAnswer(question, answer)) {
-                                correctCount++;
-                            }
-                        }
-                    });
-                    
-                    progressPercentage = Math.round((answeredCount / blockQuestions.length) * 100);
-                    correctPercentage = answeredCount > 0 ? 
-                        Math.round((correctCount / answeredCount) * 100) : 0;
-                }
-            } catch (error) {
-                console.error(`Ошибка отображения прогресса для блока ${block}:`, error);
+                console.log(`✅ Статистика экзаменов: ${attempts.length} попыток, ${passedAttempts} сдано`);
+            } else {
+                document.getElementById('exam-average').textContent = '0%';
+                console.log('📭 Нет попыток экзамена');
             }
+        } else {
+            displayEmptyStats('exam');
         }
-        
-        html += `
-            <div class="block-progress-card" style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                <h4>${block}</h4>
-                <p>Прогресс: ${progressPercentage}%</p>
-                <div style="background: #eee; height: 10px; border-radius: 5px; margin: 10px 0;">
-                    <div style="background: #4CAF50; width: ${progressPercentage}%; height: 100%; border-radius: 5px;"></div>
-                </div>
-                <p>Правильные ответы: ${correctPercentage}%</p>
-                <p>Отвечено: ${answeredCount} вопросов</p>
-            </div>
-        `;
-    });
-    
-    html += '</div>';
-    container.innerHTML = html;
-}
-
-function checkSingleAnswer(question, userAnswer) {
-    if (!question || !userAnswer) return false;
-    const userSorted = [...userAnswer].sort().join('');
-    const correctSorted = [...question.correctAnswers].sort().join('');
-    return userSorted === correctSorted;
-}
-
-function exportProgress() {
-    const isAuthorized = localStorage.getItem('isAuthorized') === 'true';
-    
-    if (!isAuthorized) {
-        alert('В гостевом режиме экспорт прогресса недоступен. Войдите через Яндекс для сохранения прогресса.');
-        return;
-    }
-    
-    // Собираем все данные прогресса
-    const progressData = {
-        user: localStorage.getItem('userName'),
-        type: localStorage.getItem('userType'),
-        exportDate: new Date().toISOString(),
-        selectedBlock: localStorage.getItem('selectedBlock'),
-        examAttempts: JSON.parse(localStorage.getItem('examAttempts') || '[]'),
-        trainerProgress: {}
-    };
-    
-    // Собираем прогресс по тренажёру
-    const blocks = ['Блок 1', 'Блок 2', 'Блок 3', 'Блок 4'];
-    blocks.forEach(block => {
-        const saved = localStorage.getItem(`trainerProgress_${block}`);
-        if (saved) {
-            progressData.trainerProgress[block] = JSON.parse(saved);
-        }
-    });
-    
-    // Создаем и скачиваем файл
-    const dataStr = JSON.stringify(progressData, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    
-    const exportFileDefaultName = `progress_${localStorage.getItem('userName')}_${new Date().toISOString().split('T')[0]}.json`;
-    
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
-    
-    alert('Прогресс успешно экспортирован!');
-}
-
-function clearProgress() {
-    if (!confirm('Вы уверены, что хотите сбросить весь прогресс? Это действие нельзя отменить.')) {
-        return;
-    }
-    
-    const isAuthorized = localStorage.getItem('isAuthorized') === 'true';
-    
-    if (isAuthorized) {
-        // У авторизованного пользователя очищаем только прогресс
-        const keysToRemove = [];
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key.startsWith('trainerProgress_') || 
-                key.startsWith('examProgress_') ||
-                key === 'examAttempts') {
-                keysToRemove.push(key);
-            }
-        }
-        
-        keysToRemove.forEach(key => {
-            localStorage.removeItem(key);
-        });
-        
-        alert('Прогресс успешно сброшен!');
-        loadProgressData(); // Перезагружаем данные
-    } else {
-        // Гостю предлагаем перейти на страницу логина
-        if (confirm('В гостевом режиме прогресс автоматически очищается. Хотите войти через Яндекс для сохранения прогресса?')) {
-            window.location.href = 'login.html';
-        }
+    } catch (error) {
+        console.error('❌ Ошибка расчета статистики экзаменов:', error);
+        displayEmptyStats('exam');
     }
 }
 
-function loadProgressData() {
-    loadUserInfo();
-    calculateTrainerStats();
-    calculateExamStats();
-    calculateBlocksStats();
-}
-
-// Ждем загрузки вопросов
-document.addEventListener('DOMContentLoaded', function() {
-    if (typeof questionsData !== 'undefined') {
-        loadProgressData();
-    } else {
-        // Если вопросы еще не загружены, ждем
-        const checkInterval = setInterval(() => {
-            if (typeof questionsData !== 'undefined') {
-                clearInterval(checkInterval);
-                loadProgressData();
-            }
-        }, 100);
+function displayEmptyStats(type) {
+    if (type === 'trainer') {
+        document.getElementById('trainer-completed').textContent = '0';
+        document.getElementById('trainer-correct').textContent = '0';
+        document.getElementById('trainer-percentage').textContent = '0%';
+    } else if (type === 'exam') {
+        document.getElementById('exam-attempts').textContent = '0';
+        document.getElementById('exam-passed').textContent = '0';
+        document.getElementById('exam-average').textContent = '0%';
     }
-});
+}

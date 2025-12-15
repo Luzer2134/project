@@ -6,25 +6,25 @@ let currentBlock = '';
 
 // Инициализация тренажёра
 function initTrainer() {
-    console.log('Инициализация тренажёра...');
+    console.log('🎮 Инициализация тренажёра...');
     
     // Получаем выбранный блок
     currentBlock = localStorage.getItem('selectedBlock');
     
     if (!currentBlock) {
-        alert('Блок не выбран! Возвращаем на главную страницу.');
+        alert('❌ Блок не выбран! Возвращаем на главную страницу.');
         setTimeout(() => {
             window.location.href = 'index.html';
         }, 2000);
         return;
     }
 
-    console.log(`Выбран блок: ${currentBlock}`);
+    console.log(`📚 Выбран блок: ${currentBlock}`);
     document.getElementById('current-block-name').textContent = currentBlock;
     
     // Проверяем загружены ли вопросы
     if (typeof questionsData === 'undefined') {
-        alert('Ошибка: вопросы не загружены! Возвращаем на главную.');
+        alert('❌ Ошибка: вопросы не загружены! Возвращаем на главную.');
         setTimeout(() => {
             window.location.href = 'index.html';
         }, 2000);
@@ -32,7 +32,7 @@ function initTrainer() {
     }
     
     if (!questionsData[currentBlock]) {
-        alert(`Вопросы для блока "${currentBlock}" не найдены! Возвращаем на главную.`);
+        alert(`❌ Вопросы для блока "${currentBlock}" не найдены! Возвращаем на главную.`);
         setTimeout(() => {
             window.location.href = 'index.html';
         }, 2000);
@@ -42,14 +42,14 @@ function initTrainer() {
     const blockQuestions = questionsData[currentBlock];
     
     if (blockQuestions.length === 0) {
-        alert(`Для блока "${currentBlock}" нет вопросов! Возвращаем на главную.`);
+        alert(`❌ Для блока "${currentBlock}" нет вопросов! Возвращаем на главную.`);
         setTimeout(() => {
             window.location.href = 'index.html';
         }, 2000);
         return;
     }
     
-    console.log(`Загружено вопросов для тренажёра: ${blockQuestions.length}`);
+    console.log(`📊 Загружено вопросов: ${blockQuestions.length}`);
     
     // Берем ВСЕ вопросы блока
     currentQuestions = [...blockQuestions];
@@ -68,14 +68,14 @@ function initTrainer() {
 // Отображение вопроса
 function displayQuestion() {
     if (!currentQuestions || currentQuestions.length === 0) {
-        console.error('Нет вопросов для отображения!');
+        console.error('❌ Нет вопросов для отображения!');
         return;
     }
     
     const question = currentQuestions[currentQuestionIndex];
     
     if (!question) {
-        console.error('Вопрос не найден!');
+        console.error('❌ Вопрос не найден!');
         return;
     }
     
@@ -186,7 +186,7 @@ function checkAnswer() {
         .map(input => input.value);
     
     if (selectedOptions.length === 0) {
-        alert('Пожалуйста, выберите ответ!');
+        alert('⚠️ Пожалуйста, выберите ответ!');
         return;
     }
     
@@ -206,6 +206,7 @@ function checkAnswer() {
 
 // Проверка одного ответа
 function checkSingleAnswer(question, userAnswer) {
+    if (!question || !userAnswer) return false;
     const userSorted = [...userAnswer].sort().join('');
     const correctSorted = [...question.correctAnswers].sort().join('');
     return userSorted === correctSorted;
@@ -217,7 +218,7 @@ function showResultModal(question, userAnswer, isCorrect) {
     const modalTitle = document.getElementById('modal-title');
     const modalContent = document.getElementById('modal-content');
     
-    modalTitle.textContent = isCorrect ? 'ВЕРНО' : 'НЕВЕРНО';
+    modalTitle.textContent = isCorrect ? '✅ ВЕРНО' : '❌ НЕВЕРНО';
     modalTitle.style.color = isCorrect ? '#4CAF50' : '#f44336';
     
     let content = `
@@ -257,7 +258,7 @@ function showResultModal(question, userAnswer, isCorrect) {
             style += 'background: #f5f5f5; color: #666;';
         }
         
-        content += `<div style="${style}">${option}</div>`;
+        content += `<div style="${style}">${letter}) ${option}</div>`;
     });
     
     modalContent.innerHTML = content;
@@ -296,60 +297,196 @@ function updateProgress() {
     document.getElementById('total-questions').textContent = totalCount;
 }
 
-// Сохранение прогресса в localStorage
-// trainer.js - обновляем функцию saveProgress
-function saveProgress() {
-    const isAuthorized = localStorage.getItem('isAuthorized') === 'true';
+// === СОХРАНЕНИЕ И ЗАГРУЗКА ПРОГРЕССА ===
+
+// Сохранение прогресса
+async function saveProgress() {
+    const user = window.examAPI ? window.examAPI.getUserFromStorage() : null;
     
-    if (!isAuthorized) {
-        console.log('Гостевой режим - прогресс не сохраняется');
+    if (!user) {
+        console.log('❌ Пользователь не найден, не могу сохранить прогресс');
         return;
     }
     
+    console.log(`💾 Сохранение прогресса для пользователя: ${user.name} (${user.userType})`);
+    
+    // 1. Сохраняем локально для быстрого доступа
     const progressData = {
-        block: currentBlock,
         userAnswers: userAnswers,
         currentQuestionIndex: currentQuestionIndex,
+        userId: user.id,
+        block: currentBlock,
         timestamp: new Date().toISOString()
     };
     
-    localStorage.setItem(`trainerProgress_${currentBlock}`, JSON.stringify(progressData));
-    console.log('Прогресс сохранен');
-}
-
-// Обновляем функцию loadProgress
-function loadProgress() {
-    const isAuthorized = localStorage.getItem('isAuthorized') === 'true';
+    // Для гостей используем отдельный ключ
+    const storageKey = user.userType === 'guest' 
+        ? 'trainerProgress_guest' 
+        : `trainerProgress_${user.id}`;
     
-    if (!isAuthorized) {
-        console.log('Гостевой режим - прогресс не загружается');
-        return;
-    }
+    // Загружаем существующий прогресс
+    let allProgress = JSON.parse(localStorage.getItem(storageKey) || '{}');
     
-    const savedProgress = localStorage.getItem(`trainerProgress_${currentBlock}`);
+    // Обновляем прогресс для текущего блока
+    allProgress[currentBlock] = progressData;
     
-    if (savedProgress) {
+    localStorage.setItem(storageKey, JSON.stringify(allProgress));
+    console.log('✅ Прогресс сохранен локально:', storageKey);
+    
+    // 2. Для зарегистрированных пользователей - сохраняем на сервер
+    if (user.userType !== 'guest') {
+        console.log('👤 Зарегистрированный пользователь, сохраняем на сервер...');
+        
         try {
-            const progressData = JSON.parse(savedProgress);
-            userAnswers = progressData.userAnswers || new Array(currentQuestions.length).fill(null);
-            currentQuestionIndex = progressData.currentQuestionIndex || 0;
-            console.log('Прогресс загружен');
+            const result = await window.examAPI.saveTrainerProgress(
+                currentBlock, 
+                userAnswers, 
+                currentQuestionIndex
+            );
+            
+            if (result.success) {
+                console.log('✅ Прогресс сохранен на сервере');
+            } else {
+                console.warn('⚠️ Ошибка сохранения на сервере:', result.error);
+            }
         } catch (error) {
-            console.error('Ошибка загрузки прогресса:', error);
-            userAnswers = new Array(currentQuestions.length).fill(null);
+            console.error('❌ Критическая ошибка при сохранении:', error);
         }
     }
 }
 
+// Загрузка прогресса
+async function loadProgress() {
+    const user = window.examAPI ? window.examAPI.getUserFromStorage() : null;
+    
+    if (!user) {
+        console.log('❌ Пользователь не найден, начинаем с нуля');
+        resetToDefault();
+        return;
+    }
+    
+    console.log(`📥 Загрузка прогресса для пользователя: ${user.name} (${user.userType})`);
+    
+    if (user.userType === 'guest') {
+        // Для гостя - только локальное сохранение
+        console.log('👤 Гость - загружаем локальный прогресс');
+        loadLocalProgress(user);
+    } else {
+        // Для зарегистрированного - пробуем загрузить с сервера
+        console.log('👤 Зарегистрированный - загружаем прогресс с сервера');
+        await loadServerProgress(user);
+    }
+}
+
+// Загрузка локального прогресса
+function loadLocalProgress(user) {
+    // Определяем ключ для гостя
+    const storageKey = user.userType === 'guest' 
+        ? 'trainerProgress_guest' 
+        : `trainerProgress_${user.id}`;
+    
+    const savedProgress = localStorage.getItem(storageKey);
+    
+    if (savedProgress) {
+        try {
+            const allProgress = JSON.parse(savedProgress);
+            const blockProgress = allProgress[currentBlock];
+            
+            if (blockProgress) {
+                // Проверяем, что прогресс принадлежит текущему пользователю
+                if (blockProgress.userId === user.id || user.userType === 'guest') {
+                    userAnswers = blockProgress.userAnswers || new Array(currentQuestions.length).fill(null);
+                    currentQuestionIndex = blockProgress.currentQuestionIndex || 0;
+                    console.log('✅ Локальный прогресс загружен для блока:', currentBlock);
+                } else {
+                    console.log('⚠️ Прогресс принадлежит другому пользователю, начинаем заново');
+                    resetToDefault();
+                }
+            } else {
+                console.log('📭 Локального прогресса для этого блока нет');
+                resetToDefault();
+            }
+        } catch (error) {
+            console.error('❌ Ошибка загрузки локального прогресса:', error);
+            resetToDefault();
+        }
+    } else {
+        console.log('📭 Локального прогресса нет');
+        resetToDefault();
+    }
+}
+
+// Загрузка прогресса с сервера
+async function loadServerProgress(user) {
+    try {
+        const result = await window.examAPI.getTrainerProgress(currentBlock);
+        
+        if (result.success && result.progress) {
+            // Загружаем с сервера
+            userAnswers = result.progress.userAnswers || new Array(currentQuestions.length).fill(null);
+            currentQuestionIndex = result.progress.currentQuestionIndex || 0;
+            console.log('✅ Прогресс загружен с сервера для блока:', currentBlock);
+            
+            // Сохраняем также локально для быстрого доступа
+            const storageKey = `trainerProgress_${user.id}`;
+            let allProgress = JSON.parse(localStorage.getItem(storageKey) || '{}');
+            
+            allProgress[currentBlock] = {
+                userAnswers,
+                currentQuestionIndex,
+                userId: user.id,
+                timestamp: new Date().toISOString()
+            };
+            
+            localStorage.setItem(storageKey, JSON.stringify(allProgress));
+        } else {
+            // Если на сервере нет, пробуем локально
+            console.log('⚠️ На сервере нет прогресса, пробуем локально');
+            loadLocalProgress(user);
+        }
+    } catch (error) {
+        console.error('❌ Ошибка загрузки прогресса с сервера:', error);
+        // При ошибке загружаем локально
+        loadLocalProgress(user);
+    }
+}
+
+// Сброс к начальному состоянию
+function resetToDefault() {
+    userAnswers = new Array(currentQuestions.length).fill(null);
+    currentQuestionIndex = 0;
+    console.log('🔄 Прогресс сброшен к начальному состоянию');
+}
+
 // Сброс прогресса
 function resetProgress() {
-    if (confirm('Вы уверены, что хотите начать тренажёр заново? Весь прогресс будет потерян.')) {
-        userAnswers = new Array(currentQuestions.length).fill(null);
-        currentQuestionIndex = 0;
-        localStorage.removeItem(`trainerProgress_${currentBlock}`);
+    if (confirm('⚠️ Вы уверены, что хотите начать тренажёр заново? Весь прогресс по этому блоку будет потерян.')) {
+        const user = window.examAPI ? window.examAPI.getUserFromStorage() : null;
+        
+        if (user) {
+            // Удаляем локальный прогресс
+            const storageKey = user.userType === 'guest' 
+                ? 'trainerProgress_guest' 
+                : `trainerProgress_${user.id}`;
+            
+            let allProgress = JSON.parse(localStorage.getItem(storageKey) || '{}');
+            delete allProgress[currentBlock];
+            localStorage.setItem(storageKey, JSON.stringify(allProgress));
+            
+            console.log('🧹 Локальный прогресс удален для блока:', currentBlock);
+            
+            // Для зарегистрированных можно добавить удаление с сервера
+            if (user.userType !== 'guest') {
+                console.log('ℹ️ Для удаления прогресса с сервера обратитесь к администратору');
+            }
+        }
+        
+        // Сбрасываем текущую сессию
+        resetToDefault();
         displayQuestion();
         updateProgress();
-        console.log('Прогресс сброшен');
+        
+        console.log('🔄 Тренажёр сброшен');
     }
 }
 
@@ -362,6 +499,27 @@ function goToMain() {
 
 // Запускаем тренажёр при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Trainer page loaded');
+    console.log('🎮 Страница тренажёра загружена');
+    
+    // Проверяем доступность API
+    if (!window.examAPI) {
+        console.error('❌ API не доступен!');
+        alert('Ошибка: API не доступен. Проверьте подключение к серверу.');
+        return;
+    }
+    
+    // Проверяем авторизацию
+    const user = window.examAPI.getUserFromStorage();
+    if (!user) {
+        alert('❌ Вы не авторизованы! Перенаправляем на страницу входа.');
+        setTimeout(() => {
+            window.location.href = 'login.html';
+        }, 1000);
+        return;
+    }
+    
+    console.log('👤 Пользователь:', user.name, 'Тип:', user.userType);
+    
+    // Запускаем тренажёр
     setTimeout(initTrainer, 100);
 });

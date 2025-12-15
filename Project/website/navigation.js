@@ -2,7 +2,7 @@
 // navigation.js - добавляем в начало файла
 function checkAuth() {
     const isAuthorized = localStorage.getItem('isAuthorized');
-    if (!isAuthorized && window.location.pathname !== '/login.html') {
+    if (!isAuthorized && window.location.pathname !== 'login.html') {
         window.location.href = 'login.html';
         return false;
     }

@@ -3,27 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Веб‑платформа подготовки Алиса</title>
+  <title>Веб‑платформа подготовки</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header>
-    Платформа для подготовки специалистов.
+    Платформа для подготовки специалистов
   </header>
 
-<nav>
+  <nav>
+    <!-- Ваша навигация без изменений -->
     <button class="button_simulation" id="simulation-btn" onclick="navigateTo('simulation.html')" disabled>
         Симуляция экзамена
     </button>
-
     <button class="button_trainer" onclick="navigateTo('trainer.html')">Тренажёр</button>
     <button class="button_progress" onclick="navigateTo('progress.html')">Прогресс</button>
     <button class="button_history" onclick="navigateTo('history.html')">История попыток</button>
     <button class="button_base" onclick="navigateTo('base.html')">База вопросов</button>
-    <button class="button_quit" onclick="navigateTo('login.html')">Выйти</button>
-</nav>
+    <button class="button_quit" onclick="logout()">Выйти</button>
+  </nav>
 
   <main>
+    <!-- Ваш контент без изменений -->
     <h3 style="margin-top:40px;">Выберите блок для обучения:</h3>
     
     <div id="selected-block-info" style="display:none; background:#e8f4fd; padding:15px; margin:20px 0; border-radius:8px; border-left:4px solid #2196F3;">
@@ -59,8 +60,80 @@
       </div>
     </div>
   </main>
-  <script src="data-loader.js"></script>
-  <script src="navigation.js"></script>
-  <script src="quit_script.js"></script>
+
+  <script src="api.js"></script>
+  <script>
+    // Функция проверки пользователя из URL (для Яндекс OAuth)
+    function checkUserFromURL() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const userParam = urlParams.get('user');
+      
+      if (userParam) {
+        try {
+          const user = JSON.parse(decodeURIComponent(userParam));
+          console.log('👤 Яндекс пользователь из URL:', user);
+          
+          // Сохраняем пользователя
+          window.examAPI.saveUserToStorage(user);
+          
+          // Убираем параметр из URL
+          window.history.replaceState({}, document.title, window.location.pathname);
+          
+          return true;
+        } catch (error) {
+          console.error('Ошибка парсинга пользователя из URL:', error);
+        }
+      }
+      return false;
+    }
+    
+    // Проверяем авторизацию при загрузке
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('=== ПРОВЕРКА АВТОРИЗАЦИИ ===');
+      
+      // 1. Проверяем пользователя из URL (для Яндекс OAuth)
+      if (checkUserFromURL()) {
+        console.log('✅ Яндекс пользователь загружен из URL');
+      }
+      
+      // 2. Проверяем пользователя из localStorage
+      const user = window.examAPI ? window.examAPI.getUserFromStorage() : null;
+      
+      if (!user) {
+        console.log('❌ Пользователь не найден, перенаправляем на логин');
+        setTimeout(() => {
+          window.location.href = 'login.html';
+        }, 1000);
+        return;
+      }
+      
+      console.log('✅ Пользователь авторизован:', user.name, `(${user.userType})`);
+      
+      // Проверяем выбранный блок
+      const selectedBlock = localStorage.getItem('selectedBlock');
+      if (selectedBlock) {
+        document.getElementById('current-selected-block').textContent = selectedBlock;
+        document.getElementById('selected-block-info').style.display = 'block';
+        document.getElementById('simulation-btn').disabled = false;
+      }
+    });
+    
+    // Остальные ваши функции без изменений
+    function selectBlock(blockName) {
+      localStorage.setItem('selectedBlock', blockName);
+      document.getElementById('current-selected-block').textContent = blockName;
+      document.getElementById('selected-block-info').style.display = 'block';
+      document.getElementById('simulation-btn').disabled = false;
+    }
+    
+    function navigateTo(page) {
+      window.location.href = page;
+    }
+    
+    function logout() {
+      window.examAPI.logout();
+      window.location.href = 'login.html';
+    }
+  </script>
 </body>
 </html>

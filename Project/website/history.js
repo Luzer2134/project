@@ -1,30 +1,122 @@
-// history.js
 function goToMain() {
     window.location.href = 'index.html';
 }
+// В начало файла history.js, перед функцией loadHistory
+async function checkAndMigrateData() {
+    const user = examAPI.getUserFromStorage();
+    
+    if (user && user.userType === 'registered') {
+        // Проверяем есть ли локальные данные в старом формате
+        const oldLocalData = JSON.parse(localStorage.getItem('examAttempts') || '[]');
+        
+        if (oldLocalData.length > 0) {
+            console.log(`🔄 Обнаружено ${oldLocalData.length} неперенесенных попыток`);
+            
+            // Автоматически переносим
+            try {
+                const result = await examAPI.migrateLocalAttemptsToServer();
+                if (result.migratedCount > 0) {
+                    console.log(`✅ Автоматически перенесено ${result.migratedCount} попыток`);
+                    return true; // Нужно перезагрузить
+                }
+            } catch (error) {
+                console.error('Ошибка автоматического переноса:', error);
+            }
+        }
+    }
+    return false;
+}
 
-function loadHistory() {
-    const userName = localStorage.getItem('userName') || 'Гость';
-    const examAttempts = JSON.parse(localStorage.getItem('examAttempts') || '[]');
+// Измени начало функции loadHistory
+async function loadHistory() {
+    console.log('=== ЗАГРУЗКА ИСТОРИИ ===');
     
-    document.getElementById('user-name').textContent = userName;
-    document.getElementById('total-attempts').textContent = examAttempts.length;
+    // Сначала проверяем и переносим данные если нужно
+    const shouldReload = await checkAndMigrateData();
+    if (shouldReload) {
+        console.log('🔄 Данные перенесены, перезагружаю страницу...');
+        location.reload();
+        return;
+    }
     
-    const passedAttempts = examAttempts.filter(attempt => attempt.isPassed).length;
+    // ... остальной код загрузки истории
+    const user = examAPI.getUserFromStorage();
+    console.log('Текущий пользователь:', user);
+    
+    // ... и так далее
+}
+async function loadHistory() {
+    console.log('📜 ЗАГРУЗКА ИСТОРИИ ПОПЫТОК');
+    
+    const user = examAPI.getUserFromStorage();
+    
+    if (!user) {
+        console.log('❌ Пользователь не найден!');
+        alert('Пожалуйста, войдите в систему!');
+        window.location.href = 'login.html';
+        return;
+    }
+    
+    document.getElementById('user-name').textContent = user.name;
+    
+    console.log('👤 Пользователь:', user.name, 'Тип:', user.userType);
+    
+    try {
+        const result = await examAPI.getExamAttempts();
+        
+        if (!result.success) {
+            console.log('❌ Ошибка загрузки:', result.error);
+            showEmptyHistory();
+            return;
+        }
+        
+        const attempts = result.attempts || [];
+        console.log(`📊 Загружено попыток: ${attempts.length}`);
+        
+        if (result.local) {
+            console.log('📌 Данные загружены из localStorage');
+        } else {
+            console.log('🌐 Данные загружены с сервера');
+        }
+        
+        displayHistory(attempts);
+        
+    } catch (error) {
+        console.error('❌ Критическая ошибка при загрузке истории:', error);
+        showEmptyHistory();
+    }
+}
+
+function displayHistory(attempts) {
+    console.log('🔄 Отображение истории...');
+    
+    document.getElementById('total-attempts').textContent = attempts.length;
+    
+    const passedAttempts = attempts.filter(attempt => attempt.isPassed).length;
     document.getElementById('passed-attempts').textContent = passedAttempts;
     
-    const successRate = examAttempts.length > 0 ? 
-        Math.round((passedAttempts / examAttempts.length) * 100) : 0;
+    const successRate = attempts.length > 0 ? 
+        Math.round((passedAttempts / attempts.length) * 100) : 0;
     document.getElementById('success-rate').textContent = `${successRate}%`;
     
-    if (examAttempts.length === 0) {
+    if (attempts.length === 0) {
         document.getElementById('attempts-container').style.display = 'none';
         document.getElementById('no-attempts').style.display = 'block';
+        console.log('📭 Нет попыток для отображения');
     } else {
         document.getElementById('attempts-container').style.display = 'block';
         document.getElementById('no-attempts').style.display = 'none';
-        displayAttempts(examAttempts);
+        displayAttempts(attempts);
+        console.log('✅ Попытки отображены');
     }
+}
+
+function showEmptyHistory() {
+    document.getElementById('total-attempts').textContent = '0';
+    document.getElementById('passed-attempts').textContent = '0';
+    document.getElementById('success-rate').textContent = '0%';
+    document.getElementById('attempts-container').style.display = 'none';
+    document.getElementById('no-attempts').style.display = 'block';
 }
 
 function displayAttempts(attempts) {
@@ -104,7 +196,7 @@ function createAttemptElement(attempt, index) {
             <button class="button" onclick="viewAttemptDetails(${index})" style="background-color: #2196F3; padding: 8px 16px; font-size: 14px;">
                 Показать детали
             </button>
-            <button class="button" onclick="deleteAttempt(${index})" style="background-color: #ff9800; padding: 8px 16px; font-size: 14px;">
+            <button class="button" onclick="deleteAttempt('${attempt.id}')" style="background-color: #ff9800; padding: 8px 16px; font-size: 14px;">
                 Удалить
             </button>
         </div>
@@ -114,42 +206,57 @@ function createAttemptElement(attempt, index) {
 }
 
 function viewAttemptDetails(attemptIndex) {
-    const examAttempts = JSON.parse(localStorage.getItem('examAttempts') || '[]');
-    const attempt = examAttempts[attemptIndex];
+    console.log('🔍 Просмотр деталей попытки #', attemptIndex);
     
-    if (!attempt) {
-        alert('Попытка не найдена!');
-        return;
-    }
-    
-    // Сохраняем выбранную попытку для просмотра деталей
-    localStorage.setItem('viewingAttempt', JSON.stringify({
-        index: attemptIndex,
-        ...attempt
-    }));
-    
-    // Открываем страницу с деталями попытки
-    window.location.href = 'attempt-details.html';
+    examAPI.getExamAttempts().then(result => {
+        if (result.success && result.attempts) {
+            const attempts = result.attempts;
+            if (attemptIndex >= 0 && attemptIndex < attempts.length) {
+                const attempt = attempts[attemptIndex];
+                
+                localStorage.setItem('viewingAttempt', JSON.stringify({
+                    index: attemptIndex,
+                    ...attempt
+                }));
+                
+                window.location.href = 'attempt-details.html';
+            }
+        }
+    });
 }
 
-function deleteAttempt(attemptIndex) {
+async function deleteAttempt(attemptId) {
+    console.log('🗑️ Удаление попытки:', attemptId);
+    
     if (!confirm('Вы уверены, что хотите удалить эту попытку?')) {
         return;
     }
     
-    const examAttempts = JSON.parse(localStorage.getItem('examAttempts') || '[]');
-    examAttempts.splice(attemptIndex, 1);
-    localStorage.setItem('examAttempts', JSON.stringify(examAttempts));
-    
-    alert('Попытка удалена!');
-    loadHistory(); // Перезагружаем историю
+    try {
+        const result = await examAPI.deleteExamAttempt(attemptId);
+        
+        if (result.success) {
+            alert('Попытка удалена!');
+            loadHistory();
+        } else {
+            alert('Ошибка при удалении: ' + (result.error || 'Неизвестная ошибка'));
+        }
+    } catch (error) {
+        console.error('❌ Ошибка удаления:', error);
+        alert('Ошибка при удалении попытки');
+    }
 }
 
-function clearHistory() {
-    const isAuthorized = localStorage.getItem('isAuthorized') === 'true';
+async function clearHistory() {
+    const user = examAPI.getUserFromStorage();
     
-    if (!isAuthorized) {
-        alert('В гостевом режиме история автоматически очищается. Войдите через Яндекс для сохранения истории.');
+    if (!user) {
+        alert('Пользователь не найден!');
+        return;
+    }
+    
+    if (user.userType === 'guest') {
+        alert('В гостевом режиме история автоматически очищается. Войдите через email для сохранения истории.');
         return;
     }
     
@@ -157,10 +264,16 @@ function clearHistory() {
         return;
     }
     
+    // Очищаем локальное хранилище
     localStorage.removeItem('examAttempts');
-    alert('История очищена!');
+    
+    // TODO: Добавить очистку на сервере
+    alert('История очищена локально!');
     loadHistory();
 }
 
 // Загружаем историю при загрузке страницы
-document.addEventListener('DOMContentLoaded', loadHistory);
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('📜 Страница истории загружена');
+    loadHistory();
+});
