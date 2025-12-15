@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход / Регистрация</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f7f9;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        
+        header {
+            background-color: #dd2222;
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 30px;
+        }
+        
+        main {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .form-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        
+        .form-tabs {
+            display: flex;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 16px;
+            color: #666;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            color: #dd2222;
+            border-bottom: 3px solid #dd2222;
+            font-weight: bold;
+        }
+        
+        .tab:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .form-content {
+            display: none;
+        }
+        
+        .form-content.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #dd2222;
+            box-shadow: 0 0 0 2px rgba(221, 34, 34, 0.2);
+        }
+        
+        .error-message {
+            color: #f44336;
+            margin-top: 10px;
+            font-size: 14px;
+            text-align: center;
+            min-height: 20px;
+        }
+        
+        .button {
+            background-color: #dd2222;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 14px 28px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .button:hover {
+            background-color: #c11d1d;
+        }
+        
+        .button:active {
+            transform: translateY(1px);
+        }
+        
+        .guest-section {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        .guest-section p {
+            color: #666;
+            margin-bottom: 15px;
+        }
+        
+        .button-guest {
+            background-color: #6c757d;
+        }
+        
+        .button-guest:hover {
+            background-color: #5a6268;
+        }
+        
+        .form-title {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #333;
+            font-size: 22px;
+        }
+        
+        .success-message {
+            color: #4CAF50;
+            margin-top: 10px;
+            font-size: 14px;
+            text-align: center;
+            min-height: 20px;
+        }
+        
+        .loading {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        
+        @media (max-width: 600px) {
+            .form-container {
+                padding: 20px;
+            }
+            
+            .tab {
+                padding: 12px;
+                font-size: 14px;
+            }
+            
+            input {
+                padding: 10px;
+                font-size: 14px;
+            }
+            
+            .button {
+                padding: 12px 24px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        Платформа для подготовки специалистов
+    </header>
+    
+    <main>
+        <div class="form-container">
+            <div class="form-tabs">
+                <button class="tab active" onclick="showForm('login')">Вход</button>
+                <button class="tab" onclick="showForm('register')">Регистрация</button>
+            </div>
+            
+            <!-- Форма входа -->
+            <div id="login-form" class="form-content active">
+                <h3 class="form-title">Вход в систему</h3>
+                
+                <div class="form-group">
+                    <label for="login-email">Email:</label>
+                    <input type="email" id="login-email" placeholder="Введите ваш email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="login-password">Пароль:</label>
+                    <input type="password" id="login-password" placeholder="Введите пароль" required>
+                </div>
+                
+                <div id="login-error" class="error-message"></div>
+                <div id="login-success" class="success-message"></div>
+                
+                <button class="button" onclick="performLogin()" id="login-button">
+                    Войти
+                </button>
+            </div>
+            
+            <!-- Форма регистрации -->
+            <div id="register-form" class="form-content">
+                <h3 class="form-title">Регистрация</h3>
+                
+                <div class="form-group">
+                    <label for="register-name">Имя:</label>
+                    <input type="text" id="register-name" placeholder="Введите ваше имя" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="register-email">Email:</label>
+                    <input type="email" id="register-email" placeholder="Введите ваш email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="register-password">Пароль:</label>
+                    <input type="password" id="register-password" placeholder="Введите пароль (мин. 6 символов)" required minlength="6">
+                </div>
+                
+                <div class="form-group">
+                    <label for="register-password-confirm">Подтвердите пароль:</label>
+                    <input type="password" id="register-password-confirm" placeholder="Повторите пароль" required minlength="6">
+                </div>
+                
+                <div id="register-error" class="error-message"></div>
+                <div id="register-success" class="success-message"></div>
+                
+                <button class="button" onclick="performRegister()" id="register-button">
+                    Зарегистрироваться
+                </button>
+            </div>
+            
+            <!-- Гостевой вход -->
+            <div class="guest-section">
+                <p>Или продолжите как гость:</p>
+                <button class="button button-guest" onclick="loginGuest()" id="guest-button">
+                    Войти как гость
+                </button>
+                <p style="margin-top: 15px; font-size: 14px; color: #888;">
+                    В гостевом режиме данные сохраняются только локально
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <script src="api.js"></script>
+    <script src="login_script.js"></script>
+    
+    <script>
+        // Функция переключения между формами
+        function showForm(formType) {
+            // Скрываем все формы
+            document.querySelectorAll('.form-content').forEach(form => {
+                form.classList.remove('active');
+            });
+            
+            // Убираем активный класс со всех вкладок
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Показываем нужную форму
+            document.getElementById(formType + '-form').classList.add('active');
+            
+            // Активируем нужную вкладку
+            document.querySelectorAll('.tab').forEach(tab => {
+                if (tab.textContent === (formType === 'login' ? 'Вход' : 'Регистрация')) {
+                    tab.classList.add('active');
+                }
+            });
+            
+            // Очищаем сообщения об ошибках
+            clearErrorMessages();
+        }
+        
+        function clearErrorMessages() {
+            document.querySelectorAll('.error-message').forEach(el => {
+                el.textContent = '';
+            });
+            document.querySelectorAll('.success-message').forEach(el => {
+                el.textContent = '';
+            });
+        }
+        
+        // Добавляем обработчики нажатия Enter
+        document.addEventListener('DOMContentLoaded', function() {
+            // Для формы входа
+            document.getElementById('login-email').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') performLogin();
+            });
+            document.getElementById('login-password').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') performLogin();
+            });
+            
+            // Для формы регистрации
+            document.getElementById('register-name').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') performRegister();
+            });
+            document.getElementById('register-email').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') performRegister();
+            });
+            document.getElementById('register-password').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') performRegister();
+            });
+            document.getElementById('register-password-confirm').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') performRegister();
+            });
+            
+            console.log('Форма входа загружена');
+        });
+    </script>
+</body>
+</html>

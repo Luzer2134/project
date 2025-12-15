@@ -1,0 +1,486 @@
+// API для работы с бэкендом
+class ExamAPI {
+    constructor() {
+        this.baseURL = 'http://localhost:3000/api';
+        this.currentUser = null;
+        this.init();
+    }
+
+    // Инициализация
+    init() {
+        console.log('🚀 ExamAPI инициализирован');
+        this.loadUserFromStorage();
+    }
+
+    // Общий метод для запросов
+    async request(endpoint, options = {}) {
+        const url = `${this.baseURL}${endpoint}`;
+        
+        const config = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            },
+            ...options
+        };
+
+        if (options.body) {
+            config.body = JSON.stringify(options.body);
+        }
+
+        try {
+            console.log(`📡 API запрос: ${url}`, options.body || '');
+            const response = await fetch(url, config);
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.error || `Ошибка ${response.status}`);
+            }
+            
+            console.log(`✅ API ответ:`, data);
+            return data;
+        } catch (error) {
+            console.error('❌ API Error:', error.message);
+            throw error;
+        }
+    }
+
+    // === АВТОРИЗАЦИЯ ===
+    
+    async register(email, password, name) {
+        try {
+            const result = await this.request('/register', {
+                method: 'POST',
+                body: { email, password, name }
+            });
+            
+            if (result.success) {
+                this.saveUserToStorage(result.user);
+            }
+            
+            return result;
+        } catch (error) {
+            console.error('❌ Ошибка регистрации:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    async login(email, password) {
+        try {
+            const result = await this.request('/login', {
+                method: 'POST',
+                body: { email, password }
+            });
+            
+            if (result.success) {
+                this.saveUserToStorage(result.user);
+            }
+            
+            return result;
+        } catch (error) {
+            console.error('❌ Ошибка входа:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    async guestLogin() {
+        try {
+            const result = await this.request('/guest', {
+                method: 'POST'
+            });
+            
+            if (result.success) {
+                this.saveUserToStorage(result.user);
+            }
+            
+            return result;
+        } catch (error) {
+            console.error('❌ Ошибка гостевого входа:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    // === ПРОГРЕСС ТРЕНАЖЕРА ===
+    
+    async saveTrainerProgress(block, userAnswers, currentQuestionIndex) {
+        const user = this.getUserFromStorage();
+        
+        if (!user) {
+            console.log('👤 Пользователь не найден');
+            return { success: false, error: 'Пользователь не найден' };
+        }
+        
+        if (user.userType === 'guest') {
+            console.log('👤 Гость - прогресс не сохраняется на сервер');
+            return { success: true, local: true };
+        }
+        
+        try {
+            return await this.request('/trainer-progress', {
+                method: 'POST',
+                body: {
+                    userId: user.id,
+                    block,
+                    userAnswers,
+                    currentQuestionIndex
+                }
+            });
+        } catch (error) {
+            console.error('❌ Ошибка сохранения прогресса тренажера:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    async getTrainerProgress(block = null) {
+        const user = this.getUserFromStorage();
+        
+        if (!user) {
+            console.log('👤 Пользователь не найден');
+            return { 
+                success: false, 
+                error: 'Пользователь не найден' 
+            };
+        }
+        
+        if (user.userType === 'guest') {
+            console.log('👤 Гость - прогресс не загружается с сервера');
+            return { 
+                success: true, 
+                progress: block ? {
+                    userAnswers: [],
+                    currentQuestionIndex: 0
+                } : {},
+                local: true
+            };
+        }
+        
+        try {
+            const endpoint = block 
+                ? `/trainer-progress/${user.id}/${block}`
+                : `/trainer-progress/${user.id}`;
+            
+            return await this.request(endpoint);
+        } catch (error) {
+            console.error('❌ Ошибка получения прогресса тренажера:', error);
+            return { 
+                success: false, 
+                error: error.message 
+            };
+        }
+    }
+
+    // === ПОПЫТКИ ЭКЗАМЕНА ===
+    
+    async saveExamAttempt(attempt) {
+        const user = this.getUserFromStorage();
+        
+        if (!user) {
+            console.log('❌ Пользователь не найден');
+            return { success: false, error: 'Пользователь не найден' };
+        }
+        
+        console.log('💾 Сохраняем попытку для пользователя:', user.id, 'Тип:', user.userType);
+        
+        if (user.userType === 'guest') {
+            console.log('👤 Гость - сохраняем только локально');
+            this.saveExamAttemptLocal(attempt, user);
+            return { success: true, local: true };
+        }
+        
+        try {
+            const result = await this.request('/exam-attempts', {
+                method: 'POST',
+                body: {
+                    userId: user.id,
+                    attempt: attempt
+                }
+            });
+            
+            console.log('✅ Попытка сохранена на сервере:', result);
+            return result;
+            
+        } catch (error) {
+            console.error('❌ Ошибка сохранения попытки на сервере:', error);
+            this.saveExamAttemptLocal(attempt, user);
+            return { 
+                success: true, 
+                local: true,
+                error: 'Сохранено локально (ошибка сервера)' 
+            };
+        }
+    }
+
+    async getExamAttempts() {
+        const user = this.getUserFromStorage();
+        
+        if (!user) {
+            console.log('❌ Пользователь не найден');
+            return { success: false, error: 'Пользователь не найден' };
+        }
+        
+        console.log('📥 Загружаем попытки для:', user.id, 'Тип:', user.userType);
+        
+        if (user.userType === 'guest') {
+            console.log('👤 Гость - загружаем локальные данные');
+            return {
+                success: true,
+                attempts: this.getExamAttemptsLocal(user),
+                local: true
+            };
+        }
+        
+        try {
+            const result = await this.request(`/exam-attempts/${user.id}`);
+            console.log('✅ Данные с сервера:', result.attempts?.length || 0, 'попыток');
+            return result;
+        } catch (error) {
+            console.error('❌ Ошибка загрузки попыток с сервера:', error);
+            return {
+                success: true,
+                attempts: this.getExamAttemptsLocal(user),
+                local: true,
+                error: 'Загружено локально (ошибка сервера)'
+            };
+        }
+    }
+
+    async deleteExamAttempt(attemptId) {
+        const user = this.getUserFromStorage();
+        
+        if (!user) {
+            return { success: false, error: 'Пользователь не найден' };
+        }
+        
+        if (user.userType === 'guest') {
+            this.deleteExamAttemptLocal(attemptId, user);
+            return { success: true, local: true };
+        }
+        
+        try {
+            return await this.request(`/exam-attempts/${user.id}/${attemptId}`, {
+                method: 'DELETE'
+            });
+        } catch (error) {
+            console.error('❌ Ошибка удаления попытки:', error);
+            this.deleteExamAttemptLocal(attemptId, user);
+            return { success: true, local: true };
+        }
+    }
+
+    // === ЛОКАЛЬНОЕ ХРАНЕНИЕ ===
+
+    // Прогресс тренажера локально
+    saveTrainerProgressLocal(block, userAnswers, currentQuestionIndex) {
+        const user = this.getUserFromStorage();
+        if (!user) return;
+        
+        const storageKey = `trainerProgress_${user.id}`;
+        let allProgress = JSON.parse(localStorage.getItem(storageKey) || '{}');
+        
+        allProgress[block] = {
+            userAnswers,
+            currentQuestionIndex,
+            userId: user.id,
+            timestamp: new Date().toISOString()
+        };
+        
+        localStorage.setItem(storageKey, JSON.stringify(allProgress));
+        console.log('💾 Локальный прогресс тренажера сохранен:', block);
+    }
+
+    getTrainerProgressLocal(block = null) {
+        const user = this.getUserFromStorage();
+        if (!user) return block ? { userAnswers: [], currentQuestionIndex: 0 } : {};
+        
+        const storageKey = `trainerProgress_${user.id}`;
+        const allProgress = JSON.parse(localStorage.getItem(storageKey) || '{}');
+        
+        if (block) {
+            return allProgress[block] || { userAnswers: [], currentQuestionIndex: 0 };
+        }
+        
+        return allProgress;
+    }
+
+    // Попытки экзамена локально
+    saveExamAttemptLocal(attempt, user) {
+        const storageKey = `examAttempts_${user.id}`;
+        const attempts = this.getExamAttemptsLocal(user);
+        
+        const attemptWithId = {
+            ...attempt,
+            id: 'local_' + Date.now(),
+            date: new Date().toISOString(),
+            userId: user.id
+        };
+        
+        attempts.push(attemptWithId);
+        localStorage.setItem(storageKey, JSON.stringify(attempts));
+        
+        console.log('💾 Попытка сохранена локально:', attemptWithId.id, 'Ключ:', storageKey);
+    }
+
+    getExamAttemptsLocal(user) {
+        const storageKey = `examAttempts_${user.id}`;
+        const attemptsJson = localStorage.getItem(storageKey);
+        return attemptsJson ? JSON.parse(attemptsJson) : [];
+    }
+
+    deleteExamAttemptLocal(attemptId, user) {
+        const storageKey = `examAttempts_${user.id}`;
+        let attempts = this.getExamAttemptsLocal(user);
+        attempts = attempts.filter(a => a.id !== attemptId);
+        localStorage.setItem(storageKey, JSON.stringify(attempts));
+        
+        console.log('🗑️ Локальная попытка удалена:', attemptId, 'Ключ:', storageKey);
+    }
+
+    // === УПРАВЛЕНИЕ ПОЛЬЗОВАТЕЛЕМ ===
+    
+    saveUserToStorage(user) {
+        console.log('💾 СОХРАНЕНИЕ ПОЛЬЗОВАТЕЛЯ В LOCALSTORAGE');
+        console.log('Данные пользователя:', user);
+        
+        // Сохраняем ВСЕ данные
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        localStorage.setItem('isAuthorized', user.isAuthorized || false);
+        localStorage.setItem('userType', user.userType || 'guest');
+        localStorage.setItem('userName', user.name || 'Гость');
+        localStorage.setItem('userId', user.id);
+        
+        // Устанавливаем текущего пользователя
+        this.currentUser = user;
+        
+        console.log('✅ Пользователь сохранен');
+    }
+    
+    loadUserFromStorage() {
+        const userJson = localStorage.getItem('currentUser');
+        if (userJson) {
+            try {
+                this.currentUser = JSON.parse(userJson);
+                console.log('👤 Пользователь загружен из localStorage:', this.currentUser.name);
+            } catch (e) {
+                console.error('❌ Ошибка парсинга пользователя:', e);
+                this.currentUser = null;
+            }
+        }
+        return this.currentUser;
+    }
+
+    getUserFromStorage() {
+        if (!this.currentUser) {
+            return this.loadUserFromStorage();
+        }
+        return this.currentUser;
+    }
+
+    logout() {
+        console.log('👋 Выход из системы');
+        const user = this.getUserFromStorage();
+        
+        // Если был пользователь, очищаем его локальные данные
+        if (user) {
+            const attemptsKey = `examAttempts_${user.id}`;
+            const progressKey = `trainerProgress_${user.id}`;
+            localStorage.removeItem(attemptsKey);
+            localStorage.removeItem(progressKey);
+        }
+        
+        // Очищаем данные авторизации
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('isAuthorized');
+        localStorage.removeItem('userType');
+        localStorage.removeItem('userName');
+        localStorage.removeItem('userId');
+        
+        this.currentUser = null;
+        
+        // Перенаправляем на страницу логина
+        window.location.href = 'login.html';
+    }
+
+    isLoggedIn() {
+        return !!this.getUserFromStorage();
+    }
+
+    isGuest() {
+        const user = this.getUserFromStorage();
+        return user && user.userType === 'guest';
+    }
+    
+    // Перенос данных гостя на сервер при регистрации
+    async migrateGuestData() {
+        const user = this.getUserFromStorage();
+        
+        if (!user || user.userType === 'guest') {
+            console.log('👤 Гость - перенос не требуется');
+            return { success: false, error: 'Для гостей перенос не требуется' };
+        }
+        
+        console.log('🚚 Перенос данных гостя на сервер для пользователя:', user.id);
+        
+        // Перенос попыток экзамена
+        const guestAttemptsKey = 'examAttempts_guest';
+        const guestAttempts = JSON.parse(localStorage.getItem(guestAttemptsKey) || '[]');
+        
+        let migratedCount = 0;
+        
+        for (const attempt of guestAttempts) {
+            try {
+                await this.saveExamAttempt(attempt);
+                migratedCount++;
+            } catch (error) {
+                console.error('❌ Ошибка переноса попытки:', error);
+            }
+        }
+        
+        // Перенос прогресса тренажера
+        const guestProgressKey = 'trainerProgress_guest';
+        const guestProgress = JSON.parse(localStorage.getItem(guestProgressKey) || '{}');
+        
+        for (const [block, progress] of Object.entries(guestProgress)) {
+            try {
+                await this.saveTrainerProgress(
+                    block, 
+                    progress.userAnswers, 
+                    progress.currentQuestionIndex
+                );
+            } catch (error) {
+                console.error(`❌ Ошибка переноса прогресса для блока ${block}:`, error);
+            }
+        }
+        
+        // Очищаем гостевые данные
+        localStorage.removeItem(guestAttemptsKey);
+        localStorage.removeItem(guestProgressKey);
+        
+        console.log(`🎉 Перенос завершен: ${migratedCount} попыток экзамена`);
+        
+        return {
+            success: true,
+            migratedAttempts: migratedCount,
+            migratedBlocks: Object.keys(guestProgress).length
+        };
+    }
+
+    // Вспомогательный метод для отладки
+    debugStorage() {
+        console.log('🔍 ДЕБАГ LOCALSTORAGE:');
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            console.log(`${key}: ${localStorage.getItem(key)}`);
+        }
+    }
+}
+
+// Создаем глобальный экземпляр
+window.examAPI = new ExamAPI();
+
+// Тестовый вызов при загрузке
+window.addEventListener('DOMContentLoaded', () => {
+    const user = window.examAPI.getUserFromStorage();
+    console.log('🚀 API загружен. Текущий пользователь:', 
+        user ? `${user.name} (${user.userType}, id: ${user.id})` : 'не авторизован');
+});
