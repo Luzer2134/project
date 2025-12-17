@@ -61,5 +61,15 @@
     "userType": "registered",
     "isAuthorized": true,
     "createdAt": "2025-12-15T05:19:32.271Z"
+  },
+  {
+    "id": "1765908399721",
+    "email": "",
+    "name": "Александр Мокосеев",
+    "yandexId": "1760941770",
+    "userType": "yandex",
+    "isAuthorized": false,
+    "createdAt": "2025-12-16T18:06:39.721Z",
+    "avatar": "https://avatars.yandex.net/get-yapic/undefined/islands-200"
   }
 ]

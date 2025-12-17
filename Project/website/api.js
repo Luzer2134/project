@@ -1,4 +1,4 @@
-// API для работы с бэкендом
+// API для работы с бэкендом - ТОЛЬКО Яндекс OAuth и гостевой вход
 class ExamAPI {
     constructor() {
         this.baseURL = 'http://localhost:3000/api';
@@ -8,7 +8,7 @@ class ExamAPI {
 
     // Инициализация
     init() {
-        console.log('🚀 ExamAPI инициализирован');
+        console.log('🚀 ExamAPI инициализирован (только Яндекс OAuth + гостевой вход)');
         this.loadUserFromStorage();
     }
 
@@ -48,42 +48,7 @@ class ExamAPI {
 
     // === АВТОРИЗАЦИЯ ===
     
-    async register(email, password, name) {
-        try {
-            const result = await this.request('/register', {
-                method: 'POST',
-                body: { email, password, name }
-            });
-            
-            if (result.success) {
-                this.saveUserToStorage(result.user);
-            }
-            
-            return result;
-        } catch (error) {
-            console.error('❌ Ошибка регистрации:', error);
-            return { success: false, error: error.message };
-        }
-    }
-
-    async login(email, password) {
-        try {
-            const result = await this.request('/login', {
-                method: 'POST',
-                body: { email, password }
-            });
-            
-            if (result.success) {
-                this.saveUserToStorage(result.user);
-            }
-            
-            return result;
-        } catch (error) {
-            console.error('❌ Ошибка входа:', error);
-            return { success: false, error: error.message };
-        }
-    }
-
+    // Гостевой вход
     async guestLogin() {
         try {
             const result = await this.request('/guest', {
@@ -97,6 +62,29 @@ class ExamAPI {
             return result;
         } catch (error) {
             console.error('❌ Ошибка гостевого входа:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    // Проверка пользователя на сервере (для Яндекс пользователей)
+    async checkUserSession(userId) {
+        try {
+            const result = await this.request(`/user/${userId}`);
+            return result;
+        } catch (error) {
+            console.error('❌ Ошибка проверки сессии:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    // Выход из Яндекс
+    async yandexLogout(userId) {
+        try {
+            const result = await fetch(`/auth/yandex/logout?userId=${userId}`);
+            const data = await result.json();
+            return data;
+        } catch (error) {
+            console.error('❌ Ошибка выхода из Яндекс:', error);
             return { success: false, error: error.message };
         }
     }
@@ -376,9 +364,19 @@ class ExamAPI {
         return this.currentUser;
     }
 
-    logout() {
+    async logout() {
         console.log('👋 Выход из системы');
         const user = this.getUserFromStorage();
+        
+        if (user && user.userType === 'yandex') {
+            // Для Яндекс пользователей - отзываем токен
+            try {
+                await this.yandexLogout(user.id);
+                console.log('✅ Яндекс токен отозван');
+            } catch (error) {
+                console.warn('⚠️ Не удалось отозвать Яндекс токен:', error);
+            }
+        }
         
         // Если был пользователь, очищаем его локальные данные
         if (user) {
@@ -410,23 +408,34 @@ class ExamAPI {
         return user && user.userType === 'guest';
     }
     
-    // Перенос данных гостя на сервер при регистрации
-    async migrateGuestData() {
+    isYandexUser() {
+        const user = this.getUserFromStorage();
+        return user && user.userType === 'yandex';
+    }
+    
+    // Перенос данных гостя на сервер при входе через Яндекс
+    async migrateGuestData(targetUserId) {
         const user = this.getUserFromStorage();
         
-        if (!user || user.userType === 'guest') {
-            console.log('👤 Гость - перенос не требуется');
-            return { success: false, error: 'Для гостей перенос не требуется' };
+        if (!user || user.userType !== 'yandex') {
+            console.log('👤 Для переноса нужен Яндекс пользователь');
+            return { success: false, error: 'Для переноса нужен Яндекс пользователь' };
         }
         
         console.log('🚚 Перенос данных гостя на сервер для пользователя:', user.id);
         
-        // Перенос попыток экзамена
+        // Находим гостевые данные (старый формат)
         const guestAttemptsKey = 'examAttempts_guest';
         const guestAttempts = JSON.parse(localStorage.getItem(guestAttemptsKey) || '[]');
         
-        let migratedCount = 0;
+        // Находим гостевой прогресс
+        const guestProgressKey = 'trainerProgress_guest';
+        const guestProgress = JSON.parse(localStorage.getItem(guestProgressKey) || '{}');
         
+        let migratedCount = 0;
+        let migratedBlocks = 0;
+        
+        // Перенос попыток экзамена
         for (const attempt of guestAttempts) {
             try {
                 await this.saveExamAttempt(attempt);
@@ -437,9 +446,6 @@ class ExamAPI {
         }
         
         // Перенос прогресса тренажера
-        const guestProgressKey = 'trainerProgress_guest';
-        const guestProgress = JSON.parse(localStorage.getItem(guestProgressKey) || '{}');
-        
         for (const [block, progress] of Object.entries(guestProgress)) {
             try {
                 await this.saveTrainerProgress(
@@ -447,6 +453,7 @@ class ExamAPI {
                     progress.userAnswers, 
                     progress.currentQuestionIndex
                 );
+                migratedBlocks++;
             } catch (error) {
                 console.error(`❌ Ошибка переноса прогресса для блока ${block}:`, error);
             }
@@ -456,12 +463,12 @@ class ExamAPI {
         localStorage.removeItem(guestAttemptsKey);
         localStorage.removeItem(guestProgressKey);
         
-        console.log(`🎉 Перенос завершен: ${migratedCount} попыток экзамена`);
+        console.log(`🎉 Перенос завершен: ${migratedCount} попыток экзамена, ${migratedBlocks} блоков прогресса`);
         
         return {
             success: true,
             migratedAttempts: migratedCount,
-            migratedBlocks: Object.keys(guestProgress).length
+            migratedBlocks: migratedBlocks
         };
     }
 

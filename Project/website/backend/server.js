@@ -2,9 +2,10 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+require('dotenv').config();
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
@@ -29,13 +30,11 @@ if (!fs.existsSync(DATA_DIR)) {
 
 // Файлы для хранения
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
-const PROGRESS_FILE = path.join(DATA_DIR, 'progress.json');
 
 // Инициализация файлов
 const initFiles = () => {
     const files = [
-        { path: USERS_FILE, default: [] },
-        { path: PROGRESS_FILE, default: [] }
+        { path: USERS_FILE, default: [] }
     ];
     
     files.forEach(file => {
@@ -47,6 +46,218 @@ const initFiles = () => {
 };
 initFiles();
 
+// === Яндекс OAuth МАРШРУТЫ ===
+
+// Старт авторизации через Яндекс
+app.get('/auth/yandex', (req, res) => {
+    const YANDEX_CLIENT_ID = process.env.YANDEX_CLIENT_ID;
+    const REDIRECT_URI = encodeURIComponent(process.env.YANDEX_REDIRECT_URI);
+    
+    if (!YANDEX_CLIENT_ID) {
+        console.error('❌ YANDEX_CLIENT_ID не настроен в .env файле');
+        return res.redirect('/login.html?error=oauth_not_configured');
+    }
+    
+    const authUrl = `https://oauth.yandex.ru/authorize?` +
+        `response_type=code&` +
+        `client_id=${YANDEX_CLIENT_ID}&` +
+        `redirect_uri=${REDIRECT_URI}&` +
+        `force_confirm=true`;
+    
+    console.log('🔗 Перенаправление на Яндекс OAuth:', authUrl);
+    res.redirect(authUrl);
+});
+
+// Callback от Яндекс OAuth
+// Callback от Яндекс OAuth - ВАЖНО: Яндекс отправляет на /callback
+// Callback от Яндекс OAuth - Яндекс отправляет на /callback
+app.get('/callback', async (req, res) => {
+    console.log('🔄 Яндекс OAuth callback получен НА /callback');
+    console.log('Query параметры:', req.query);
+    
+    try {
+        const { code, error, error_description } = req.query;
+        
+        if (error) {
+            console.error('❌ Ошибка от Яндекс OAuth:', error, error_description);
+            return res.redirect(`/login.html?error=${encodeURIComponent(error_description || error)}`);
+        }
+        
+        if (!code) {
+            console.error('❌ Код авторизации не получен');
+            return res.redirect('/login.html?error=no_auth_code');
+        }
+        
+        const YANDEX_CLIENT_ID = process.env.YANDEX_CLIENT_ID;
+        const YANDEX_CLIENT_SECRET = process.env.YANDEX_CLIENT_SECRET;
+        
+        if (!YANDEX_CLIENT_ID || !YANDEX_CLIENT_SECRET) {
+            console.error('❌ Яндекс OAuth не настроен в .env файле');
+            return res.redirect('/login.html?error=oauth_not_configured');
+        }
+        
+        console.log('🔐 Получение токена от Яндекс...');
+        
+        // Получаем access token
+        const tokenResponse = await fetch('https://oauth.yandex.ru/token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({
+                grant_type: 'authorization_code',
+                code: code,
+                client_id: YANDEX_CLIENT_ID,
+                client_secret: YANDEX_CLIENT_SECRET,
+                redirect_uri: process.env.YANDEX_REDIRECT_URI // ВАЖНО!
+            })
+        });
+        
+        const tokenData = await tokenResponse.json();
+        console.log('Ответ от Яндекс token:', tokenData);
+        
+        if (!tokenData.access_token) {
+            console.error('❌ Не удалось получить токен:', tokenData);
+            throw new Error(tokenData.error_description || 'Не удалось получить токен от Яндекс');
+        }
+        
+        console.log('✅ Токен получен, получение данных пользователя...');
+        
+        // Получаем данные пользователя
+        const userResponse = await fetch('https://login.yandex.ru/info?format=json', {
+            headers: {
+                'Authorization': `OAuth ${tokenData.access_token}`
+            }
+        });
+        
+        if (!userResponse.ok) {
+            throw new Error('Не удалось получить данные пользователя: ' + userResponse.status);
+        }
+        
+        const userData = await userResponse.json();
+        console.log('👤 Данные пользователя Яндекс:', {
+            id: userData.id,
+            email: userData.default_email,
+            name: userData.real_name || userData.display_name,
+            login: userData.login
+        });
+        
+        // Загружаем или создаем пользователя в нашей системе
+        let users = [];
+        if (fs.existsSync(USERS_FILE)) {
+            users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+        }
+        
+        // Ищем пользователя по Яндекс ID или email
+        let user = users.find(u => u.yandexId === userData.id) || 
+                   users.find(u => u.email === userData.default_email);
+        
+        if (!user) {
+            // Создаем нового пользователя
+            user = {
+                id: Date.now().toString(),
+                email: userData.default_email,
+                name: userData.real_name || userData.display_name || userData.login || 'Пользователь Яндекс',
+                yandexId: userData.id,
+                userType: 'yandex',
+                isAuthorized: true,
+                createdAt: new Date().toISOString(),
+                avatar: userData.is_avatar_empty ? null : `https://avatars.yandex.net/get-yapic/${userData.default_avatar_id}/islands-200`,
+                accessToken: tokenData.access_token,
+                refreshToken: tokenData.refresh_token
+            };
+            
+            users.push(user);
+            fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+            console.log(`✅ Создан новый пользователь: ${user.email}`);
+        } else {
+            // Обновляем существующего пользователя
+            user.name = userData.real_name || userData.display_name || userData.login || user.name;
+            user.isAuthorized = true;
+            user.avatar = userData.is_avatar_empty ? null : `https://avatars.yandex.net/get-yapic/${userData.default_avatar_id}/islands-200`;
+            user.accessToken = tokenData.access_token;
+            user.refreshToken = tokenData.refresh_token;
+            user.lastLogin = new Date().toISOString();
+            
+            fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+            console.log(`✅ Обновлен существующий пользователь: ${user.email}`);
+        }
+        
+        // Подготовка данных для фронтенда
+        const userForFrontend = {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            userType: user.userType,
+            isAuthorized: user.isAuthorized,
+            avatar: user.avatar,
+            yandexId: user.yandexId
+        };
+        
+        // Генерируем URL для редиректа с данными пользователя
+        const userParam = encodeURIComponent(JSON.stringify(userForFrontend));
+        console.log('🔄 Перенаправление на главную страницу с данными пользователя');
+        res.redirect(`/index.html?user=${userParam}`);
+        
+    } catch (error) {
+        console.error('❌ Критическая ошибка Яндекс OAuth:', error);
+        console.error(error.stack);
+        res.redirect(`/login.html?error=${encodeURIComponent('Ошибка авторизации через Яндекс: ' + error.message)}`);
+    }
+});
+
+// Выход из Яндекс (отзыв токена)
+app.get('/auth/yandex/logout', async (req, res) => {
+    try {
+        const userId = req.query.userId;
+        
+        if (!userId) {
+            return res.json({ success: false, error: 'Не указан userId' });
+        }
+        
+        // Загружаем пользователей
+        let users = [];
+        if (fs.existsSync(USERS_FILE)) {
+            users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+        }
+        
+        const user = users.find(u => u.id === userId);
+        
+        if (user && user.accessToken) {
+            // Пытаемся отозвать токен у Яндекс
+            try {
+                await fetch('https://oauth.yandex.ru/revoke_token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: new URLSearchParams({
+                        access_token: user.accessToken,
+                        client_id: process.env.YANDEX_CLIENT_ID,
+                        client_secret: process.env.YANDEX_CLIENT_SECRET
+                    })
+                });
+                console.log(`✅ Токен Яндекс отозван для пользователя: ${user.email}`);
+            } catch (revokeError) {
+                console.warn('⚠️ Не удалось отозвать токен Яндекс:', revokeError);
+            }
+            
+            // Удаляем токены у пользователя
+            delete user.accessToken;
+            delete user.refreshToken;
+            user.isAuthorized = false;
+            
+            fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+        }
+        
+        res.json({ success: true });
+        
+    } catch (error) {
+        console.error('❌ Ошибка выхода из Яндекс:', error);
+        res.json({ success: false, error: error.message });
+    }
+});
+
 // === API МАРШРУТЫ ===
 
 // Тестовый маршрут
@@ -54,131 +265,9 @@ app.get('/api/test', (req, res) => {
     res.json({ 
         success: true,
         message: 'API работает!', 
-        time: new Date().toISOString() 
+        time: new Date().toISOString(),
+        yandexConfigured: !!process.env.YANDEX_CLIENT_ID
     });
-});
-
-// Регистрация
-app.post('/api/register', (req, res) => {
-    try {
-        const { email, password, name } = req.body;
-        
-        if (!email || !password) {
-            return res.status(400).json({ 
-                success: false,
-                error: 'Email и пароль обязательны' 
-            });
-        }
-        
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            return res.status(400).json({ 
-                success: false,
-                error: 'Некорректный email' 
-            });
-        }
-        
-        if (password.length < 6) {
-            return res.status(400).json({ 
-                success: false,
-                error: 'Пароль должен быть не менее 6 символов' 
-            });
-        }
-        
-        let users = [];
-        if (fs.existsSync(USERS_FILE)) {
-            users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
-        }
-        
-        // Проверяем, есть ли уже пользователь
-        if (users.find(u => u.email === email)) {
-            return res.status(400).json({ 
-                success: false,
-                error: 'Пользователь с таким email уже существует' 
-            });
-        }
-        
-        // Создаем нового пользователя
-        const newUser = {
-            id: Date.now().toString(),
-            email,
-            password, // ВНИМАНИЕ: в продакшене нужно хэшировать!
-            name: name || email.split('@')[0],
-            userType: 'registered',
-            isAuthorized: true,
-            createdAt: new Date().toISOString()
-        };
-        
-        users.push(newUser);
-        fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
-        
-        console.log(`✅ Зарегистрирован новый пользователь: ${email}`);
-        
-        res.json({
-            success: true,
-            user: {
-                id: newUser.id,
-                email: newUser.email,
-                name: newUser.name,
-                userType: newUser.userType,
-                isAuthorized: newUser.isAuthorized
-            }
-        });
-        
-    } catch (error) {
-        console.error('❌ Ошибка регистрации:', error);
-        res.status(500).json({ 
-            success: false,
-            error: 'Ошибка при регистрации' 
-        });
-    }
-});
-
-// Вход
-app.post('/api/login', (req, res) => {
-    try {
-        const { email, password } = req.body;
-        
-        if (!email || !password) {
-            return res.status(400).json({ 
-                success: false,
-                error: 'Email и пароль обязательны' 
-            });
-        }
-        
-        let users = [];
-        if (fs.existsSync(USERS_FILE)) {
-            users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
-        }
-        
-        const user = users.find(u => u.email === email && u.password === password);
-        
-        if (!user) {
-            return res.status(401).json({ 
-                success: false,
-                error: 'Неверный email или пароль' 
-            });
-        }
-        
-        console.log(`✅ Успешный вход: ${email}`);
-        
-        res.json({
-            success: true,
-            user: {
-                id: user.id,
-                email: user.email,
-                name: user.name,
-                userType: user.userType,
-                isAuthorized: user.isAuthorized
-            }
-        });
-        
-    } catch (error) {
-        console.error('❌ Ошибка входа:', error);
-        res.status(500).json({ 
-            success: false,
-            error: 'Ошибка при входе' 
-        });
-    }
 });
 
 // Гостевой вход
@@ -205,6 +294,47 @@ app.post('/api/guest', (req, res) => {
         res.status(500).json({ 
             success: false,
             error: 'Ошибка гостевого входа' 
+        });
+    }
+});
+
+// Получение пользователя по ID (для проверки сессии)
+app.get('/api/user/:userId', (req, res) => {
+    try {
+        const { userId } = req.params;
+        
+        let users = [];
+        if (fs.existsSync(USERS_FILE)) {
+            users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+        }
+        
+        const user = users.find(u => u.id === userId);
+        
+        if (user) {
+            res.json({
+                success: true,
+                user: {
+                    id: user.id,
+                    email: user.email,
+                    name: user.name,
+                    userType: user.userType,
+                    isAuthorized: user.isAuthorized,
+                    avatar: user.avatar,
+                    yandexId: user.yandexId
+                }
+            });
+        } else {
+            res.status(404).json({ 
+                success: false,
+                error: 'Пользователь не найден' 
+            });
+        }
+        
+    } catch (error) {
+        console.error('❌ Ошибка получения пользователя:', error);
+        res.status(500).json({ 
+            success: false,
+            error: 'Ошибка получения пользователя' 
         });
     }
 });
@@ -484,8 +614,10 @@ app.listen(PORT, () => {
     console.log(`✅ Сервер запущен: http://localhost:${PORT}`);
     console.log(`📁 Статические файлы из: ${path.join(__dirname, '..')}`);
     console.log(`💾 Данные сохраняются в: ${DATA_DIR}`);
+    console.log(`🔑 Яндекс OAuth: ${process.env.YANDEX_CLIENT_ID ? 'Настроен' : 'Не настроен'}`);
     console.log(`\n📄 Главная страница: http://localhost:${PORT}/`);
     console.log(`🔑 Страница входа: http://localhost:${PORT}/login.html`);
     console.log(`🧪 API тест: http://localhost:${PORT}/api/test`);
+    console.log(`🔐 Яндекс вход: http://localhost:${PORT}/auth/yandex`);
     console.log(`======================================\n`);
 });

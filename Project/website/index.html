@@ -5,11 +5,85 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Веб‑платформа подготовки</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    .user-info-panel {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 10px 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #ddd;
+    }
+    
+    .user-avatar-placeholder {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #2196F3;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 18px;
+    }
+    
+    .user-details {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .user-name {
+      font-weight: bold;
+      font-size: 16px;
+    }
+    
+    .user-type {
+      font-size: 12px;
+      color: #666;
+    }
+    
+    .yandex-badge {
+      background: #FFCC00;
+      color: #000;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: bold;
+      margin-left: 5px;
+    }
+    
+    .guest-badge {
+      background: #6c757d;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: bold;
+      margin-left: 5px;
+    }
+  </style>
 </head>
 <body>
   <header>
     Платформа для подготовки специалистов
   </header>
+
+  <div id="user-panel" class="user-info-panel" style="display: none;">
+    <!-- Заполнится JavaScript -->
+  </div>
 
   <nav>
     <!-- Ваша навигация без изменений -->
@@ -63,6 +137,34 @@
 
   <script src="api.js"></script>
   <script>
+    // Функция отображения информации о пользователе
+    function displayUserInfo(user) {
+      const panel = document.getElementById('user-panel');
+      
+      if (!user) return;
+      
+      let avatarHtml = '';
+      if (user.avatar) {
+        avatarHtml = `<img src="${user.avatar}" alt="Аватар" class="user-avatar">`;
+      } else {
+        const initials = user.name.charAt(0).toUpperCase();
+        avatarHtml = `<div class="user-avatar-placeholder">${initials}</div>`;
+      }
+      
+      const badge = user.userType === 'yandex' 
+        ? '<span class="yandex-badge">Яндекс</span>' 
+        : '<span class="guest-badge">Гость</span>';
+      
+      panel.innerHTML = `
+        ${avatarHtml}
+        <div class="user-details">
+          <div class="user-name">${user.name} ${badge}</div>
+          <div class="user-type">${user.email}</div>
+        </div>
+      `;
+      panel.style.display = 'flex';
+    }
+    
     // Функция проверки пользователя из URL (для Яндекс OAuth)
     function checkUserFromURL() {
       const urlParams = new URLSearchParams(window.location.search);
@@ -76,15 +178,27 @@
           // Сохраняем пользователя
           window.examAPI.saveUserToStorage(user);
           
+          // Пробуем перенести гостевые данные
+          setTimeout(async () => {
+            try {
+              const result = await examAPI.migrateGuestData(user.id);
+              if (result.success && result.migratedAttempts > 0) {
+                console.log(`✅ Перенесено ${result.migratedAttempts} попыток и ${result.migratedBlocks} блоков`);
+              }
+            } catch (migrateError) {
+              console.error('Ошибка переноса данных:', migrateError);
+            }
+          }, 1000);
+          
           // Убираем параметр из URL
           window.history.replaceState({}, document.title, window.location.pathname);
           
-          return true;
+          return user;
         } catch (error) {
           console.error('Ошибка парсинга пользователя из URL:', error);
         }
       }
-      return false;
+      return null;
     }
     
     // Проверяем авторизацию при загрузке
@@ -92,7 +206,8 @@
       console.log('=== ПРОВЕРКА АВТОРИЗАЦИИ ===');
       
       // 1. Проверяем пользователя из URL (для Яндекс OAuth)
-      if (checkUserFromURL()) {
+      const userFromURL = checkUserFromURL();
+      if (userFromURL) {
         console.log('✅ Яндекс пользователь загружен из URL');
       }
       
@@ -108,6 +223,9 @@
       }
       
       console.log('✅ Пользователь авторизован:', user.name, `(${user.userType})`);
+      
+      // Отображаем информацию о пользователе
+      displayUserInfo(user);
       
       // Проверяем выбранный блок
       const selectedBlock = localStorage.getItem('selectedBlock');
@@ -132,7 +250,6 @@
     
     function logout() {
       window.examAPI.logout();
-      window.location.href = 'login.html';
     }
   </script>
 </body>
