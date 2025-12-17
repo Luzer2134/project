@@ -68,8 +68,11 @@
     "name": "Александр Мокосеев",
     "yandexId": "1760941770",
     "userType": "yandex",
-    "isAuthorized": false,
+    "isAuthorized": true,
     "createdAt": "2025-12-16T18:06:39.721Z",
-    "avatar": "https://avatars.yandex.net/get-yapic/undefined/islands-200"
+    "avatar": "https://avatars.yandex.net/get-yapic/undefined/islands-200",
+    "accessToken": "y0__xDKrdfHBhjvpzwg5aD72BUwl6WT8wdleh4HEI3-IvuhjWPdOhL90br1gw",
+    "refreshToken": "2:AAA:AAAAAGj11so:1:hRhYXf8_sgjVoctY:7f8kKuXy_q5IW9NYeh4e1f5LWE0wKNTDAt0Q2jEMW2iknwE_nLaa-CHSOd_0ufWlztiQ8SFDuLzx0SMAmg:PgrRqQ04GnzSGPtLsF-HxA",
+    "lastLogin": "2025-12-17T08:09:07.090Z"
   }
 ]

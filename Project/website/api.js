@@ -1,49 +1,20 @@
 // API для работы с бэкендом - ТОЛЬКО Яндекс OAuth и гостевой вход
 class ExamAPI {
     constructor() {
-        this.baseURL = 'http://localhost:3000/api';
+        // Автоматически определяем базовый URL
+        this.baseURL = this.getBaseURL();
         this.currentUser = null;
         this.init();
     }
 
-    // Инициализация
-    init() {
-        console.log('🚀 ExamAPI инициализирован (только Яндекс OAuth + гостевой вход)');
-        this.loadUserFromStorage();
-    }
-
-    // Общий метод для запросов
-    async request(endpoint, options = {}) {
-        const url = `${this.baseURL}${endpoint}`;
-        
-        const config = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            },
-            ...options
-        };
-
-        if (options.body) {
-            config.body = JSON.stringify(options.body);
+    getBaseURL() {
+        // Если локальная разработка
+        if (window.location.hostname === 'localhost' || 
+            window.location.hostname === '127.0.0.1') {
+            return 'http://localhost:3000/api';
         }
-
-        try {
-            console.log(`📡 API запрос: ${url}`, options.body || '');
-            const response = await fetch(url, config);
-            const data = await response.json();
-            
-            if (!response.ok) {
-                throw new Error(data.error || `Ошибка ${response.status}`);
-            }
-            
-            console.log(`✅ API ответ:`, data);
-            return data;
-        } catch (error) {
-            console.error('❌ API Error:', error.message);
-            throw error;
-        }
+        // На Vercel - относительный путь
+        return '/api';
     }
 
     // === АВТОРИЗАЦИЯ ===
