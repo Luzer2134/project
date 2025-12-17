@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Прогресс обучения</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        Прогресс обучения
+    </header>
+
+    <nav>
+        <button class="button_quit" onclick="goToMain()">На главную</button>
+    </nav>
+
+    <main>
+        <div id="user-info" style="background: #e8f4fd; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <h3>Информация о пользователе</h3>
+            <p><strong>Имя:</strong> <span id="user-name">-</span></p>
+            <p><strong>Тип входа:</strong> <span id="user-type">-</span></p>
+            <p><strong>Сохранение прогресса:</strong> <span id="progress-status">-</span></p>
+        </div>
+
+        <div id="progress-container">
+            <h3>Общая статистика</h3>
+            
+            <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 20px 0;">
+                <div class="stat-card" style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                    <h4>Тренажёр</h4>
+                    <div id="trainer-stats">
+                        <p>Пройдено вопросов: <span id="trainer-completed">0</span></p>
+                        <p>Правильных ответов: <span id="trainer-correct">0</span></p>
+                        <p>Процент успеха: <span id="trainer-percentage">0%</span></p>
+                    </div>
+                </div>
+                
+                <div class="stat-card" style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                    <h4>Симуляция экзамена</h4>
+                    <div id="exam-stats">
+                        <p>Попыток: <span id="exam-attempts">0</span></p>
+                        <p>Успешных попыток: <span id="exam-passed">0</span></p>
+                        <p>Средний балл: <span id="exam-average">0%</span></p>
+                    </div>
+                </div>
+                
+                <div class="stat-card" style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                    <h4>По блокам</h4>
+                    <div id="blocks-stats">
+                        <p>Изучено блоков: <span id="blocks-studied">0</span></p>
+                        <p>Всего вопросов: <span id="total-questions">0</span></p>
+                        <p>Лучший блок: <span id="best-block">-</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <h3>Детальный прогресс по блокам</h3>
+            <div id="blocks-progress" style="margin-top: 20px;">
+                <!-- Динамически заполнится JavaScript -->
+            </div>
+            
+            <div style="margin-top: 30px;">
+                <button class="button" onclick="exportProgress()" style="background-color: #2196F3;">Экспорт прогресса</button>
+                <button class="button" onclick="clearProgress()" style="background-color: #f44336;">Сбросить прогресс</button>
+            </div>
+        </div>
+    </main>
+    <script src="api.js"></script>
+    <script src="progress.js"></script>
+</body>
+</html>
