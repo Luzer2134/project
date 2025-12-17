@@ -207,3 +207,62 @@ body {
     cursor: not-allowed;
     opacity: 0.8;
 }
+
+/* Добавьте в style.css */
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.stat-card h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.stat-numbers {
+    display: grid;
+    gap: 15px;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.stat-label {
+    color: #666;
+}
+
+.stat-value {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #2196F3;
+}
+
+.block-progress {
+    transition: transform 0.3s ease;
+}
+
+.block-progress:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+#detailed-progress {
+    background: #f9f9f9;
+    padding: 30px;
+    border-radius: 10px;
+}

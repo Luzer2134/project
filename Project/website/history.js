@@ -193,9 +193,6 @@ function createAttemptElement(attempt, index) {
         </div>
         
         <div style="margin-top: 15px;">
-            <button class="button" onclick="viewAttemptDetails(${index})" style="background-color: #2196F3; padding: 8px 16px; font-size: 14px;">
-                Показать детали
-            </button>
             <button class="button" onclick="deleteAttempt('${attempt.id}')" style="background-color: #ff9800; padding: 8px 16px; font-size: 14px;">
                 Удалить
             </button>

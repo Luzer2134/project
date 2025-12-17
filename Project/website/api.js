@@ -91,34 +91,380 @@ class ExamAPI {
 
     // === ПРОГРЕСС ТРЕНАЖЕРА ===
     
-    async saveTrainerProgress(block, userAnswers, currentQuestionIndex) {
-        const user = this.getUserFromStorage();
+    // В api.js обновите функцию saveTrainerProgress:
+// api.js - ДОБАВЬТЕ ЭТИ ФУНКЦИИ В КЛАСС ExamAPI
+
+// Сохранение прогресса тренажера на сервер
+// api.js - ЗАМЕНИТЕ ЭТИ МЕТОДЫ В КЛАССЕ ExamAPI
+
+// Сохранение прогресса тренажера
+async saveTrainerProgress(block, progressData) {
+    const user = this.getUserFromStorage();
+    
+    if (!user) {
+        console.log('❌ Нет пользователя для сохранения прогресса');
+        return { success: false, error: 'Пользователь не найден' };
+    }
+    
+    console.log(`💾 Сохраняем прогресс: блок "${block}", пользователь "${user.name}"`);
+    
+    // Для гостей - только локальное сохранение
+    if (user.userType === 'guest') {
+        console.log('👤 Гость - сохраняем только локально');
+        this.saveTrainerProgressLocal(block, progressData, user);
+        return { success: true, local: true };
+    }
+    
+    try {
+        // Сохраняем на сервер
+        const result = await this.request('/trainer-progress', {
+            method: 'POST',
+            body: {
+                userId: user.id,
+                block: block,
+                userAnswers: progressData.userAnswers,
+                currentQuestionIndex: progressData.currentQuestionIndex
+            }
+        });
         
-        if (!user) {
-            console.log('👤 Пользователь не найден');
-            return { success: false, error: 'Пользователь не найден' };
+        console.log('✅ Прогресс сохранен на сервере');
+        
+        // Также сохраняем локально для быстрого доступа
+        this.saveTrainerProgressLocal(block, progressData, user);
+        
+        return result;
+        
+    } catch (error) {
+        console.error('❌ Ошибка сохранения на сервере, сохраняем локально:', error);
+        this.saveTrainerProgressLocal(block, progressData, user);
+        return { 
+            success: true, 
+            local: true,
+            error: 'Сохранено локально (ошибка сервера)' 
+        };
+    }
+}
+
+// Получение прогресса тренажера
+async getTrainerProgress(block = null) {
+    const user = this.getUserFromStorage();
+    
+    if (!user) {
+        console.log('❌ Нет пользователя для загрузки прогресса');
+        return { success: false, error: 'Пользователь не найден' };
+    }
+    
+    console.log(`📥 Загружаем прогресс для: ${user.name}, блок: ${block || 'все'}`);
+    
+    // Для гостей - только локальное хранилище
+    if (user.userType === 'guest') {
+        console.log('👤 Гость - загружаем локально');
+        const localProgress = this.getTrainerProgressLocal(block);
+        return { 
+            success: true, 
+            progress: localProgress,
+            local: true 
+        };
+    }
+    
+    try {
+        // Пробуем загрузить с сервера
+        let endpoint;
+        if (block) {
+            endpoint = `/trainer-progress/${user.id}/${block}`;
+        } else {
+            endpoint = `/trainer-progress/${user.id}`;
         }
         
-        if (user.userType === 'guest') {
-            console.log('👤 Гость - прогресс не сохраняется на сервер');
-            return { success: true, local: true };
-        }
+        const result = await this.request(endpoint);
         
-        try {
-            return await this.request('/trainer-progress', {
-                method: 'POST',
-                body: {
-                    userId: user.id,
-                    block,
-                    userAnswers,
-                    currentQuestionIndex
+        if (result.success && result.progress) {
+            console.log(`✅ Прогресс загружен с сервера для блока: ${block || 'все'}`);
+            
+            // Сохраняем также локально для быстрого доступа
+            if (block && result.progress) {
+                this.saveTrainerProgressLocal(block, result.progress, user);
+            } else if (result.progress && typeof result.progress === 'object') {
+                // Сохраняем все блоки локально
+                for (const [blockKey, blockProgress] of Object.entries(result.progress)) {
+                    this.saveTrainerProgressLocal(blockKey, blockProgress, user);
                 }
-            });
-        } catch (error) {
-            console.error('❌ Ошибка сохранения прогресса тренажера:', error);
-            return { success: false, error: error.message };
+            }
+            
+            return result;
+        } else {
+            console.log('⚠️ На сервере нет данных, пробуем локально');
+            const localProgress = this.getTrainerProgressLocal(block);
+            return { 
+                success: true, 
+                progress: localProgress,
+                local: true 
+            };
+        }
+        
+    } catch (error) {
+        console.error('❌ Ошибка загрузки с сервера:', error);
+        // При ошибке загружаем локально
+        const localProgress = this.getTrainerProgressLocal(block);
+        return { 
+            success: true, 
+            progress: localProgress,
+            local: true,
+            error: 'Загружено локально (ошибка сервера)' 
+        };
+    }
+}
+
+// Удаление прогресса
+async deleteTrainerProgress(block = null) {
+    const user = this.getUserFromStorage();
+    
+    if (!user) {
+        return { success: false, error: 'Пользователь не найден' };
+    }
+    
+    console.log(`🗑️ Удаление прогресса для: ${user.name}, блок: ${block || 'все'}`);
+    
+    // Удаляем локально в любом случае
+    this.deleteTrainerProgressLocal(block, user);
+    
+    // Для гостей - только локальное удаление
+    if (user.userType === 'guest') {
+        return { success: true, local: true };
+    }
+    
+    try {
+        let endpoint;
+        if (block) {
+            endpoint = `/trainer-progress/${user.id}/${block}`;
+        } else {
+            endpoint = `/trainer-progress/${user.id}`;
+        }
+        
+        // Пытаемся удалить с сервера
+        const result = await this.request(endpoint, { method: 'DELETE' });
+        return result;
+        
+    } catch (error) {
+        console.error('❌ Ошибка удаления с сервера:', error);
+        return { success: true, local: true };
+    }
+}
+
+// Локальные методы для тренажера (ОСТАВЬТЕ ИХ КАК ЕСТЬ, они уже правильные)
+saveTrainerProgressLocal(block, progressData, user) {
+    const userToUse = user || this.getUserFromStorage();
+    if (!userToUse) return;
+    
+    const storageKey = userToUse.userType === 'guest' 
+        ? 'trainerProgress_guest' 
+        : `trainerProgress_${userToUse.id}`;
+    
+    let allProgress = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    
+    allProgress[block] = {
+        ...progressData,
+        userId: userToUse.id,
+        timestamp: new Date().toISOString()
+    };
+    
+    localStorage.setItem(storageKey, JSON.stringify(allProgress));
+    console.log(`💾 Локальный прогресс сохранен: ${block}, ключ: ${storageKey}`);
+}
+
+getTrainerProgressLocal(block = null) {
+    const user = this.getUserFromStorage();
+    if (!user) return block ? null : {};
+    
+    const storageKey = user.userType === 'guest' 
+        ? 'trainerProgress_guest' 
+        : `trainerProgress_${user.id}`;
+    
+    const allProgress = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    
+    if (block) {
+        const blockProgress = allProgress[block];
+        // Проверяем принадлежность данных
+        if (blockProgress && (blockProgress.userId === user.id || user.userType === 'guest')) {
+            return blockProgress;
+        }
+        return null;
+    }
+    
+    // Фильтруем только прогресс текущего пользователя
+    const filteredProgress = {};
+    for (const [blockKey, blockProgress] of Object.entries(allProgress)) {
+        if (blockProgress.userId === user.id || user.userType === 'guest') {
+            filteredProgress[blockKey] = blockProgress;
         }
     }
+    
+    return filteredProgress;
+}
+
+deleteTrainerProgressLocal(block, user) {
+    const userToUse = user || this.getUserFromStorage();
+    if (!userToUse) return;
+    
+    const storageKey = userToUse.userType === 'guest' 
+        ? 'trainerProgress_guest' 
+        : `trainerProgress_${userToUse.id}`;
+    
+    let allProgress = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    
+    if (block) {
+        delete allProgress[block];
+    } else {
+        allProgress = {};
+    }
+    
+    localStorage.setItem(storageKey, JSON.stringify(allProgress));
+    console.log(`🗑️ Локальный прогресс удален: ${block || 'все'}`);
+}
+
+// Загрузка прогресса тренажера с сервера
+async loadTrainerProgress(block = null) {
+    const user = this.getUserFromStorage();
+    
+    if (!user) {
+        console.log('❌ Нет пользователя для загрузки прогресса');
+        return { success: false, error: 'Пользователь не найден' };
+    }
+    
+    if (user.userType === 'guest') {
+        console.log('👤 Гость - загружаем только локально');
+        const localData = this.getTrainerProgressLocal(block);
+        return { 
+            success: true, 
+            progress: localData,
+            local: true 
+        };
+    }
+    
+    try {
+        console.log(`📥 Загружаем прогресс с сервера для пользователя: ${user.id}`);
+        
+        const endpoint = block 
+            ? `/trainer-progress/${user.id}/${block}`
+            : `/trainer-progress/${user.id}`;
+            
+        const result = await this.request(endpoint);
+        
+        if (result.success) {
+            console.log(`✅ Прогресс загружен с сервера для блока: ${block || 'все'}`);
+            
+            // Сохраняем также локально для быстрого доступа
+            if (block && result.progress) {
+                const storageKey = `trainerProgress_${user.id}`;
+                let allProgress = JSON.parse(localStorage.getItem(storageKey) || '{}');
+                allProgress[block] = result.progress;
+                localStorage.setItem(storageKey, JSON.stringify(allProgress));
+            }
+        }
+        
+        return result;
+        
+    } catch (error) {
+        console.error('❌ Ошибка загрузки прогресса с сервера:', error);
+        
+        // При ошибке загружаем локально
+        const localData = this.getTrainerProgressLocal(block);
+        return { 
+            success: true, 
+            progress: localData,
+            local: true,
+            error: 'Загружено локально (ошибка сервера)' 
+        };
+    }
+}
+
+// Удаление прогресса
+async deleteTrainerProgress(block = null) {
+    const user = this.getUserFromStorage();
+    
+    if (!user) {
+        return { success: false, error: 'Пользователь не найден' };
+    }
+    
+    if (user.userType === 'guest') {
+        this.deleteTrainerProgressLocal(block, user);
+        return { success: true, local: true };
+    }
+    
+    try {
+        const endpoint = block 
+            ? `/trainer-progress/${user.id}/${block}`
+            : `/trainer-progress/${user.id}`;
+            
+        return await this.request(endpoint, { method: 'DELETE' });
+    } catch (error) {
+        console.error('❌ Ошибка удаления прогресса:', error);
+        this.deleteTrainerProgressLocal(block, user);
+        return { success: true, local: true };
+    }
+}
+
+// Локальные методы для тренажера
+saveTrainerProgressLocal(block, data, user) {
+    const userToUse = user || this.getUserFromStorage();
+    if (!userToUse) return;
+    
+    const storageKey = userToUse.userType === 'guest' 
+        ? 'trainerProgress_guest' 
+        : `trainerProgress_${userToUse.id}`;
+    
+    let allProgress = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    allProgress[block] = {
+        ...data,
+        userId: userToUse.id,
+        timestamp: new Date().toISOString()
+    };
+    
+    localStorage.setItem(storageKey, JSON.stringify(allProgress));
+    console.log(`💾 Локальный прогресс сохранен: ${block}`);
+}
+
+getTrainerProgressLocal(block = null) {
+    const user = this.getUserFromStorage();
+    if (!user) return block ? null : {};
+    
+    const storageKey = user.userType === 'guest' 
+        ? 'trainerProgress_guest' 
+        : `trainerProgress_${user.id}`;
+    
+    const allProgress = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    
+    if (block) {
+        const blockProgress = allProgress[block];
+        // Проверяем, что прогресс принадлежит текущему пользователю
+        if (blockProgress && (blockProgress.userId === user.id || user.userType === 'guest')) {
+            return blockProgress;
+        }
+        return null;
+    }
+    
+    return allProgress;
+}
+
+deleteTrainerProgressLocal(block, user) {
+    const userToUse = user || this.getUserFromStorage();
+    if (!userToUse) return;
+    
+    const storageKey = userToUse.userType === 'guest' 
+        ? 'trainerProgress_guest' 
+        : `trainerProgress_${userToUse.id}`;
+    
+    let allProgress = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    
+    if (block) {
+        delete allProgress[block];
+    } else {
+        allProgress = {};
+    }
+    
+    localStorage.setItem(storageKey, JSON.stringify(allProgress));
+    console.log(`🗑️ Локальный прогресс удален: ${block || 'весь'}`);
+}
 
     async getTrainerProgress(block = null) {
         const user = this.getUserFromStorage();

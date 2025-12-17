@@ -247,14 +247,50 @@ function saveCurrentAnswer() {
     userAnswers[currentQuestionIndex] = selectedOptions;
 }
 
-// Завершение экзамена
-function finishExam() {
+
+async function finishExam() {
     clearInterval(timer);
     saveCurrentAnswer();
     
     const results = calculateResults();
     showResults(results);
-    saveAttemptToStorage(results);
+    
+    // Сохраняем через API
+    await saveAttemptToAPI(results);
+}
+
+// Новая функция сохранения через API
+async function saveAttemptToAPI(results) {
+    console.log('💾 Сохранение попытки...');
+    
+    const attemptData = {
+        block: currentBlock,
+        date: new Date().toISOString(),
+        correctAnswers: results.correct,
+        totalQuestions: results.total,
+        grade: results.grade,
+        percentage: results.percentage,
+        isPassed: results.isPassed,
+        timeSpent: (45 * 60 - timeLeft),
+        userAnswers: userAnswers,
+        questions: currentQuestions.map(q => ({ 
+            id: q.id, 
+            question: q.question,
+            correctAnswers: q.correctAnswers
+        }))
+    };
+    
+    try {
+        const result = await window.examAPI.saveExamAttempt(attemptData);
+        
+        if (result.success) {
+            console.log('✅ Попытка сохранена успешно');
+        } else {
+            console.warn('⚠️ Попытка не сохранена:', result.error);
+        }
+    } catch (error) {
+        console.error('❌ Ошибка сохранения:', error);
+    }
 }
 
 // Подсчёт результатов
