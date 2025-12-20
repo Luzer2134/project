@@ -11,7 +11,8 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, '..')));
+app.use(express.static(path.join(__dirname, 'website')));
+
 
 // Логирование
 app.use((req, res, next) => {
@@ -612,8 +613,8 @@ app.get('*', (req, res) => {
 // Запуск сервера
 app.listen(PORT, () => {
     console.log(`\n🚀 ======================================`);
-    console.log(`\n🚀 Сервер запущен на порту ${PORT}`);
-    console.log(`📁 Корень проекта: ${path.join(__dirname, '..')}`);
+    console.log(`✅ Сервер запущен: http://localhost:${PORT}`);
+    console.log(`📁 Статические файлы из: ${path.join(__dirname, '..')}`);
     console.log(`💾 Данные сохраняются в: ${DATA_DIR}`);
     console.log(`🔑 Яндекс OAuth: ${process.env.YANDEX_CLIENT_ID ? 'Настроен' : 'Не настроен'}`);
     console.log(`\n📄 Главная страница: http://localhost:${PORT}/`);

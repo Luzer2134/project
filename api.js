@@ -1,7 +1,7 @@
 // API для работы с бэкендом - ТОЛЬКО Яндекс OAuth и гостевой вход
 class ExamAPI {
     constructor() {
-        this.baseURL = 'http://localhost:3000/api';
+        this.baseURL = 'https://exam-platform-83z7.onrender.com/callbacki';
         this.currentUser = null;
         this.init();
     }
