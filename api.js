@@ -12,7 +12,7 @@ class ExamAPI {
         this.loadUserFromStorage();
     }
 
-    // Общий метод для запросов
+    // Общий метод для запросов с улучшенной обработкой ошибок
     async request(endpoint, options = {}) {
         const url = `${this.baseURL}${endpoint}`;
         
@@ -32,60 +32,136 @@ class ExamAPI {
         try {
             console.log(`📡 API запрос: ${url}`, options.body || '');
             const response = await fetch(url, config);
-            const data = await response.json();
             
-            if (!response.ok) {
-                throw new Error(data.error || `Ошибка ${response.status}`);
+            // Проверяем Content-Type
+            const contentType = response.headers.get('content-type');
+            
+            if (contentType && contentType.includes('application/json')) {
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || `Ошибка ${response.status}`);
+                }
+                
+                console.log(`✅ API ответ:`, data);
+                return data;
+            } else {
+                // Если ответ не JSON, это ошибка
+                const text = await response.text();
+                console.warn(`⚠️ Ответ не JSON, получаем: ${text.substring(0, 100)}...`);
+                
+                // Если это HTML страница, значит маршрута нет
+                if (text.includes('<!DOCTYPE') || text.includes('<html')) {
+                    throw new Error('API маршрут не найден на сервере');
+                } else {
+                    throw new Error(`Некорректный ответ сервера: ${response.status}`);
+                }
             }
-            
-            console.log(`✅ API ответ:`, data);
-            return data;
         } catch (error) {
             console.error('❌ API Error:', error.message);
             throw error;
         }
     }
 
-    // === АВТОРИЗАЦИЯ ===
+    // === ПРОГРЕСС ТРЕНАЖЕРА ===
     
-    // Гостевой вход
-    async guestLogin() {
+    async saveTrainerProgress(block, userAnswers, currentQuestionIndex) {
+        const user = this.getUserFromStorage();
+        
+        if (!user) {
+            console.log('👤 Пользователь не найден');
+            return { success: false, error: 'Пользователь не найден' };
+        }
+        
+        // Для всех пользователей сохраняем локально, т.к. API маршрута может не быть
+        console.log('💾 Сохраняем прогресс тренажера локально:', block);
+        this.saveTrainerProgressLocal(block, userAnswers, currentQuestionIndex);
+        
+        if (user.userType === 'guest') {
+            return { success: true, local: true };
+        }
+        
+        // Для зарегистрированных пробуем отправить на сервер
         try {
-            const result = await this.request('/api/guest', {
-                method: 'POST'
+            const result = await this.request('/api/trainer-progress', {
+                method: 'POST',
+                body: {
+                    userId: user.id,
+                    block,
+                    userAnswers,
+                    currentQuestionIndex
+                }
             });
             
-            if (result.success) {
-                this.saveUserToStorage(result.user);
+            console.log('✅ Прогресс тренажера сохранен на сервере');
+            return result;
+            
+        } catch (error) {
+            console.warn('⚠️ Не удалось сохранить на сервер, используем локальное хранилище');
+            return { 
+                success: true, 
+                local: true,
+                error: 'Сохранено локально (ошибка сервера)' 
+            };
+        }
+    }
+
+    async getTrainerProgress(block = null) {
+        const user = this.getUserFromStorage();
+        
+        if (!user) {
+            console.log('👤 Пользователь не найден');
+            return { 
+                success: false, 
+                error: 'Пользователь не найден' 
+            };
+        }
+        
+        console.log('📥 Загружаем прогресс тренажера для:', user.id);
+        
+        // Сначала пробуем загрузить локально
+        const localProgress = this.getTrainerProgressLocal(block);
+        
+        if (user.userType === 'guest') {
+            console.log('👤 Гость - используем локальные данные');
+            return { 
+                success: true, 
+                progress: localProgress,
+                local: true
+            };
+        }
+        
+        // Для зарегистрированных пробуем сервер
+        try {
+            const endpoint = block 
+                ? `/api/trainer-progress/${user.id}/${block}`
+                : `/api/trainer-progress/${user.id}`;
+            
+            const result = await this.request(endpoint);
+            console.log('✅ Прогресс тренажера загружен с сервера');
+            
+            // Объединяем с локальными данными (если сервер вернул данные)
+            if (result.success && result.progress) {
+                // Можно добавить логику слияния данных
+                return result;
+            } else {
+                // Если сервер вернул пустые данные, используем локальные
+                console.log('⚠️ Сервер вернул пустые данные, используем локальные');
+                return {
+                    success: true,
+                    progress: localProgress,
+                    local: true
+                };
             }
             
-            return result;
         } catch (error) {
-            console.error('❌ Ошибка гостевого входа:', error);
-            return { success: false, error: error.message };
-        }
-    }
-
-    // Проверка пользователя на сервере (для Яндекс пользователей)
-    async checkUserSession(userId) {
-        try {
-            const result = await this.request(`/api/user/${userId}`);
-            return result;
-        } catch (error) {
-            console.error('❌ Ошибка проверки сессии:', error);
-            return { success: false, error: error.message };
-        }
-    }
-
-    // Выход из Яндекс
-    async yandexLogout(userId) {
-        try {
-            const result = await fetch(`/auth/yandex/logout?userId=${userId}`);
-            const data = await result.json();
-            return data;
-        } catch (error) {
-            console.error('❌ Ошибка выхода из Яндекс:', error);
-            return { success: false, error: error.message };
+            console.warn('⚠️ Не удалось загрузить с сервера, используем локальные данные:', error.message);
+            return {
+                success: true,
+                progress: localProgress,
+                local: true,
+                error: 'Загружено локально (ошибка сервера)'
+            };
         }
     }
 
@@ -100,8 +176,8 @@ class ExamAPI {
         
         console.log('💾 Сохраняем прогресс симуляции для:', user.id, 'Тип:', user.userType);
         
-        // Для всех пользователей сохраняем только локально, т.к. нет API на сервере
-        console.log('🔧 API маршрута нет - сохраняем только локально');
+        // Для всех пользователей сохраняем только локально
+        console.log('🔧 Сохраняем только локально');
         this.saveSimulationProgressLocal(block, currentQuestionIndex, userAnswers, user);
         return { success: true, local: true };
     }
@@ -113,10 +189,9 @@ class ExamAPI {
             return { success: false, error: 'Пользователь не найден' };
         }
         
-        console.log('📥 Загружаем прогресс симуляции для:', user.id, 'Тип:', user.userType);
+        console.log('📥 Загружаем прогресс симуляции для:', user.id);
         
-        // Пока нет API на сервере - всегда используем локальное хранилище
-        console.log('🔧 API маршрута нет - загружаем локальные данные');
+        // Всегда используем локальное хранилище для симуляции
         const progress = this.getSimulationProgressLocal(block, user);
         
         return {
@@ -137,7 +212,161 @@ class ExamAPI {
         return { success: true, local: true };
     }
 
-    // Локальное сохранение прогресса симуляции
+    // === ПОПЫТКИ ЭКЗАМЕНА ===
+    
+    async saveExamAttempt(attempt) {
+        const user = this.getUserFromStorage();
+        
+        if (!user) {
+            console.log('❌ Пользователь не найден');
+            return { success: false, error: 'Пользователь не найден' };
+        }
+        
+        console.log('💾 Сохраняем попытку для пользователя:', user.id);
+        
+        // Всегда сохраняем локально
+        this.saveExamAttemptLocal(attempt, user);
+        
+        if (user.userType === 'guest') {
+            console.log('👤 Гость - сохраняем только локально');
+            return { success: true, local: true };
+        }
+        
+        // Для зарегистрированных пробуем сервер
+        try {
+            const result = await this.request('/api/exam-attempts', {
+                method: 'POST',
+                body: {
+                    userId: user.id,
+                    attempt: attempt
+                }
+            });
+            
+            console.log('✅ Попытка сохранена на сервере');
+            return result;
+            
+        } catch (error) {
+            console.warn('⚠️ Не удалось сохранить на сервер, используем локальное хранилище');
+            return { 
+                success: true, 
+                local: true,
+                error: 'Сохранено локально (ошибка сервера)' 
+            };
+        }
+    }
+
+    async getExamAttempts() {
+        const user = this.getUserFromStorage();
+        
+        if (!user) {
+            console.log('❌ Пользователь не найден');
+            return { success: false, error: 'Пользователь не найден' };
+        }
+        
+        console.log('📥 Загружаем попытки для:', user.id);
+        
+        // Всегда загружаем локально
+        const localAttempts = this.getExamAttemptsLocal(user);
+        
+        if (user.userType === 'guest') {
+            console.log('👤 Гость - используем локальные данные');
+            return {
+                success: true,
+                attempts: localAttempts,
+                local: true
+            };
+        }
+        
+        // Для зарегистрированных пробуем сервер
+        try {
+            const result = await this.request(`/api/exam-attempts/${user.id}`);
+            console.log('✅ Данные с сервера:', result.attempts?.length || 0, 'попыток');
+            
+            // Объединяем с локальными данными
+            if (result.success && result.attempts && result.attempts.length > 0) {
+                return result;
+            } else {
+                // Если сервер вернул пустые данные, используем локальные
+                console.log('⚠️ Сервер вернул пустые данные, используем локальные');
+                return {
+                    success: true,
+                    attempts: localAttempts,
+                    local: true
+                };
+            }
+            
+        } catch (error) {
+            console.warn('⚠️ Не удалось загрузить с сервера, используем локальные данные');
+            return {
+                success: true,
+                attempts: localAttempts,
+                local: true,
+                error: 'Загружено локально (ошибка сервера)'
+            };
+        }
+    }
+
+    async deleteExamAttempt(attemptId) {
+        const user = this.getUserFromStorage();
+        
+        if (!user) {
+            return { success: false, error: 'Пользователь не найден' };
+        }
+        
+        // Всегда удаляем локально
+        this.deleteExamAttemptLocal(attemptId, user);
+        
+        if (user.userType === 'guest') {
+            return { success: true, local: true };
+        }
+        
+        // Для зарегистрированных пробуем сервер
+        try {
+            return await this.request(`/api/exam-attempts/${user.id}/${attemptId}`, {
+                method: 'DELETE'
+            });
+        } catch (error) {
+            console.warn('⚠️ Не удалось удалить с сервера');
+            return { success: true, local: true };
+        }
+    }
+
+    // === ЛОКАЛЬНОЕ ХРАНЕНИЕ ===
+
+    // Прогресс тренажера локально
+    saveTrainerProgressLocal(block, userAnswers, currentQuestionIndex) {
+        const user = this.getUserFromStorage();
+        if (!user) return;
+        
+        const storageKey = `trainerProgress_${user.id}`;
+        let allProgress = JSON.parse(localStorage.getItem(storageKey) || '{}');
+        
+        allProgress[block] = {
+            userAnswers,
+            currentQuestionIndex,
+            userId: user.id,
+            timestamp: new Date().toISOString()
+        };
+        
+        localStorage.setItem(storageKey, JSON.stringify(allProgress));
+        console.log('💾 Локальный прогресс тренажера сохранен:', block, 'Ключ:', storageKey);
+    }
+
+    getTrainerProgressLocal(block = null) {
+        const user = this.getUserFromStorage();
+        if (!user) return block ? { userAnswers: [], currentQuestionIndex: 0 } : {};
+        
+        const storageKey = `trainerProgress_${user.id}`;
+        const allProgress = JSON.parse(localStorage.getItem(storageKey) || '{}');
+        
+        if (block) {
+            return allProgress[block] || { userAnswers: [], currentQuestionIndex: 0 };
+        }
+        
+        return allProgress;
+    }
+
+    // Прогресс симуляции локально
     saveSimulationProgressLocal(block, currentQuestionIndex, userAnswers, user) {
         const storageKey = user.userType === 'guest' 
             ? 'simulationProgress_guest' 
@@ -167,7 +396,7 @@ class ExamAPI {
         const progress = allProgress[block] || null;
         
         if (progress) {
-            console.log('✅ Найден локальный прогресс:', progress);
+            console.log('✅ Найден локальный прогресс');
         } else {
             console.log('📭 Локальный прогресс не найден');
         }
@@ -184,209 +413,7 @@ class ExamAPI {
         delete allProgress[block];
         localStorage.setItem(storageKey, JSON.stringify(allProgress));
         
-        console.log('🗑️ Локальный прогресс симуляции удален:', block, 'Ключ:', storageKey);
-    }
-
-    // === ПРОГРЕСС ТРЕНАЖЕРА ===
-    
-    async saveTrainerProgress(block, userAnswers, currentQuestionIndex) {
-        const user = this.getUserFromStorage();
-        
-        if (!user) {
-            console.log('👤 Пользователь не найден');
-            return { success: false, error: 'Пользователь не найден' };
-        }
-        
-        if (user.userType === 'guest') {
-            console.log('👤 Гость - прогресс не сохраняется на сервер');
-            return { success: true, local: true };
-        }
-        
-        try {
-            return await this.request('/api/trainer-progress', {
-                method: 'POST',
-                body: {
-                    userId: user.id,
-                    block,
-                    userAnswers,
-                    currentQuestionIndex
-                }
-            });
-        } catch (error) {
-            console.error('❌ Ошибка сохранения прогресса тренажера:', error);
-            return { success: false, error: error.message };
-        }
-    }
-
-    async getTrainerProgress(block = null) {
-        const user = this.getUserFromStorage();
-        
-        if (!user) {
-            console.log('👤 Пользователь не найден');
-            return { 
-                success: false, 
-                error: 'Пользователь не найден' 
-            };
-        }
-        
-        if (user.userType === 'guest') {
-            console.log('👤 Гость - прогресс не загружается с сервера');
-            return { 
-                success: true, 
-                progress: block ? {
-                    userAnswers: [],
-                    currentQuestionIndex: 0
-                } : {},
-                local: true
-            };
-        }
-        
-        try {
-            const endpoint = block 
-                ? `/trainer-progress/${user.id}/${block}`
-                : `/trainer-progress/${user.id}`;
-            
-            return await this.request(endpoint);
-        } catch (error) {
-            console.error('❌ Ошибка получения прогресса тренажера:', error);
-            return { 
-                success: false, 
-                error: error.message 
-            };
-        }
-    }
-
-    // === ПОПЫТКИ ЭКЗАМЕНА ===
-    
-    async saveExamAttempt(attempt) {
-        const user = this.getUserFromStorage();
-        
-        if (!user) {
-            console.log('❌ Пользователь не найден');
-            return { success: false, error: 'Пользователь не найден' };
-        }
-        
-        console.log('💾 Сохраняем попытку для пользователя:', user.id, 'Тип:', user.userType);
-        
-        if (user.userType === 'guest') {
-            console.log('👤 Гость - сохраняем только локально');
-            this.saveExamAttemptLocal(attempt, user);
-            return { success: true, local: true };
-        }
-        
-        try {
-            const result = await this.request('/api/exam-attempts', {
-                method: 'POST',
-                body: {
-                    userId: user.id,
-                    attempt: attempt
-                }
-            });
-            
-            console.log('✅ Попытка сохранена на сервере:', result);
-            return result;
-            
-        } catch (error) {
-            console.error('❌ Ошибка сохранения попытки на сервере:', error);
-            this.saveExamAttemptLocal(attempt, user);
-            return { 
-                success: true, 
-                local: true,
-                error: 'Сохранено локально (ошибка сервера)' 
-            };
-        }
-    }
-
-    async getExamAttempts() {
-        const user = this.getUserFromStorage();
-        
-        if (!user) {
-            console.log('❌ Пользователь не найден');
-            return { success: false, error: 'Пользователь не найден' };
-        }
-        
-        console.log('📥 Загружаем попытки для:', user.id, 'Тип:', user.userType);
-        
-        if (user.userType === 'guest') {
-            console.log('👤 Гость - загружаем локальные данные');
-            return {
-                success: true,
-                attempts: this.getExamAttemptsLocal(user),
-                local: true
-            };
-        }
-        
-        try {
-            const result = await this.request(`/api/exam-attempts/${user.id}`);
-            console.log('✅ Данные с сервера:', result.attempts?.length || 0, 'попыток');
-            return result;
-        } catch (error) {
-            console.error('❌ Ошибка загрузки попыток с сервера:', error);
-            return {
-                success: true,
-                attempts: this.getExamAttemptsLocal(user),
-                local: true,
-                error: 'Загружено локально (ошибка сервера)'
-            };
-        }
-    }
-
-    async deleteExamAttempt(attemptId) {
-        const user = this.getUserFromStorage();
-        
-        if (!user) {
-            return { success: false, error: 'Пользователь не найден' };
-        }
-        
-        if (user.userType === 'guest') {
-            this.deleteExamAttemptLocal(attemptId, user);
-            return { success: true, local: true };
-        }
-        
-        try {
-            return await this.request(`/api/exam-attempts/${user.id}/${attemptId}`, {
-                method: 'DELETE'
-            });
-        } catch (error) {
-            console.error('❌ Ошибка удаления попытки:', error);
-            this.deleteExamAttemptLocal(attemptId, user);
-            return { success: true, local: true };
-        }
-    }
-
-    // === ЛОКАЛЬНОЕ ХРАНЕНИЕ ===
-
-    // Прогресс тренажера локально
-    saveTrainerProgressLocal(block, userAnswers, currentQuestionIndex) {
-        const user = this.getUserFromStorage();
-        if (!user) return;
-        
-        const storageKey = `trainerProgress_${user.id}`;
-        let allProgress = JSON.parse(localStorage.getItem(storageKey) || '{}');
-        
-        allProgress[block] = {
-            userAnswers,
-            currentQuestionIndex,
-            userId: user.id,
-            timestamp: new Date().toISOString()
-        };
-        
-        localStorage.setItem(storageKey, JSON.stringify(allProgress));
-        console.log('💾 Локальный прогресс тренажера сохранен:', block);
-    }
-
-    getTrainerProgressLocal(block = null) {
-        const user = this.getUserFromStorage();
-        if (!user) return block ? { userAnswers: [], currentQuestionIndex: 0 } : {};
-        
-        const storageKey = `trainerProgress_${user.id}`;
-        const allProgress = JSON.parse(localStorage.getItem(storageKey) || '{}');
-        
-        if (block) {
-            return allProgress[block] || { userAnswers: [], currentQuestionIndex: 0 };
-        }
-        
-        return allProgress;
+        console.log('🗑️ Локальный прогресс симуляции удален:', block);
     }
 
     // Попытки экзамена локально
@@ -419,12 +446,10 @@ class ExamAPI {
         attempts = attempts.filter(a => a.id !== attemptId);
         localStorage.setItem(storageKey, JSON.stringify(attempts));
         
-        console.log('🗑️ Локальная попытка удалена:', attemptId, 'Ключ:', storageKey);
+        console.log('🗑️ Локальная попытка удалена:', attemptId);
     }
 
-    // === УПРАВЛЕНИЕ ПОЛЬЗОВАТЕЛЕМ ===
-    
-    saveUserToStorage(user) {
+     saveUserToStorage(user) {
         console.log('💾 СОХРАНЕНИЕ ПОЛЬЗОВАТЕЛЯ В LOCALSTORAGE');
         console.log('Данные пользователя:', user);
         
@@ -613,6 +638,7 @@ class ExamAPI {
     }
 }
 
+// Создаем глобальный экземпляр
 window.examAPI = new ExamAPI();
 
 // Тестовый вызов при загрузке
