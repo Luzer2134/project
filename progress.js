@@ -1,4 +1,4 @@
-/// progress.js - основные функции статистики
+// progress.js - основные функции статистики
 
 let questionsData = null;
 
@@ -40,11 +40,21 @@ async function loadQuestionsData() {
         
         // Пробуем загрузить через fetch
         try {
-            const response = await fetch('questions-data.json');
+            // ВАЖНО: используем правильный путь к файлу
+            const response = await fetch('data/questions-data.json');
             if (response.ok) {
-                questionsData = await response.json();
-                console.log('✅ Вопросы загружены из questions-data.json');
-                return true;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    questionsData = await response.json();
+                    console.log('✅ Вопросы загружены из questions-data.json');
+                    
+                    // Сохраняем в localStorage для будущего использования
+                    localStorage.setItem('questionsData', JSON.stringify(questionsData));
+                    return true;
+                } else {
+                    const text = await response.text();
+                    console.error('⚠️ Ответ не JSON:', text.substring(0, 200));
+                }
             }
         } catch (fetchError) {
             console.warn('⚠️ Ошибка загрузки questions-data.json:', fetchError.message);
@@ -81,6 +91,69 @@ function getQuestionsCountForBlock(block) {
     return blockData ? blockData.length : 0;
 }
 
+// Получаем данные тренажера для блока
+async function getBlockTrainerData(block) {
+    const user = window.examAPI ? window.examAPI.getUserFromStorage() : null;
+    
+    if (!user) {
+        return { completed: 0, correct: 0 };
+    }
+    
+    try {
+        const result = await window.examAPI.getTrainerProgress();
+        
+        if (result.success && result.progress && result.progress[block]) {
+            const blockProgress = result.progress[block];
+            const userAnswers = blockProgress.userAnswers || [];
+            
+            const completed = userAnswers.filter(answer => answer !== null && answer !== undefined).length;
+            let correct = 0;
+            
+            // Считаем правильные ответы
+            if (questionsData && questionsData[block]) {
+                userAnswers.forEach((answer, index) => {
+                    if (answer !== null && answer !== undefined && questionsData[block][index]) {
+                        const question = questionsData[block][index];
+                        if (checkSingleAnswer(question, answer)) {
+                            correct++;
+                        }
+                    }
+                });
+            }
+            
+            return { completed, correct };
+        }
+    } catch (error) {
+        console.error(`❌ Ошибка получения данных тренажера для блока ${block}:`, error);
+    }
+    
+    return { completed: 0, correct: 0 };
+}
+
+// Получаем данные экзамена для блока
+async function getBlockExamData(block) {
+    const user = window.examAPI ? window.examAPI.getUserFromStorage() : null;
+    
+    if (!user) {
+        return { attempts: 0, passed: 0 };
+    }
+    
+    try {
+        const result = await window.examAPI.getExamAttempts();
+        
+        if (result.success && result.attempts) {
+            const blockAttempts = result.attempts.filter(attempt => attempt.block === block);
+            const passed = blockAttempts.filter(attempt => attempt.isPassed).length;
+            
+            return { attempts: blockAttempts.length, passed };
+        }
+    } catch (error) {
+        console.error(`❌ Ошибка получения данных экзамена для блока ${block}:`, error);
+    }
+    
+    return { attempts: 0, passed: 0 };
+}
+
 // Инициализация страницы
 async function initProgressPage() {
     console.log('📊 Инициализация страницы прогресса');
@@ -104,14 +177,12 @@ async function initProgressPage() {
         : '✅ Сохраняется на сервере и доступно на всех устройствах';
     document.getElementById('progress-status').textContent = statusText;
     
-    // Загружаем данные вопросов (но не блокируем загрузку страницы)
-    loadQuestionsData().then(loaded => {
-        if (!loaded) {
-            console.log('⚠️ Работаем без полных данных вопросов');
-            // Показываем сообщение пользователю
-            showNotification('Некоторые данные вопросов недоступны, но статистика все равно будет показана', 'warning');
-        }
-    });
+    // Загружаем данные вопросов
+    const loaded = await loadQuestionsData();
+    if (!loaded) {
+        console.log('⚠️ Работаем без полных данных вопросов');
+        showNotification('Некоторые данные вопросов недоступны, но статистика все равно будет показана', 'warning');
+    }
     
     // Рассчитываем статистику
     await calculateAllStats();
@@ -195,6 +266,7 @@ async function calculateAllStats() {
     }
 }
 
+// Статистика тренажера
 async function calculateTrainerStats() {
     const user = window.examAPI ? window.examAPI.getUserFromStorage() : null;
     
@@ -210,99 +282,45 @@ async function calculateTrainerStats() {
         const result = await window.examAPI.getTrainerProgress();
         
         if (result.success) {
-            if (user.userType === 'guest' || result.local) {
-                calculateLocalTrainerStats(user, result.progress || {});
-            } else {
-                calculateServerTrainerStats(result.progress || {});
-            }
+            const progress = result.progress || {};
+            const blocks = ['Блок 1', 'Блок 2', 'Блок 3', 'Блок 4'];
+            let totalCompleted = 0;
+            let totalCorrect = 0;
+            
+            blocks.forEach(block => {
+                const blockProgress = progress[block];
+                
+                if (blockProgress) {
+                    const userAnswers = blockProgress.userAnswers || [];
+                    const completed = userAnswers.filter(answer => answer !== null && answer !== undefined).length;
+                    totalCompleted += completed;
+                    
+                    // Считаем правильные ответы
+                    if (questionsData && questionsData[block]) {
+                        let correctInBlock = 0;
+                        userAnswers.forEach((answer, index) => {
+                            if (answer !== null && answer !== undefined && questionsData[block][index]) {
+                                const question = questionsData[block][index];
+                                if (checkSingleAnswer(question, answer)) {
+                                    correctInBlock++;
+                                }
+                            }
+                        });
+                        totalCorrect += correctInBlock;
+                    }
+                }
+            });
+            
+            const percentage = totalCompleted > 0 ? Math.round((totalCorrect / totalCompleted) * 100) : 0;
+            
+            updateTrainerStats(totalCompleted, totalCorrect, percentage);
         } else {
-            console.error('❌ Ошибка загрузки прогресса тренажера:', result.error);
-            calculateLocalTrainerStats(user);
+            displayEmptyStats('trainer');
         }
     } catch (error) {
         console.error('❌ Ошибка расчета статистики тренажера:', error);
-        calculateLocalTrainerStats(user);
+        displayEmptyStats('trainer');
     }
-}
-
-// Статистика тренажера
-function calculateServerTrainerStats(serverProgress) {
-    const blocks = ['Блок 1', 'Блок 2', 'Блок 3', 'Блок 4'];
-    let totalCompleted = 0;
-    let totalCorrect = 0;
-    
-    blocks.forEach(block => {
-        const blockProgress = serverProgress[block];
-        
-        if (blockProgress) {
-            const userAnswers = blockProgress.userAnswers || [];
-            const completed = userAnswers.filter(answer => answer !== null && answer !== undefined).length;
-            totalCompleted += completed;
-            
-            // Считаем правильные ответы
-            if (questionsData && questionsData[block]) {
-                let correctInBlock = 0;
-                userAnswers.forEach((answer, index) => {
-                    if (answer !== null && answer !== undefined && questionsData[block][index]) {
-                        const question = questionsData[block][index];
-                        const isCorrect = checkSingleAnswer(question, answer);
-                        if (isCorrect) correctInBlock++;
-                    }
-                });
-                totalCorrect += correctInBlock;
-            }
-        }
-    });
-    
-    const percentage = totalCompleted > 0 ? Math.round((totalCorrect / totalCompleted) * 100) : 0;
-    
-    updateTrainerStats(totalCompleted, totalCorrect, percentage);
-}
-
-// Локальная статистика тренажера
-function calculateLocalTrainerStats(user, localProgress = null) {
-    const blocks = ['Блок 1', 'Блок 2', 'Блок 3', 'Блок 4'];
-    let totalCompleted = 0;
-    let totalCorrect = 0;
-    
-    // Определяем ключ для localStorage
-    const storageKey = user.userType === 'guest' 
-        ? 'trainerProgress_guest' 
-        : `trainerProgress_${user.id}`;
-    
-    // Используем переданный прогресс или загружаем из localStorage
-    let allProgress = localProgress;
-    if (!allProgress || Object.keys(allProgress).length === 0) {
-        const savedProgress = localStorage.getItem(storageKey);
-        allProgress = savedProgress ? JSON.parse(savedProgress) : {};
-    }
-    
-    blocks.forEach(block => {
-        const blockProgress = allProgress[block];
-        
-        if (blockProgress) {
-            const userAnswers = blockProgress.userAnswers || [];
-            const completed = userAnswers.filter(answer => answer !== null && answer !== undefined).length;
-            totalCompleted += completed;
-            
-            // Считаем правильные ответы
-            if (questionsData && questionsData[block]) {
-                let correctInBlock = 0;
-                userAnswers.forEach((answer, index) => {
-                    if (answer !== null && answer !== undefined && questionsData[block][index]) {
-                        const question = questionsData[block][index];
-                        const isCorrect = checkSingleAnswer(question, answer);
-                        if (isCorrect) correctInBlock++;
-                    }
-                });
-                totalCorrect += correctInBlock;
-            }
-        }
-    });
-    
-    const percentage = totalCompleted > 0 ? Math.round((totalCorrect / totalCompleted) * 100) : 0;
-    
-    updateTrainerStats(totalCompleted, totalCorrect, percentage);
 }
 
 // Обновление статистики тренажера в DOM
@@ -314,6 +332,21 @@ function updateTrainerStats(completed, correct, percentage) {
     console.log(`✅ Статистика тренажера: ${completed} пройдено, ${correct} правильно (${percentage}%)`);
 }
 
+// Отображение пустой статистики
+function displayEmptyStats(type) {
+    if (type === 'trainer') {
+        document.getElementById('trainer-completed').textContent = '0';
+        document.getElementById('trainer-correct').textContent = '0';
+        document.getElementById('trainer-percentage').textContent = '0%';
+    } else if (type === 'exam') {
+        document.getElementById('exam-attempts').textContent = '0';
+        document.getElementById('exam-passed').textContent = '0';
+        document.getElementById('exam-average').textContent = '0%';
+        document.getElementById('exam-best').textContent = '0%';
+    }
+}
+
+// Статистика экзаменов
 async function calculateExamStats() {
     const user = window.examAPI ? window.examAPI.getUserFromStorage() : null;
     
@@ -373,10 +406,6 @@ async function calculateBlocksStats() {
     // Рассчитываем изученные блоки
     let studiedBlocks = 0;
     let totalQuestions = 0;
-    let bestBlock = null;
-    let bestBlockPercentage = 0;
-    let worstBlock = null;
-    let worstBlockPercentage = 100;
     
     if (questionsData) {
         blocks.forEach(block => {
@@ -387,11 +416,10 @@ async function calculateBlocksStats() {
         });
     }
     
-    // Пока просто ставим заглушки
     document.getElementById('blocks-studied').textContent = studiedBlocks;
     document.getElementById('total-questions').textContent = totalQuestions;
-    document.getElementById('best-block').textContent = bestBlock || '-';
-    document.getElementById('worst-block').textContent = worstBlock || '-';
+    document.getElementById('best-block').textContent = '-';
+    document.getElementById('worst-block').textContent = '-';
 }
 
 // Детальный прогресс по блокам
@@ -412,6 +440,7 @@ async function calculateDetailedBlockProgress() {
     }
 }
 
+// Проверка одиночного ответа
 function checkSingleAnswer(question, userAnswer) {
     if (!question || !userAnswer) return false;
     
@@ -425,7 +454,7 @@ function checkSingleAnswer(question, userAnswer) {
     return userSorted === correctSorted;
 }
 
-// Создание элемента прогресса для блока с безопасным доступом к questionsData
+// Создание элемента прогресса для блока
 async function createBlockProgressElement(block) {
     const element = document.createElement('div');
     element.className = 'block-progress';
@@ -506,10 +535,9 @@ async function createBlockProgressElement(block) {
 function startTrainer(block) {
     console.log(`🎯 Запуск тренажера для блока: ${block}`);
     localStorage.setItem('selectedBlock', block);
-    localStorage.setItem('trainingMode', 'trainer');
     
     // Проверяем, есть ли страница тренажера
-    const hasTrainerPage = checkPageExists('trainer.html');
+    const hasTrainerPage = true; // Временно true, так как тренажер должен быть
     
     if (hasTrainerPage) {
         window.location.href = 'trainer.html';
@@ -524,12 +552,6 @@ function startExam(block) {
     console.log(`🎯 Запуск экзамена для блока: ${block}`);
     localStorage.setItem('selectedBlock', block);
     window.location.href = 'simulation.html';
-}
-
-// Проверка существования страницы
-function checkPageExists(page) {
-    // Простая проверка - если у нас есть симуляция, то тренажер тоже должен быть
-    return page === 'simulation.html' ? true : false; // Заглушка
 }
 
 // Функции кнопок
@@ -562,8 +584,6 @@ async function exportProgress() {
                 type: user.userType
             },
             date: new Date().toISOString(),
-            trainerStats: await window.examAPI.getTrainerProgress(),
-            examStats: await window.examAPI.getExamAttempts(),
             exportInfo: {
                 appName: 'Exam Trainer',
                 exportDate: new Date().toLocaleString('ru-RU'),
@@ -589,6 +609,39 @@ async function exportProgress() {
     } catch (error) {
         console.error('❌ Ошибка экспорта прогресса:', error);
         showNotification('Ошибка при экспорте прогресса: ' + error.message, 'error');
+    }
+}
+
+function clearProgress() {
+    if (confirm('Вы уверены, что хотите очистить весь прогресс тренажера?')) {
+        const user = window.examAPI ? window.examAPI.getUserFromStorage() : null;
+        
+        if (user) {
+            // Удаляем локальный прогресс тренажера
+            const storageKey = user.userType === 'guest' 
+                ? 'trainerProgress_guest' 
+                : `trainerProgress_${user.id}`;
+            
+            localStorage.removeItem(storageKey);
+            
+            showNotification('Прогресс тренажера очищен', 'info');
+            refreshStats();
+        }
+    }
+}
+
+function clearExamHistory() {
+    if (confirm('Вы уверены, что хотите очистить всю историю экзаменов?')) {
+        const user = window.examAPI ? window.examAPI.getUserFromStorage() : null;
+        
+        if (user) {
+            // Удаляем локальные попытки экзамена
+            const storageKey = `examAttempts_${user.id}`;
+            localStorage.removeItem(storageKey);
+            
+            showNotification('История экзаменов очищена', 'info');
+            refreshStats();
+        }
     }
 }
 
