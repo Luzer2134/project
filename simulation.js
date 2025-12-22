@@ -1,41 +1,4 @@
-function checkAuthAndSave() {
-    const isAuthorized = localStorage.getItem('isAuthorized') === 'true';
-    return isAuthorized; 
-}
-
-// Обновляем функцию saveAttemptToStorage
-function saveAttemptToStorage(results) {
-    const isAuthorized = localStorage.getItem('isAuthorized') === 'true';
-    
-    if (!isAuthorized) {
-        console.log('Гостевой режим - попытка не сохраняется');
-        return;
-    }
-    
-    const attempt = {
-        block: currentBlock,
-        date: new Date().toISOString(),
-        correctAnswers: results.correct,
-        totalQuestions: results.total,
-        grade: results.grade,
-        percentage: results.percentage,
-        isPassed: results.isPassed,
-        timeSpent: (45 * 60 - timeLeft),
-        userAnswers: userAnswers,
-        questions: currentQuestions.map(q => ({ 
-            id: q.id, 
-            question: q.question,
-            correctAnswers: q.correctAnswers
-        }))
-    };
-    
-    const existingAttempts = JSON.parse(localStorage.getItem('examAttempts') || '[]');
-    existingAttempts.push(attempt);
-    localStorage.setItem('examAttempts', JSON.stringify(existingAttempts));
-    
-    console.log('Попытка сохранена в историю');
-}
-
+// simulation.js
 let currentQuestions = [];
 let currentQuestionIndex = 0;
 let userAnswers = [];
@@ -43,9 +6,12 @@ let timer;
 let timeLeft = 45 * 60;
 let currentBlock = '';
 let startTime = null;
+let isGuestMode = false;
+let autoSaveInterval;
+let isExamFinished = false;
 
 // Инициализация экзамена
-function initExam() {
+async function initExam() {
     console.log('Инициализация экзамена...');
     
     // Получаем выбранный блок
@@ -60,7 +26,17 @@ function initExam() {
     }
 
     currentBlock = selectedBlock;
-    console.log(`Выбран блок: ${currentBlock}`);
+    
+    // Проверяем тип пользователя
+    const user = window.examAPI ? window.examAPI.getUserFromStorage() : null;
+    if (user && user.userType === 'guest') {
+        isGuestMode = true;
+        console.log('👤 Гостевой режим');
+    } else if (user) {
+        console.log('👤 Зарегистрированный пользователь:', user.userType);
+    }
+    
+    console.log(`Выбран блок: ${currentBlock}, Режим: ${isGuestMode ? 'Гость' : 'Зарегистрированный'}`);
     document.getElementById('current-block-name').textContent = currentBlock;
     
     // Проверяем загружены ли вопросы
@@ -92,15 +68,22 @@ function initExam() {
     
     console.log(`Загружено вопросов для "${currentBlock}": ${blockQuestions.length}`);
     
-    // Выбираем 30 случайных вопросов
-    const questionsCount = Math.min(30, blockQuestions.length);
-    currentQuestions = getRandomQuestions(blockQuestions, questionsCount);
-    userAnswers = new Array(currentQuestions.length).fill(null);
+    // Пытаемся загрузить сохраненный прогресс
+    const hasSavedProgress = await loadSavedProgress();
     
-    console.log(`Выбрано ${currentQuestions.length} случайных вопросов`);
+    // Если нет сохраненного прогресса, начинаем с начала
+    if (!hasSavedProgress) {
+        // Выбираем 30 случайных вопросов
+        const questionsCount = Math.min(30, blockQuestions.length);
+        currentQuestions = getRandomQuestions(blockQuestions, questionsCount);
+        userAnswers = new Array(currentQuestions.length).fill(null);
+        currentQuestionIndex = 0;
+        console.log(`Создана новая симуляция: ${currentQuestions.length} вопросов`);
+    }
     
     startTime = new Date();
     startTimer();
+    startAutoSave();
     displayQuestion();
 }
 
@@ -108,6 +91,74 @@ function initExam() {
 function getRandomQuestions(questions, count) {
     const shuffled = [...questions].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, count);
+}
+
+// Загрузка сохраненного прогресса
+async function loadSavedProgress() {
+    try {
+        console.log('🔍 Загружаем сохраненный прогресс...');
+        const result = await window.examAPI.getSimulationProgress(currentBlock);
+        
+        if (result.success && result.progress) {
+            console.log('📥 Загружен сохраненный прогресс симуляции:', result.progress);
+            
+            const blockQuestions = questionsData[currentBlock];
+            const savedProgress = result.progress;
+            
+            // Проверяем принадлежность данных текущему пользователю
+            const user = window.examAPI.getUserFromStorage();
+            if (user && savedProgress.userId !== user.id && savedProgress.userType !== user.userType) {
+                console.log('⚠️ Данные принадлежат другому пользователю, игнорируем');
+                return false;
+            }
+            
+            // Восстанавливаем индекс текущего вопроса
+            currentQuestionIndex = savedProgress.currentQuestionIndex || 0;
+            
+            // Восстанавливаем ответы пользователя
+            userAnswers = savedProgress.userAnswers || [];
+            
+            // Создаем новую симуляцию с теми же вопросами
+            const questionsCount = Math.min(30, blockQuestions.length);
+            currentQuestions = getRandomQuestions(blockQuestions, questionsCount);
+            
+            // Если userAnswers не соответствует длине currentQuestions, корректируем
+            if (userAnswers.length > currentQuestions.length) {
+                userAnswers = userAnswers.slice(0, currentQuestions.length);
+            } else if (userAnswers.length < currentQuestions.length) {
+                userAnswers = userAnswers.concat(new Array(currentQuestions.length - userAnswers.length).fill(null));
+            }
+            
+            console.log(`✅ Прогресс восстановлен: вопрос ${currentQuestionIndex + 1} из ${currentQuestions.length}`);
+            return true;
+        } else {
+            console.log('📭 Сохраненного прогресса нет');
+            return false;
+        }
+    } catch (error) {
+        console.error('❌ Ошибка загрузки прогресса:', error);
+        return false;
+    }
+}
+
+// Сохранение прогресса
+async function saveProgress() {
+    if (!currentBlock || currentQuestions.length === 0 || isExamFinished) {
+        console.log('⚠️ Сохранение прогресса пропущено');
+        return;
+    }
+    
+    // Сохраняем текущий ответ
+    saveCurrentAnswer();
+    
+    console.log('💾 Сохраняем прогресс симуляции...');
+    const result = await window.examAPI.saveSimulationProgress(currentBlock, currentQuestionIndex, userAnswers);
+    
+    if (result.success) {
+        console.log('✅ Прогресс сохранен');
+    } else {
+        console.error('❌ Ошибка сохранения прогресса:', result.error);
+    }
 }
 
 // Таймер
@@ -129,11 +180,21 @@ function updateTimerDisplay() {
         `Осталось времени: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     
     // Меняем цвет при малом остатке времени
-    if (timeLeft < 300) { // Меньше 5 минут
+    if (timeLeft < 300) {
         document.getElementById('timer').style.color = '#ff0000';
-    } else if (timeLeft < 600) { // Меньше 10 минут
+    } else if (timeLeft < 600) {
         document.getElementById('timer').style.color = '#ff6b00';
     }
+}
+
+// Автосохранение
+function startAutoSave() {
+    autoSaveInterval = setInterval(() => {
+        if (currentBlock && currentQuestions.length > 0 && !isExamFinished) {
+            saveProgress();
+            console.log('💾 Автосохранение прогресса');
+        }
+    }, 30000); // 30 секунд
 }
 
 // Отображение вопроса
@@ -185,14 +246,18 @@ function displayQuestion() {
         optionElement.style.borderRadius = '5px';
         optionElement.style.cursor = 'pointer';
         
-            const input = document.createElement('input');
+        const input = document.createElement('input');
         input.type = question.correctAnswers.length > 1 ? 'checkbox' : 'radio';
         input.name = 'answer';
         
         const cyrillicLetters = ['А', 'Б', 'В', 'Г', 'Д', 'Е'];
-        input.value = cyrillicLetters[index]; // А, Б, В, Г, Д, Е
+        input.value = cyrillicLetters[index];
         
-        input.checked = userAnswers[currentQuestionIndex]?.includes(input.value) || false;
+        // Проверяем, выбран ли этот вариант в сохраненном ответе
+        const userAnswer = userAnswers[currentQuestionIndex];
+        const isChecked = userAnswer ? userAnswer.includes(input.value) : false;
+        input.checked = isChecked;
+        
         input.style.cssText = `
             margin-right: 12px;
             transform: scale(1.2);
@@ -211,7 +276,13 @@ function displayQuestion() {
         optionElement.addEventListener('click', function(e) {
             if (e.target !== input) {
                 input.checked = !input.checked;
+                input.dispatchEvent(new Event('change'));
             }
+        });
+        
+        // При изменении чекбокса/радио сохраняем ответ
+        input.addEventListener('change', function() {
+            saveCurrentAnswer();
         });
         
         optionsContainer.appendChild(optionElement);
@@ -223,23 +294,6 @@ function displayQuestion() {
     document.getElementById('finish-btn').style.display = currentQuestionIndex === currentQuestions.length - 1 ? 'inline-block' : 'none';
 }
 
-// Навигация по вопросам
-function nextQuestion() {
-    saveCurrentAnswer();
-    if (currentQuestionIndex < currentQuestions.length - 1) {
-        currentQuestionIndex++;
-        displayQuestion();
-    }
-}
-
-function prevQuestion() {
-    saveCurrentAnswer();
-    if (currentQuestionIndex > 0) {
-        currentQuestionIndex--;
-        displayQuestion();
-    }
-}
-
 // Сохранение текущего ответа
 function saveCurrentAnswer() {
     const selectedOptions = Array.from(document.querySelectorAll('input[name="answer"]:checked'))
@@ -247,19 +301,84 @@ function saveCurrentAnswer() {
     userAnswers[currentQuestionIndex] = selectedOptions;
 }
 
-// Завершение экзамена
-function finishExam() {
-    clearInterval(timer);
+// Навигация по вопросам
+function nextQuestion() {
+    if (isExamFinished) return;
+    
     saveCurrentAnswer();
+    saveProgress();
+    
+    if (currentQuestionIndex < currentQuestions.length - 1) {
+        currentQuestionIndex++;
+        displayQuestion();
+    }
+}
+
+function prevQuestion() {
+    if (isExamFinished) return;
+    
+    saveCurrentAnswer();
+    saveProgress();
+    
+    if (currentQuestionIndex > 0) {
+        currentQuestionIndex--;
+        displayQuestion();
+    }
+}
+
+// Завершение экзамена (нормальное или по таймеру)
+async function finishExam() {
+    if (isExamFinished) return;
+    
+    isExamFinished = true;
+    clearInterval(timer);
+    clearInterval(autoSaveInterval);
+    saveCurrentAnswer();
+    saveProgress();
     
     const results = calculateResults();
     showResults(results);
-    saveAttemptToStorage(results);
+    
+    // Удаляем сохраненный прогресс симуляции после завершения
+    await deleteSimulationProgress();
+    
+    // Сохраняем попытку в историю
+    await saveAttemptToStorage(results);
+}
+
+// Завершение экзамена досрочно
+async function finishExamEarly() {
+    if (isExamFinished) return;
+    
+    isExamFinished = true;
+    clearInterval(timer);
+    clearInterval(autoSaveInterval);
+    saveCurrentAnswer();
+    saveProgress();
+    
+    const results = calculateResults();
+    showResults(results);
+    
+    // Удаляем сохраненный прогресс симуляции после завершения
+    await deleteSimulationProgress();
+    
+    // Сохраняем попытку в историю
+    await saveAttemptToStorage(results);
+}
+
+// Удаление прогресса симуляции
+async function deleteSimulationProgress() {
+    console.log('🗑️ Удаляем прогресс симуляции...');
+    const result = await window.examAPI.deleteSimulationProgress(currentBlock);
+    
+    if (result.success) {
+        console.log('✅ Прогресс симуляции удален');
+    } else {
+        console.error('❌ Ошибка удаления прогресса:', result.error);
+    }
 }
 
 // Подсчёт результатов
-// simulation.js - полностью переписанная функция calculateResults
-// simulation.js - добавьте отладочную информацию
 function calculateResults() {
     let correctCount = 0;
     const questionResults = [];
@@ -329,11 +448,56 @@ function showResults(results) {
     percentageElement.innerHTML = `<strong>Процент правильных ответов:</strong> ${results.percentage.toFixed(1)}%`;
     document.querySelector('#results-container .block').appendChild(percentageElement);
     
+    // Статус сдачи
+    const statusElement = document.createElement('p');
+    statusElement.innerHTML = `<strong>Статус:</strong> <span style="color: ${results.isPassed ? '#4CAF50' : '#f44336'}; font-weight: bold;">${results.isPassed ? 'СДАЛ' : 'НЕ СДАЛ'}</span>`;
+    document.querySelector('#results-container .block').appendChild(statusElement);
+    
     // Показываем детальные результаты
     showDetailedResults(results.questionResults);
 }
 
-// Новая функция для показа детальных результатов
+// Сохранение попытки
+async function saveAttemptToStorage(results) {
+    const user = window.examAPI ? window.examAPI.getUserFromStorage() : null;
+    
+    if (!user) {
+        console.log('Пользователь не найден - попытка не сохраняется');
+        return;
+    }
+    
+    const attempt = {
+        block: currentBlock,
+        date: new Date().toISOString(),
+        correctAnswers: results.correct,
+        totalQuestions: results.total,
+        grade: results.grade,
+        percentage: results.percentage,
+        isPassed: results.isPassed,
+        timeSpent: (45 * 60 - timeLeft),
+        userAnswers: userAnswers,
+        questions: currentQuestions.map(q => ({ 
+            id: q.id, 
+            question: q.question,
+            correctAnswers: q.correctAnswers
+        }))
+    };
+    
+    // Используем API для сохранения
+    const saveResult = await window.examAPI.saveExamAttempt(attempt);
+    
+    if (saveResult.success) {
+        console.log('✅ Попытка экзамена сохранена');
+        
+        if (saveResult.local) {
+            console.log('⚠️ Данные сохранены только локально (гость или ошибка сервера)');
+        }
+    } else {
+        console.error('❌ Ошибка сохранения попытки:', saveResult.error);
+    }
+}
+
+// Функция для показа обзора вопросов
 function showDetailedResults(questionResults) {
     const detailsContainer = document.createElement('div');
     detailsContainer.id = 'detailed-results';
@@ -356,42 +520,6 @@ function showDetailedResults(questionResults) {
     showQuestionsReview(questionResults);
 }
 
-// Сохранение попытки
-function saveAttemptToStorage(results) {
-    const attempt = {
-        block: currentBlock,
-        date: new Date().toISOString(),
-        correctAnswers: results.correct,
-        totalQuestions: results.total,
-        grade: results.grade,
-        percentage: results.percentage,
-        timeSpent: (60 * 60 - timeLeft),
-        userAnswers: userAnswers,
-        questions: currentQuestions.map(q => ({ id: q.id, question: q.question })) // Сохраняем только ID и текст вопросов
-    };
-    
-    const existingAttempts = JSON.parse(localStorage.getItem('examAttempts') || '[]');
-    existingAttempts.push(attempt);
-    localStorage.setItem('examAttempts', JSON.stringify(existingAttempts));
-}
-
-function saveAttempt() {
-    window.location.href = 'history.html';
-}
-
-function confirmExit() {
-    if (confirm('Вы уверены, что хотите завершить экзамен досрочно? Результаты не будут сохранены.')) {
-        finishExam();
-    }
-}
-
-// Запускаем экзамен при загрузке страницы
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Simulation page loaded');
-    setTimeout(initExam, 100); // Даем время на загрузку данных
-});
-
-// simulation.js - функция для показа обзора вопросов
 function showQuestionsReview(questionResults) {
     const reviewContainer = document.getElementById('questions-review');
     
@@ -452,7 +580,7 @@ function createQuestionReviewElement(result) {
             <strong>Варианты ответов:</strong>
             <div style="margin-left: 20px;">
                 ${question.options.map((option, index) => {
-                    const letter = String.fromCharCode(1040 + index); // Кириллические А, Б, В...
+                    const letter = String.fromCharCode(1040 + index);
                     const isUserSelected = result.userAnswer.includes(letter);
                     const isCorrectOption = result.correctAnswer.includes(letter);
                     
@@ -465,7 +593,7 @@ function createQuestionReviewElement(result) {
                         style += 'background: #fff9c4; color: #f57f17;';
                     }
                     
-                    return `<div style="${style}">${option}</div>`;
+                    return `<div style="${style}">${letter}. ${option}</div>`;
                 }).join('')}
             </div>
         </div>
@@ -473,3 +601,33 @@ function createQuestionReviewElement(result) {
     
     return element;
 }
+
+// Обработка выхода из экзамена ДОСРОЧНО
+function confirmExit() {
+    if (confirm('Завершить экзамен досрочно? Будет подсчитан результат на основе отвеченных вопросов.')) {
+        finishExamEarly();
+    }
+}
+
+// Обработка сохранения и выхода
+function saveAttempt() {
+    window.location.href = 'history.html';
+}
+
+// Обработка закрытия страницы
+window.addEventListener('beforeunload', function (e) {
+    if (currentBlock && currentQuestions.length > 0 && timeLeft > 0 && !isExamFinished) {
+        saveCurrentAnswer();
+        saveProgress();
+        
+        // Показываем предупреждение только если экзамен не завершен
+        e.preventDefault();
+        e.returnValue = 'У вас есть несохраненный прогресс симуляции. Вы уверены, что хотите уйти?';
+    }
+});
+
+// Запускаем экзамен при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Simulation page loaded');
+    setTimeout(initExam, 100);
+});

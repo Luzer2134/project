@@ -89,6 +89,104 @@ class ExamAPI {
         }
     }
 
+    // === СИМУЛЯЦИЯ ЭКЗАМЕНА ===
+    
+    async saveSimulationProgress(block, currentQuestionIndex, userAnswers) {
+        const user = this.getUserFromStorage();
+        
+        if (!user) {
+            return { success: false, error: 'Пользователь не найден' };
+        }
+        
+        console.log('💾 Сохраняем прогресс симуляции для:', user.id, 'Тип:', user.userType);
+        
+        // Для всех пользователей сохраняем только локально, т.к. нет API на сервере
+        console.log('🔧 API маршрута нет - сохраняем только локально');
+        this.saveSimulationProgressLocal(block, currentQuestionIndex, userAnswers, user);
+        return { success: true, local: true };
+    }
+
+    async getSimulationProgress(block) {
+        const user = this.getUserFromStorage();
+        
+        if (!user) {
+            return { success: false, error: 'Пользователь не найден' };
+        }
+        
+        console.log('📥 Загружаем прогресс симуляции для:', user.id, 'Тип:', user.userType);
+        
+        // Пока нет API на сервере - всегда используем локальное хранилище
+        console.log('🔧 API маршрута нет - загружаем локальные данные');
+        const progress = this.getSimulationProgressLocal(block, user);
+        
+        return {
+            success: true,
+            progress: progress,
+            local: true
+        };
+    }
+
+    async deleteSimulationProgress(block) {
+        const user = this.getUserFromStorage();
+        
+        if (!user) {
+            return { success: false, error: 'Пользователь не найден' };
+        }
+        
+        this.deleteSimulationProgressLocal(block, user);
+        return { success: true, local: true };
+    }
+
+    // Локальное сохранение прогресса симуляции
+    saveSimulationProgressLocal(block, currentQuestionIndex, userAnswers, user) {
+        const storageKey = user.userType === 'guest' 
+            ? 'simulationProgress_guest' 
+            : `simulationProgress_${user.id}`;
+        
+        let allProgress = JSON.parse(localStorage.getItem(storageKey) || '{}');
+        
+        allProgress[block] = {
+            currentQuestionIndex: currentQuestionIndex,
+            userAnswers: userAnswers,
+            timestamp: new Date().toISOString(),
+            userId: user.id,
+            userType: user.userType
+        };
+        
+        localStorage.setItem(storageKey, JSON.stringify(allProgress));
+        console.log('💾 Локальный прогресс симуляции сохранен:', block, 'Ключ:', storageKey);
+    }
+
+    getSimulationProgressLocal(block, user) {
+        const storageKey = user.userType === 'guest' 
+            ? 'simulationProgress_guest' 
+            : `simulationProgress_${user.id}`;
+        
+        console.log('🔍 Ищем локальный прогресс по ключу:', storageKey);
+        const allProgress = JSON.parse(localStorage.getItem(storageKey) || '{}');
+        const progress = allProgress[block] || null;
+        
+        if (progress) {
+            console.log('✅ Найден локальный прогресс:', progress);
+        } else {
+            console.log('📭 Локальный прогресс не найден');
+        }
+        
+        return progress;
+    }
+
+    deleteSimulationProgressLocal(block, user) {
+        const storageKey = user.userType === 'guest' 
+            ? 'simulationProgress_guest' 
+            : `simulationProgress_${user.id}`;
+        
+        let allProgress = JSON.parse(localStorage.getItem(storageKey) || '{}');
+        delete allProgress[block];
+        localStorage.setItem(storageKey, JSON.stringify(allProgress));
+        
+        console.log('🗑️ Локальный прогресс симуляции удален:', block, 'Ключ:', storageKey);
+    }
+
     // === ПРОГРЕСС ТРЕНАЖЕРА ===
     
     async saveTrainerProgress(block, userAnswers, currentQuestionIndex) {
@@ -380,10 +478,22 @@ class ExamAPI {
         
         // Если был пользователь, очищаем его локальные данные
         if (user) {
-            const attemptsKey = `examAttempts_${user.id}`;
-            const progressKey = `trainerProgress_${user.id}`;
-            localStorage.removeItem(attemptsKey);
-            localStorage.removeItem(progressKey);
+            // Для гостей очищаем ВСЕ данные
+            if (user.userType === 'guest') {
+                const guestKeys = [
+                    'examAttempts_guest',
+                    'trainerProgress_guest', 
+                    'simulationProgress_guest'
+                ];
+                
+                guestKeys.forEach(key => {
+                    localStorage.removeItem(key);
+                    console.log(`🗑️ Удалено: ${key}`);
+                });
+            } else {
+                // Для зарегистрированных оставляем данные
+                console.log('🔐 Данные зарегистрированного пользователя сохранены');
+            }
         }
         
         // Очищаем данные авторизации
@@ -432,8 +542,13 @@ class ExamAPI {
         const guestProgressKey = 'trainerProgress_guest';
         const guestProgress = JSON.parse(localStorage.getItem(guestProgressKey) || '{}');
         
+        // Находим гостевые симуляции
+        const guestSimulationKey = 'simulationProgress_guest';
+        const guestSimulation = JSON.parse(localStorage.getItem(guestSimulationKey) || '{}');
+        
         let migratedCount = 0;
         let migratedBlocks = 0;
+        let migratedSimulations = 0;
         
         // Перенос попыток экзамена
         for (const attempt of guestAttempts) {
@@ -459,16 +574,32 @@ class ExamAPI {
             }
         }
         
+        // Перенос симуляций
+        for (const [block, simulation] of Object.entries(guestSimulation)) {
+            try {
+                await this.saveSimulationProgress(
+                    block,
+                    simulation.currentQuestionIndex,
+                    simulation.userAnswers
+                );
+                migratedSimulations++;
+            } catch (error) {
+                console.error(`❌ Ошибка переноса симуляции для блока ${block}:`, error);
+            }
+        }
+        
         // Очищаем гостевые данные
         localStorage.removeItem(guestAttemptsKey);
         localStorage.removeItem(guestProgressKey);
+        localStorage.removeItem(guestSimulationKey);
         
-        console.log(`🎉 Перенос завершен: ${migratedCount} попыток экзамена, ${migratedBlocks} блоков прогресса`);
+        console.log(`🎉 Перенос завершен: ${migratedCount} попыток экзамена, ${migratedBlocks} блоков прогресса, ${migratedSimulations} симуляций`);
         
         return {
             success: true,
             migratedAttempts: migratedCount,
-            migratedBlocks: migratedBlocks
+            migratedBlocks: migratedBlocks,
+            migratedSimulations: migratedSimulations
         };
     }
 
@@ -482,7 +613,6 @@ class ExamAPI {
     }
 }
 
-// Создаем глобальный экземпляр
 window.examAPI = new ExamAPI();
 
 // Тестовый вызов при загрузке

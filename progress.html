@@ -5,6 +5,77 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Прогресс обучения</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        .progress-block {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+        }
+        
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .progress-bar-container {
+            height: 20px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: #4CAF50;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+        
+        .progress-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+        }
+        
+        .block-button {
+            margin-top: 10px;
+            padding: 8px 15px;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .block-button:hover {
+            background: #0b7dda;
+        }
+        
+        .completed-label {
+            background: #4CAF50;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -15,55 +86,63 @@
         <button class="button_quit" onclick="goToMain()">На главную</button>
     </nav>
 
-    <main>
-        <div id="user-info" style="background: #e8f4fd; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-            <h3>Информация о пользователе</h3>
-            <p><strong>Имя:</strong> <span id="user-name">-</span></p>
-            <p><strong>Тип входа:</strong> <span id="user-type">-</span></p>
-            <p><strong>Сохранение прогресса:</strong> <span id="progress-status">-</span></p>
+    <main style="max-width: 800px; margin: 0 auto;">
+        <div id="user-info" style="background: #e8f4fd; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <h3 style="margin-top: 0;">👤 Информация о пользователе</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                <div>
+                    <strong>Имя:</strong><br>
+                    <span id="user-name">-</span>
+                </div>
+                <div>
+                    <strong>Тип входа:</strong><br>
+                    <span id="user-type">-</span>
+                </div>
+                <div>
+                    <strong>Статус:</strong><br>
+                    <span id="progress-status">-</span>
+                </div>
+                <div>
+                    <strong>Всего пройдено:</strong><br>
+                    <span id="total-progress">0%</span>
+                </div>
+            </div>
         </div>
 
-        <div id="progress-container">
-            <h3>Общая статистика</h3>
-            
-            <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 20px 0;">
-                <div class="stat-card" style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                    <h4>Тренажёр</h4>
-                    <div id="trainer-stats">
-                        <p>Пройдено вопросов: <span id="trainer-completed">0</span></p>
-                        <p>Правильных ответов: <span id="trainer-correct">0</span></p>
-                        <p>Процент успеха: <span id="trainer-percentage">0%</span></p>
-                    </div>
+        <h2 style="margin-bottom: 20px;">📊 Прогресс по блокам</h2>
+        
+        <div id="blocks-progress">
+            <!-- Блоки будут добавлены динамически -->
+            <div style="text-align: center; padding: 40px; color: #666;">
+                Загрузка прогресса...
+            </div>
+        </div>
+        
+        <div style="margin-top: 30px; padding: 20px; background: #f9f9f9; border-radius: 10px;">
+            <h3 style="margin-top: 0;">📈 Общая статистика</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                <div class="stat-card">
+                    <h4 style="margin-top: 0;">✅ Пройдено</h4>
+                    <div style="font-size: 32px; font-weight: bold; color: #4CAF50;" id="completed-blocks">0</div>
+                    <div style="font-size: 14px; color: #666;">из 5 блоков</div>
                 </div>
-                
-                <div class="stat-card" style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                    <h4>Симуляция экзамена</h4>
-                    <div id="exam-stats">
-                        <p>Попыток: <span id="exam-attempts">0</span></p>
-                        <p>Успешных попыток: <span id="exam-passed">0</span></p>
-                        <p>Средний балл: <span id="exam-average">0%</span></p>
-                    </div>
+                <div class="stat-card">
+                    <h4 style="margin-top: 0;">🎯 Вопросы</h4>
+                    <div style="font-size: 32px; font-weight: bold; color: #2196F3;" id="total-questions">0</div>
+                    <div style="font-size: 14px; color: #666;">отвечено</div>
                 </div>
-                
-                <div class="stat-card" style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                    <h4>По блокам</h4>
-                    <div id="blocks-stats">
-                        <p>Изучено блоков: <span id="blocks-studied">0</span></p>
-                        <p>Всего вопросов: <span id="total-questions">0</span></p>
-                        <p>Лучший блок: <span id="best-block">-</span></p>
-                    </div>
+                <div class="stat-card">
+                    <h4 style="margin-top: 0;">📅 Последняя активность</h4>
+                    <div style="font-size: 16px; font-weight: bold;" id="last-activity">-</div>
+                    <div style="font-size: 14px; color: #666;">дата</div>
                 </div>
             </div>
-
-            <h3>Детальный прогресс по блокам</h3>
-            <div id="blocks-progress" style="margin-top: 20px;">
-                <!-- Динамически заполнится JavaScript -->
-            </div>
-            
-            <div style="margin-top: 30px;">
-                <button class="button" onclick="exportProgress()" style="background-color: #2196F3;">Экспорт прогресса</button>
-                <button class="button" onclick="clearProgress()" style="background-color: #f44336;">Сбросить прогресс</button>
-            </div>
+        </div>
+        
+        <div style="margin-top: 30px; display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="button" onclick="refreshProgress()" style="background-color: #4CAF50;">🔄 Обновить</button>
+            <button class="button" onclick="resetAllProgress()" style="background-color: #ff9800;">🗑️ Очистить все</button>
+            <button class="button" onclick="exportProgress()" style="background-color: #2196F3;">📥 Экспорт</button>
         </div>
     </main>
     <script src="api.js"></script>
