@@ -1,7 +1,7 @@
 // API для работы с бэкендом - ТОЛЬКО Яндекс OAuth и гостевой вход
 class ExamAPI {
     constructor() {
-        this.baseURL =  'http://localhost:3000/api';
+        this.baseURL = 'http://localhost:3000';
         this.currentUser = null;
         this.init();
     }
@@ -51,7 +51,7 @@ class ExamAPI {
     // Гостевой вход
     async guestLogin() {
         try {
-            const result = await this.request('/guest', {
+            const result = await this.request('/api/guest', {
                 method: 'POST'
             });
             
@@ -69,7 +69,7 @@ class ExamAPI {
     // Проверка пользователя на сервере (для Яндекс пользователей)
     async checkUserSession(userId) {
         try {
-            const result = await this.request(`/user/${userId}`);
+            const result = await this.request(`/api/user/${userId}`);
             return result;
         } catch (error) {
             console.error('❌ Ошибка проверки сессии:', error);
@@ -105,7 +105,7 @@ class ExamAPI {
         }
         
         try {
-            return await this.request('/trainer-progress', {
+            return await this.request('/api/trainer-progress', {
                 method: 'POST',
                 body: {
                     userId: user.id,
@@ -177,7 +177,7 @@ class ExamAPI {
         }
         
         try {
-            const result = await this.request('/exam-attempts', {
+            const result = await this.request('/api/exam-attempts', {
                 method: 'POST',
                 body: {
                     userId: user.id,
@@ -219,7 +219,7 @@ class ExamAPI {
         }
         
         try {
-            const result = await this.request(`/exam-attempts/${user.id}`);
+            const result = await this.request(`/api/exam-attempts/${user.id}`);
             console.log('✅ Данные с сервера:', result.attempts?.length || 0, 'попыток');
             return result;
         } catch (error) {
@@ -246,7 +246,7 @@ class ExamAPI {
         }
         
         try {
-            return await this.request(`/exam-attempts/${user.id}/${attemptId}`, {
+            return await this.request(`/api/exam-attempts/${user.id}/${attemptId}`, {
                 method: 'DELETE'
             });
         } catch (error) {
