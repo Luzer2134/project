@@ -1,4 +1,4 @@
-// API для работы с бэкендом - ТОЛЬКО Яндекс OAuth и гостевой вход
+// API для работы с бэкендом - версия с SQLite
 class ExamAPI {
     constructor() {
         this.baseURL = 'http://localhost:3000';
@@ -6,55 +6,25 @@ class ExamAPI {
         this.init();
     }
 
-    // === АВТОРИЗАЦИЯ ===
-    
-    async guestLogin() {
-        console.log('👤 Гостевой вход...');
-        
-        try {
-            // Проверяем доступность сервера
-            await this.request('/health');
-            console.log('✅ Сервер доступен, пробуем гостевую регистрацию');
-            
-            try {
-                // Пробуем получить гостевой токен с сервера
-                const result = await this.request('/auth/guest', {
-                    method: 'POST'
-                });
-                
-                if (result.success && result.user) {
-                    this.saveUserToStorage(result.user);
-                    console.log('✅ Гостевой вход через сервер');
-                    return { success: true };
-                }
-            } catch (serverError) {
-                console.log('⚠️ Сервер не поддерживает гостевую авторизацию, используем локальную');
-            }
-            
-        } catch (error) {
-            console.log('🌐 Сервер недоступен, используем локальную гостевую авторизацию');
-        }
-        
-        // Локальная гостевая авторизация
-        const guestUser = {
-            id: 'guest_' + Date.now(),
-            name: 'Гость',
-            email: null,
-            avatar: null,
-            userType: 'guest',
-            isAuthorized: true
-        };
-        
-        this.saveUserToStorage(guestUser);
-        console.log('✅ Локальный гостевой вход');
-        
-        return { success: true };
-    }
-
     // Инициализация
     init() {
-        console.log('🚀 ExamAPI инициализирован (только Яндекс OAuth + гостевой вход)');
+        console.log('🚀 ExamAPI инициализирован (SQLite версия)');
         this.loadUserFromStorage();
+        
+        // Проверяем соединение с сервером
+        this.checkConnection();
+    }
+
+    // Проверка соединения с сервером
+    async checkConnection() {
+        try {
+            const result = await this.request('/api/test');
+            console.log('✅ Сервер доступен:', result.message);
+            return true;
+        } catch (error) {
+            console.warn('⚠️ Сервер не отвечает, используем только локальное хранилище');
+            return false;
+        }
     }
 
     // Общий метод для запросов с улучшенной обработкой ошибок
@@ -104,7 +74,70 @@ class ExamAPI {
             }
         } catch (error) {
             console.error('❌ API Error:', error.message);
+            
+            // Проверяем если это ошибка сети
+            if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                throw new Error('Сервер недоступен. Проверьте запущен ли сервер на localhost:3000');
+            }
+            
             throw error;
+        }
+    }
+
+    // === АВТОРИЗАЦИЯ ===
+
+    // Гостевой вход
+    async guestLogin() {
+        try {
+            console.log('👤 Гостевой вход...');
+            const result = await this.request('/api/guest', {
+                method: 'POST'
+            });
+            
+            if (result.success && result.user) {
+                this.saveUserToStorage(result.user);
+                console.log('✅ Гостевой вход успешен');
+                return { success: true, user: result.user };
+            } else {
+                return { success: false, error: result.error || 'Ошибка входа' };
+            }
+        } catch (error) {
+            console.error('❌ Ошибка гостевого входа:', error);
+            
+            // Если сервер недоступен, создаем локального гостя
+            if (error.message.includes('Сервер недоступен') || error.message.includes('NetworkError')) {
+                console.log('🔄 Создаем локального гостя (сервер недоступен)');
+                return this.createLocalGuest();
+            }
+            
+            return { success: false, error: error.message };
+        }
+    }
+
+    // Создание локального гостя (когда сервер недоступен)
+    createLocalGuest() {
+        const guestUser = {
+            id: 'local_guest_' + Date.now(),
+            email: 'guest_' + Date.now() + '@temp.com',
+            name: 'Гость (локальный)',
+            userType: 'guest',
+            isAuthorized: false,
+            createdAt: new Date().toISOString()
+        };
+        
+        this.saveUserToStorage(guestUser);
+        console.log('✅ Локальный гость создан');
+        return { success: true, user: guestUser, local: true };
+    }
+
+    // Выход из Яндекс
+    async yandexLogout(userId) {
+        try {
+            const result = await this.request(`/auth/yandex/logout?userId=${userId}`);
+            return result;
+        } catch (error) {
+            console.warn('⚠️ Ошибка выхода из Яндекс:', error);
+            return { success: false, error: error.message };
         }
     }
 
@@ -118,11 +151,14 @@ class ExamAPI {
             return { success: false, error: 'Пользователь не найден' };
         }
         
-        // Для всех пользователей сохраняем локально, т.к. API маршрута может не быть
-        console.log('💾 Сохраняем прогресс тренажера локально:', block);
+        console.log('💾 Сохраняем прогресс тренажера:', block, 'для пользователя:', user.id);
+        
+        // Всегда сохраняем локально для быстрого доступа
         this.saveTrainerProgressLocal(block, userAnswers, currentQuestionIndex);
         
+        // Если пользователь гость или сервер недоступен, сохраняем только локально
         if (user.userType === 'guest') {
+            console.log('👤 Гость - сохраняем только локально');
             return { success: true, local: true };
         }
         
@@ -142,11 +178,11 @@ class ExamAPI {
             return result;
             
         } catch (error) {
-            console.warn('⚠️ Не удалось сохранить на сервер, используем локальное хранилище');
+            console.warn('⚠️ Не удалось сохранить на сервер, используем локальное хранилище:', error.message);
             return { 
                 success: true, 
                 local: true,
-                error: 'Сохранено локально (ошибка сервера)' 
+                error: 'Сохранено локально (ошибка сервера)'
             };
         }
     }
@@ -162,9 +198,9 @@ class ExamAPI {
             };
         }
         
-        console.log('📥 Загружаем прогресс тренажера для:', user.id);
+        console.log('📥 Загружаем прогресс тренажера для:', user.id, block ? `блок: ${block}` : 'все блоки');
         
-        // Сначала пробуем загрузить локально
+        // Сначала пробуем загрузить локально (для быстрого отображения)
         const localProgress = this.getTrainerProgressLocal(block);
         
         if (user.userType === 'guest') {
@@ -183,11 +219,26 @@ class ExamAPI {
                 : `/api/trainer-progress/${user.id}`;
             
             const result = await this.request(endpoint);
-            console.log('✅ Прогресс тренажера загружен с сервера');
             
-            // Объединяем с локальными данными (если сервер вернул данные)
             if (result.success && result.progress) {
-                // Можно добавить логику слияния данных
+                console.log('✅ Прогресс тренажера загружен с сервера');
+                
+                // Обновляем локальные данные данными с сервера
+                if (block && result.progress.userAnswers) {
+                    this.saveTrainerProgressLocal(block, result.progress.userAnswers, result.progress.currentQuestionIndex);
+                } else if (!block) {
+                    // Для всех блоков
+                    Object.keys(result.progress).forEach(b => {
+                        if (result.progress[b]) {
+                            this.saveTrainerProgressLocal(
+                                b, 
+                                result.progress[b].userAnswers, 
+                                result.progress[b].currentQuestionIndex
+                            );
+                        }
+                    });
+                }
+                
                 return result;
             } else {
                 // Если сервер вернул пустые данные, используем локальные
@@ -219,12 +270,40 @@ class ExamAPI {
             return { success: false, error: 'Пользователь не найден' };
         }
         
-        console.log('💾 Сохраняем прогресс симуляции для:', user.id, 'Тип:', user.userType);
+        console.log('💾 Сохраняем прогресс симуляции для:', user.id, 'блок:', block);
         
-        // Для всех пользователей сохраняем только локально
-        console.log('🔧 Сохраняем только локально');
+        // Сохраняем локально
         this.saveSimulationProgressLocal(block, currentQuestionIndex, userAnswers, user);
-        return { success: true, local: true };
+        
+        // Если пользователь гость или сервер недоступен, сохраняем только локально
+        if (user.userType === 'guest') {
+            console.log('👤 Гость - сохраняем только локально');
+            return { success: true, local: true };
+        }
+        
+        // Для зарегистрированных пробуем сервер
+        try {
+            const result = await this.request('/api/simulation-progress', {
+                method: 'POST',
+                body: {
+                    userId: user.id,
+                    block,
+                    userAnswers,
+                    currentQuestionIndex
+                }
+            });
+            
+            console.log('✅ Прогресс симуляции сохранен на сервере');
+            return result;
+            
+        } catch (error) {
+            console.warn('⚠️ Не удалось сохранить на сервер, используем локальное хранилище');
+            return { 
+                success: true, 
+                local: true,
+                error: 'Сохранено локально (ошибка сервера)'
+            };
+        }
     }
 
     async getSimulationProgress(block) {
@@ -234,16 +313,56 @@ class ExamAPI {
             return { success: false, error: 'Пользователь не найден' };
         }
         
-        console.log('📥 Загружаем прогресс симуляции для:', user.id);
+        console.log('📥 Загружаем прогресс симуляции для:', user.id, 'блок:', block);
         
-        // Всегда используем локальное хранилище для симуляции
-        const progress = this.getSimulationProgressLocal(block, user);
+        // Сначала пробуем локально
+        const localProgress = this.getSimulationProgressLocal(block, user);
         
-        return {
-            success: true,
-            progress: progress,
-            local: true
-        };
+        if (user.userType === 'guest') {
+            console.log('👤 Гость - используем локальные данные');
+            return {
+                success: true,
+                progress: localProgress,
+                local: true
+            };
+        }
+        
+        // Для зарегистрированных пробуем сервер
+        try {
+            const result = await this.request(`/api/simulation-progress/${user.id}/${block}`);
+            
+            if (result.success) {
+                console.log('✅ Прогресс симуляции загружен с сервера');
+                
+                // Обновляем локальные данные
+                if (result.progress) {
+                    this.saveSimulationProgressLocal(
+                        block, 
+                        result.progress.currentQuestionIndex, 
+                        result.progress.userAnswers, 
+                        user
+                    );
+                }
+                
+                return result;
+            } else {
+                console.log('⚠️ Сервер вернул пустые данные, используем локальные');
+                return {
+                    success: true,
+                    progress: localProgress,
+                    local: true
+                };
+            }
+            
+        } catch (error) {
+            console.warn('⚠️ Не удалось загрузить с сервера, используем локальные данные:', error.message);
+            return {
+                success: true,
+                progress: localProgress,
+                local: true,
+                error: 'Загружено локально (ошибка сервера)'
+            };
+        }
     }
 
     async deleteSimulationProgress(block) {
@@ -253,8 +372,26 @@ class ExamAPI {
             return { success: false, error: 'Пользователь не найден' };
         }
         
+        // Удаляем локально
         this.deleteSimulationProgressLocal(block, user);
-        return { success: true, local: true };
+        
+        // Если пользователь гость, удаляем только локально
+        if (user.userType === 'guest') {
+            return { success: true, local: true };
+        }
+        
+        // Для зарегистрированных пробуем сервер
+        try {
+            const result = await this.request(`/api/simulation-progress/${user.id}/${block}`, {
+                method: 'DELETE'
+            });
+            
+            return result;
+            
+        } catch (error) {
+            console.warn('⚠️ Не удалось удалить с сервера, удаляем локально');
+            return { success: true, local: true };
+        }
     }
 
     // === ПОПЫТКИ ЭКЗАМЕНА ===
@@ -267,7 +404,7 @@ class ExamAPI {
             return { success: false, error: 'Пользователь не найден' };
         }
         
-        console.log('💾 Сохраняем попытку для пользователя:', user.id);
+        console.log('💾 Сохраняем попытку для пользователя:', user.id, 'блок:', attempt.block);
         
         // Всегда сохраняем локально
         this.saveExamAttemptLocal(attempt, user);
@@ -291,11 +428,11 @@ class ExamAPI {
             return result;
             
         } catch (error) {
-            console.warn('⚠️ Не удалось сохранить на сервер, используем локальное хранилище');
+            console.warn('⚠️ Не удалось сохранить на сервер, используем локальное хранилище:', error.message);
             return { 
                 success: true, 
                 local: true,
-                error: 'Сохранено локально (ошибка сервера)' 
+                error: 'Сохранено локально (ошибка сервера)'
             };
         }
     }
@@ -308,9 +445,9 @@ class ExamAPI {
             return { success: false, error: 'Пользователь не найден' };
         }
         
-        console.log('📥 Загружаем попытки для:', user.id);
+        console.log('📥 Загружаем попытки для:', user.id, 'тип:', user.userType);
         
-        // Всегда загружаем локально
+        // Всегда загружаем локально (для быстрого отображения)
         const localAttempts = this.getExamAttemptsLocal(user);
         
         if (user.userType === 'guest') {
@@ -327,9 +464,18 @@ class ExamAPI {
             const result = await this.request(`/api/exam-attempts/${user.id}`);
             console.log('✅ Данные с сервера:', result.attempts?.length || 0, 'попыток');
             
-            // Объединяем с локальными данными
-            if (result.success && result.attempts && result.attempts.length > 0) {
-                return result;
+            if (result.success && result.attempts) {
+                // Обновляем локальные данные
+                this.updateLocalAttempts(result.attempts, user);
+                
+                // Объединяем с локальными данными (удаляем дубликаты)
+                const mergedAttempts = this.mergeAttempts(result.attempts, localAttempts);
+                
+                return {
+                    success: true,
+                    attempts: mergedAttempts,
+                    fromServer: true
+                };
             } else {
                 // Если сервер вернул пустые данные, используем локальные
                 console.log('⚠️ Сервер вернул пустые данные, используем локальные');
@@ -341,7 +487,7 @@ class ExamAPI {
             }
             
         } catch (error) {
-            console.warn('⚠️ Не удалось загрузить с сервера, используем локальные данные');
+            console.warn('⚠️ Не удалось загрузить с сервера, используем локальные данные:', error.message);
             return {
                 success: true,
                 attempts: localAttempts,
@@ -349,6 +495,59 @@ class ExamAPI {
                 error: 'Загружено локально (ошибка сервера)'
             };
         }
+    }
+
+    // Обновление локальных попыток данными с сервера
+    updateLocalAttempts(serverAttempts, user) {
+        const storageKey = `examAttempts_${user.id}`;
+        const currentLocal = this.getExamAttemptsLocal(user);
+        
+        // Создаем Map для быстрого поиска по ID
+        const serverMap = new Map();
+        serverAttempts.forEach(attempt => {
+            serverMap.set(attempt.id, attempt);
+        });
+        
+        // Объединяем: серверные данные имеют приоритет
+        const updatedAttempts = [...currentLocal];
+        
+        serverAttempts.forEach(serverAttempt => {
+            const localIndex = updatedAttempts.findIndex(a => a.id === serverAttempt.id);
+            if (localIndex === -1) {
+                // Добавляем новую попытку с сервера
+                updatedAttempts.push(serverAttempt);
+            } else {
+                // Обновляем существующую (серверная версия новее)
+                updatedAttempts[localIndex] = serverAttempt;
+            }
+        });
+        
+        // Сохраняем обновленные данные
+        localStorage.setItem(storageKey, JSON.stringify(updatedAttempts));
+        console.log('💾 Локальные попытки обновлены данными с сервера');
+    }
+
+    // Объединение попыток с сервера и локальных
+    mergeAttempts(serverAttempts, localAttempts) {
+        const mergedMap = new Map();
+        
+        // Сначала добавляем серверные (они имеют приоритет)
+        serverAttempts.forEach(attempt => {
+            mergedMap.set(attempt.id, attempt);
+        });
+        
+        // Добавляем локальные, которых нет на сервере
+        localAttempts.forEach(attempt => {
+            if (!mergedMap.has(attempt.id) && attempt.id.startsWith('local_')) {
+                mergedMap.set(attempt.id, attempt);
+            }
+        });
+        
+        return Array.from(mergedMap.values()).sort((a, b) => {
+            const dateA = new Date(a.date || a.attempt_date || 0);
+            const dateB = new Date(b.date || b.attempt_date || 0);
+            return dateB - dateA; // Новые сверху
+        });
     }
 
     async deleteExamAttempt(attemptId) {
@@ -371,7 +570,7 @@ class ExamAPI {
                 method: 'DELETE'
             });
         } catch (error) {
-            console.warn('⚠️ Не удалось удалить с сервера');
+            console.warn('⚠️ Не удалось удалить с сервера, удаляем локально');
             return { success: true, local: true };
         }
     }
@@ -390,7 +589,8 @@ class ExamAPI {
             userAnswers,
             currentQuestionIndex,
             userId: user.id,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            synced: false
         };
         
         localStorage.setItem(storageKey, JSON.stringify(allProgress));
@@ -414,7 +614,7 @@ class ExamAPI {
     // Прогресс симуляции локально
     saveSimulationProgressLocal(block, currentQuestionIndex, userAnswers, user) {
         const storageKey = user.userType === 'guest' 
-            ? 'simulationProgress_guest' 
+            ? 'simulationProgress_guest'
             : `simulationProgress_${user.id}`;
         
         let allProgress = JSON.parse(localStorage.getItem(storageKey) || '{}');
@@ -424,7 +624,8 @@ class ExamAPI {
             userAnswers: userAnswers,
             timestamp: new Date().toISOString(),
             userId: user.id,
-            userType: user.userType
+            userType: user.userType,
+            synced: false
         };
         
         localStorage.setItem(storageKey, JSON.stringify(allProgress));
@@ -433,7 +634,7 @@ class ExamAPI {
 
     getSimulationProgressLocal(block, user) {
         const storageKey = user.userType === 'guest' 
-            ? 'simulationProgress_guest' 
+            ? 'simulationProgress_guest'
             : `simulationProgress_${user.id}`;
         
         console.log('🔍 Ищем локальный прогресс по ключу:', storageKey);
@@ -451,7 +652,7 @@ class ExamAPI {
 
     deleteSimulationProgressLocal(block, user) {
         const storageKey = user.userType === 'guest' 
-            ? 'simulationProgress_guest' 
+            ? 'simulationProgress_guest'
             : `simulationProgress_${user.id}`;
         
         let allProgress = JSON.parse(localStorage.getItem(storageKey) || '{}');
@@ -468,9 +669,10 @@ class ExamAPI {
         
         const attemptWithId = {
             ...attempt,
-            id: 'local_' + Date.now(),
+            id: attempt.id || 'local_' + Date.now(),
             date: new Date().toISOString(),
-            userId: user.id
+            userId: user.id,
+            local: true
         };
         
         attempts.push(attemptWithId);
@@ -488,13 +690,18 @@ class ExamAPI {
     deleteExamAttemptLocal(attemptId, user) {
         const storageKey = `examAttempts_${user.id}`;
         let attempts = this.getExamAttemptsLocal(user);
+        const initialLength = attempts.length;
         attempts = attempts.filter(a => a.id !== attemptId);
-        localStorage.setItem(storageKey, JSON.stringify(attempts));
         
-        console.log('🗑️ Локальная попытка удалена:', attemptId);
+        if (attempts.length < initialLength) {
+            localStorage.setItem(storageKey, JSON.stringify(attempts));
+            console.log('🗑️ Локальная попытка удалена:', attemptId);
+        }
     }
 
-     saveUserToStorage(user) {
+    // === УПРАВЛЕНИЕ ПОЛЬЗОВАТЕЛЯМИ ===
+
+    saveUserToStorage(user) {
         console.log('💾 СОХРАНЕНИЕ ПОЛЬЗОВАТЕЛЯ В LOCALSTORAGE');
         console.log('Данные пользователя:', user);
         
@@ -510,7 +717,7 @@ class ExamAPI {
         
         console.log('✅ Пользователь сохранен');
     }
-    
+
     loadUserFromStorage() {
         const userJson = localStorage.getItem('currentUser');
         if (userJson) {
@@ -546,26 +753,6 @@ class ExamAPI {
             }
         }
         
-        // Если был пользователь, очищаем его локальные данные
-        if (user) {
-            // Для гостей очищаем ВСЕ данные
-            if (user.userType === 'guest') {
-                const guestKeys = [
-                    'examAttempts_guest',
-                    'trainerProgress_guest', 
-                    'simulationProgress_guest'
-                ];
-                
-                guestKeys.forEach(key => {
-                    localStorage.removeItem(key);
-                    console.log(`🗑️ Удалено: ${key}`);
-                });
-            } else {
-                // Для зарегистрированных оставляем данные
-                console.log('🔐 Данные зарегистрированного пользователя сохранены');
-            }
-        }
-        
         // Очищаем данные авторизации
         localStorage.removeItem('currentUser');
         localStorage.removeItem('isAuthorized');
@@ -592,7 +779,136 @@ class ExamAPI {
         const user = this.getUserFromStorage();
         return user && user.userType === 'yandex';
     }
-    
+
+    // === СИНХРОНИЗАЦИЯ ДАННЫХ ===
+
+    // Синхронизация локальных данных с сервером
+    async syncLocalDataToServer() {
+        const user = this.getUserFromStorage();
+        
+        if (!user || user.userType === 'guest') {
+            console.log('👤 Синхронизация не требуется для гостя');
+            return { success: true, message: 'Синхронизация не требуется для гостя' };
+        }
+        
+        console.log('🔄 Синхронизация данных с сервером для пользователя:', user.id);
+        
+        try {
+            // 1. Синхронизация прогресса тренажера
+            await this.syncTrainerProgress(user);
+            
+            // 2. Синхронизация попыток экзамена
+            await this.syncExamAttempts(user);
+            
+            // 3. Синхронизация прогресса симуляции
+            await this.syncSimulationProgress(user);
+            
+            console.log('✅ Все данные синхронизированы с сервером');
+            return { success: true, message: 'Данные синхронизированы' };
+            
+        } catch (error) {
+            console.error('❌ Ошибка синхронизации:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    async syncTrainerProgress(user) {
+        const storageKey = `trainerProgress_${user.id}`;
+        const localProgress = JSON.parse(localStorage.getItem(storageKey) || '{}');
+        
+        for (const [block, progress] of Object.entries(localProgress)) {
+            if (progress && !progress.synced) {
+                try {
+                    await this.request('/api/trainer-progress', {
+                        method: 'POST',
+                        body: {
+                            userId: user.id,
+                            block,
+                            userAnswers: progress.userAnswers,
+                            currentQuestionIndex: progress.currentQuestionIndex
+                        }
+                    });
+                    
+                    // Помечаем как синхронизированное
+                    progress.synced = true;
+                    console.log(`✅ Синхронизирован прогресс тренажера: ${block}`);
+                    
+                } catch (error) {
+                    console.warn(`⚠️ Не удалось синхронизировать прогресс тренажера ${block}:`, error.message);
+                }
+            }
+        }
+        
+        // Сохраняем обновленные данные
+        localStorage.setItem(storageKey, JSON.stringify(localProgress));
+    }
+
+    async syncExamAttempts(user) {
+        const storageKey = `examAttempts_${user.id}`;
+        const localAttempts = this.getExamAttemptsLocal(user);
+        
+        for (const attempt of localAttempts) {
+            if (attempt.local && !attempt.synced) {
+                try {
+                    await this.request('/api/exam-attempts', {
+                        method: 'POST',
+                        body: {
+                            userId: user.id,
+                            attempt: {
+                                ...attempt,
+                                id: undefined // Сервер создаст свой ID
+                            }
+                        }
+                    });
+                    
+                    // Помечаем как синхронизированное
+                    attempt.synced = true;
+                    console.log(`✅ Синхронизирована попытка: ${attempt.id}`);
+                    
+                } catch (error) {
+                    console.warn(`⚠️ Не удалось синхронизировать попытку ${attempt.id}:`, error.message);
+                }
+            }
+        }
+        
+        // Сохраняем обновленные данные
+        localStorage.setItem(storageKey, JSON.stringify(localAttempts));
+    }
+
+    async syncSimulationProgress(user) {
+        const storageKey = user.userType === 'guest' 
+            ? 'simulationProgress_guest'
+            : `simulationProgress_${user.id}`;
+        
+        const localProgress = JSON.parse(localStorage.getItem(storageKey) || '{}');
+        
+        for (const [block, progress] of Object.entries(localProgress)) {
+            if (progress && !progress.synced) {
+                try {
+                    await this.request('/api/simulation-progress', {
+                        method: 'POST',
+                        body: {
+                            userId: user.id,
+                            block,
+                            userAnswers: progress.userAnswers,
+                            currentQuestionIndex: progress.currentQuestionIndex
+                        }
+                    });
+                    
+                    // Помечаем как синхронизированное
+                    progress.synced = true;
+                    console.log(`✅ Синхронизирован прогресс симуляции: ${block}`);
+                    
+                } catch (error) {
+                    console.warn(`⚠️ Не удалось синхронизировать прогресс симуляции ${block}:`, error.message);
+                }
+            }
+        }
+        
+        // Сохраняем обновленные данные
+        localStorage.setItem(storageKey, JSON.stringify(localProgress));
+    }
+
     // Перенос данных гостя на сервер при входе через Яндекс
     async migrateGuestData(targetUserId) {
         const user = this.getUserFromStorage();
@@ -673,13 +989,104 @@ class ExamAPI {
         };
     }
 
+    // === СТАТИСТИКА ===
+
+    async getStatistics() {
+        const user = this.getUserFromStorage();
+        
+        if (!user) {
+            return { success: false, error: 'Пользователь не найден' };
+        }
+        
+        try {
+            const result = await this.request(`/api/stats/${user.id}`);
+            return result;
+        } catch (error) {
+            console.warn('⚠️ Не удалось получить статистику с сервера:', error.message);
+            
+            // Возвращаем локальную статистику
+            return this.getLocalStatistics(user);
+        }
+    }
+
+    getLocalStatistics(user) {
+        const attempts = this.getExamAttemptsLocal(user);
+        const trainerProgress = this.getTrainerProgressLocal();
+        
+        let totalTrainerQuestions = 0;
+        let completedTrainerQuestions = 0;
+        
+        Object.values(trainerProgress).forEach(progress => {
+            if (progress && progress.userAnswers) {
+                const completed = progress.userAnswers.filter(a => a !== null && a !== undefined).length;
+                completedTrainerQuestions += completed;
+            }
+        });
+        
+        const totalExamAttempts = attempts.length;
+        const passedExamAttempts = attempts.filter(a => a.isPassed).length;
+        const averagePercentage = attempts.length > 0 
+            ? attempts.reduce((sum, a) => sum + (a.percentage || 0), 0) / attempts.length
+            : 0;
+        
+        return {
+            success: true,
+            stats: {
+                user: {
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    type: user.userType
+                },
+                trainer: {
+                    completedQuestions: completedTrainerQuestions,
+                    totalQuestions: totalTrainerQuestions
+                },
+                exams: {
+                    totalAttempts: totalExamAttempts,
+                    passedAttempts: passedExamAttempts,
+                    successRate: totalExamAttempts > 0 ? (passedExamAttempts / totalExamAttempts) * 100 : 0,
+                    averagePercentage: averagePercentage
+                }
+            },
+            local: true
+        };
+    }
+
     // Вспомогательный метод для отладки
     debugStorage() {
         console.log('🔍 ДЕБАГ LOCALSTORAGE:');
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
-            console.log(`${key}: ${localStorage.getItem(key)}`);
+            const value = localStorage.getItem(key);
+            
+            try {
+                const parsed = JSON.parse(value);
+                console.log(`${key}:`, parsed);
+            } catch {
+                console.log(`${key}: ${value}`);
+            }
         }
+    }
+
+    // Получить информацию о состоянии соединения
+    getConnectionStatus() {
+        return new Promise(async (resolve) => {
+            try {
+                const result = await this.request('/api/test');
+                resolve({
+                    connected: true,
+                    message: result.message,
+                    time: result.time
+                });
+            } catch (error) {
+                resolve({
+                    connected: false,
+                    message: error.message,
+                    time: new Date().toISOString()
+                });
+            }
+        });
     }
 }
 
@@ -690,5 +1097,26 @@ window.examAPI = new ExamAPI();
 window.addEventListener('DOMContentLoaded', () => {
     const user = window.examAPI.getUserFromStorage();
     console.log('🚀 API загружен. Текущий пользователь:', 
-        user ? `${user.name} (${user.userType}, id: ${user.id})` : 'не авторизован');
+         user ? `${user.name} (${user.userType}, id: ${user.id})` : 'не авторизован');
+    
+    // Проверяем соединение
+    window.examAPI.getConnectionStatus().then(status => {
+        console.log('📡 Статус соединения:', status.connected ? '✅ Соединение установлено' : '❌ Сервер недоступен');
+    });
+    
+    // Автоматическая синхронизация при загрузке (если пользователь зарегистрирован)
+    if (user && user.userType !== 'guest') {
+        setTimeout(() => {
+            window.examAPI.syncLocalDataToServer().then(result => {
+                if (result.success) {
+                    console.log('✅ Автоматическая синхронизация завершена');
+                }
+            });
+        }, 3000); // Ждем 3 секунды после загрузки
+    }
 });
+
+// Экспорт для использования в модулях
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = ExamAPI;
+}

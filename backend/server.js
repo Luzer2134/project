@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const sqlite3 = require('sqlite3').verbose();
 require('dotenv').config();
 
 const app = express();
@@ -11,8 +12,6 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'website')));
-
 
 // Логирование
 app.use((req, res, next) => {
@@ -26,27 +25,126 @@ app.use(express.static(path.join(__dirname, '..')));
 // Папка для данных
 const DATA_DIR = path.join(__dirname, 'data');
 if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR);
+    fs.mkdirSync(DATA_DIR, { recursive: true });
     console.log('📁 Создана папка для данных:', DATA_DIR);
 }
 
-// Файлы для хранения
-const USERS_FILE = path.join(DATA_DIR, 'users.json');
+// Подключение к базе данных
+const DB_PATH = path.join(DATA_DIR, 'exam-platform.db');
+const db = new sqlite3.Database(DB_PATH, (err) => {
+    if (err) {
+        console.error('❌ Ошибка подключения к SQLite:', err.message);
+    } else {
+        console.log('✅ Подключено к SQLite базе данных');
+        
+        // Включаем foreign keys
+        db.run('PRAGMA foreign_keys = ON');
+        
+        // Создаем таблицы если их нет
+        createTables();
+    }
+});
 
-// Инициализация файлов
-const initFiles = () => {
-    const files = [
-        { path: USERS_FILE, default: [] }
+// Функция создания таблиц
+function createTables() {
+    const tables = [
+        // Таблица пользователей
+        `CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            yandex_id TEXT UNIQUE,
+            email TEXT UNIQUE NOT NULL,
+            name TEXT NOT NULL,
+            user_type TEXT NOT NULL DEFAULT 'guest',
+            avatar TEXT,
+            access_token TEXT,
+            refresh_token TEXT,
+            is_authorized BOOLEAN DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            last_login DATETIME
+        )`,
+        
+        // Таблица прогресса тренажера
+        `CREATE TABLE IF NOT EXISTS trainer_progress (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            block TEXT NOT NULL,
+            question_index INTEGER DEFAULT 0,
+            user_answers TEXT DEFAULT '[]',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(user_id, block),
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        )`,
+        
+        // Таблица попыток экзамена
+        `CREATE TABLE IF NOT EXISTS exam_attempts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            attempt_id TEXT UNIQUE NOT NULL,
+            block TEXT NOT NULL,
+            score INTEGER NOT NULL,
+            total_questions INTEGER NOT NULL,
+            correct_answers INTEGER NOT NULL,
+            percentage REAL NOT NULL,
+            is_passed BOOLEAN DEFAULT 0,
+            time_spent INTEGER DEFAULT 0,
+            user_answers TEXT DEFAULT '[]',
+            questions_data TEXT DEFAULT '[]',
+            attempt_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        )`,
+        
+        // Таблица прогресса симуляции
+        `CREATE TABLE IF NOT EXISTS simulation_progress (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            block TEXT NOT NULL,
+            question_index INTEGER DEFAULT 0,
+            user_answers TEXT DEFAULT '[]',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(user_id, block),
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        )`
     ];
     
-    files.forEach(file => {
-        if (!fs.existsSync(file.path)) {
-            fs.writeFileSync(file.path, JSON.stringify(file.default, null, 2));
-            console.log(`📄 Создан файл: ${path.basename(file.path)}`);
-        }
+    tables.forEach((sql, index) => {
+        db.run(sql, (err) => {
+            if (err) {
+                console.error(`❌ Ошибка создания таблицы ${index + 1}:`, err.message);
+            }
+        });
     });
-};
-initFiles();
+    
+    console.log('✅ Таблицы базы данных проверены');
+}
+
+// Вспомогательная функция для запросов к базе данных
+function dbQuery(sql, params = []) {
+    return new Promise((resolve, reject) => {
+        db.all(sql, params, (err, rows) => {
+            if (err) {
+                console.error('❌ Ошибка SQL запроса:', err.message);
+                reject(err);
+            } else {
+                resolve(rows);
+            }
+        });
+    });
+}
+
+function dbRun(sql, params = []) {
+    return new Promise((resolve, reject) => {
+        db.run(sql, params, function(err) {
+            if (err) {
+                console.error('❌ Ошибка SQL выполнения:', err.message);
+                reject(err);
+            } else {
+                resolve({ id: this.lastID, changes: this.changes });
+            }
+        });
+    });
+}
 
 // === Яндекс OAuth МАРШРУТЫ ===
 
@@ -71,11 +169,8 @@ app.get('/auth/yandex', (req, res) => {
 });
 
 // Callback от Яндекс OAuth
-// Callback от Яндекс OAuth - ВАЖНО: Яндекс отправляет на /callback
-// Callback от Яндекс OAuth - Яндекс отправляет на /callback
 app.get('/callback', async (req, res) => {
-    console.log('🔄 Яндекс OAuth callback получен НА /callback');
-    console.log('Query параметры:', req.query);
+    console.log('🔄 Яндекс OAuth callback получен');
     
     try {
         const { code, error, error_description } = req.query;
@@ -111,12 +206,11 @@ app.get('/callback', async (req, res) => {
                 code: code,
                 client_id: YANDEX_CLIENT_ID,
                 client_secret: YANDEX_CLIENT_SECRET,
-                redirect_uri: process.env.YANDEX_REDIRECT_URI // ВАЖНО!
+                redirect_uri: process.env.YANDEX_REDIRECT_URI
             })
         });
         
         const tokenData = await tokenResponse.json();
-        console.log('Ответ от Яндекс token:', tokenData);
         
         if (!tokenData.access_token) {
             console.error('❌ Не удалось получить токен:', tokenData);
@@ -144,56 +238,68 @@ app.get('/callback', async (req, res) => {
             login: userData.login
         });
         
-        // Загружаем или создаем пользователя в нашей системе
-        let users = [];
-        if (fs.existsSync(USERS_FILE)) {
-            users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
-        }
+        // Проверяем существует ли пользователь в базе
+        let user = await dbQuery(
+            'SELECT * FROM users WHERE yandex_id = ? OR email = ?',
+            [userData.id, userData.default_email]
+        );
         
-        // Ищем пользователя по Яндекс ID или email
-        let user = users.find(u => u.yandexId === userData.id) || 
-                   users.find(u => u.email === userData.default_email);
-        
-        if (!user) {
+        if (user.length === 0) {
             // Создаем нового пользователя
-            user = {
-                id: Date.now().toString(),
-                email: userData.default_email,
-                name: userData.real_name || userData.display_name || userData.login || 'Пользователь Яндекс',
-                yandexId: userData.id,
-                userType: 'yandex',
-                isAuthorized: true,
-                createdAt: new Date().toISOString(),
-                avatar: userData.is_avatar_empty ? null : `https://avatars.yandex.net/get-yapic/${userData.default_avatar_id}/islands-200`,
-                accessToken: tokenData.access_token,
-                refreshToken: tokenData.refresh_token
-            };
+            const result = await dbRun(
+                `INSERT INTO users 
+                (yandex_id, email, name, user_type, avatar, access_token, refresh_token, is_authorized, last_login) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [
+                    userData.id,
+                    userData.default_email,
+                    userData.real_name || userData.display_name || userData.login || 'Пользователь Яндекс',
+                    'yandex',
+                    userData.is_avatar_empty ? null : `https://avatars.yandex.net/get-yapic/${userData.default_avatar_id}/islands-200`,
+                    tokenData.access_token,
+                    tokenData.refresh_token,
+                    1,
+                    new Date().toISOString()
+                ]
+            );
             
-            users.push(user);
-            fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
-            console.log(`✅ Создан новый пользователь: ${user.email}`);
+            user = await dbQuery('SELECT * FROM users WHERE id = ?', [result.id]);
+            console.log(`✅ Создан новый пользователь: ${userData.default_email}`);
         } else {
             // Обновляем существующего пользователя
-            user.name = userData.real_name || userData.display_name || userData.login || user.name;
-            user.isAuthorized = true;
-            user.avatar = userData.is_avatar_empty ? null : `https://avatars.yandex.net/get-yapic/${userData.default_avatar_id}/islands-200`;
-            user.accessToken = tokenData.access_token;
-            user.refreshToken = tokenData.refresh_token;
-            user.lastLogin = new Date().toISOString();
+            await dbRun(
+                `UPDATE users SET 
+                name = ?, 
+                avatar = ?, 
+                access_token = ?, 
+                refresh_token = ?, 
+                is_authorized = ?, 
+                last_login = ? 
+                WHERE id = ?`,
+                [
+                    userData.real_name || userData.display_name || userData.login || user[0].name,
+                    userData.is_avatar_empty ? null : `https://avatars.yandex.net/get-yapic/${userData.default_avatar_id}/islands-200`,
+                    tokenData.access_token,
+                    tokenData.refresh_token,
+                    1,
+                    new Date().toISOString(),
+                    user[0].id
+                ]
+            );
             
-            fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
-            console.log(`✅ Обновлен существующий пользователь: ${user.email}`);
+            user = await dbQuery('SELECT * FROM users WHERE id = ?', [user[0].id]);
+            console.log(`✅ Обновлен существующий пользователь: ${userData.default_email}`);
         }
         
         // Подготовка данных для фронтенда
         const userForFrontend = {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            userType: user.userType,
-            isAuthorized: user.isAuthorized,
-            avatar: user.avatar,
-            yandexId: user.yandexId
+            id: user[0].id,
+            email: user[0].email,
+            name: user[0].name,
+            userType: user[0].user_type,
+            isAuthorized: user[0].is_authorized,
+            avatar: user[0].avatar,
+            yandexId: user[0].yandex_id
         };
         
         // Генерируем URL для редиректа с данными пользователя
@@ -217,15 +323,16 @@ app.get('/auth/yandex/logout', async (req, res) => {
             return res.json({ success: false, error: 'Не указан userId' });
         }
         
-        // Загружаем пользователей
-        let users = [];
-        if (fs.existsSync(USERS_FILE)) {
-            users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+        // Получаем пользователя
+        const users = await dbQuery('SELECT * FROM users WHERE id = ?', [userId]);
+        
+        if (users.length === 0) {
+            return res.json({ success: false, error: 'Пользователь не найден' });
         }
         
-        const user = users.find(u => u.id === userId);
+        const user = users[0];
         
-        if (user && user.accessToken) {
+        if (user.access_token) {
             // Пытаемся отозвать токен у Яндекс
             try {
                 await fetch('https://oauth.yandex.ru/revoke_token', {
@@ -234,7 +341,7 @@ app.get('/auth/yandex/logout', async (req, res) => {
                         'Content-Type': 'application/x-www-form-urlencoded'
                     },
                     body: new URLSearchParams({
-                        access_token: user.accessToken,
+                        access_token: user.access_token,
                         client_id: process.env.YANDEX_CLIENT_ID,
                         client_secret: process.env.YANDEX_CLIENT_SECRET
                     })
@@ -245,11 +352,10 @@ app.get('/auth/yandex/logout', async (req, res) => {
             }
             
             // Удаляем токены у пользователя
-            delete user.accessToken;
-            delete user.refreshToken;
-            user.isAuthorized = false;
-            
-            fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+            await dbRun(
+                'UPDATE users SET access_token = NULL, refresh_token = NULL, is_authorized = 0 WHERE id = ?',
+                [userId]
+            );
         }
         
         res.json({ success: true });
@@ -264,79 +370,88 @@ app.get('/auth/yandex/logout', async (req, res) => {
 
 // Тестовый маршрут
 app.get('/api/test', (req, res) => {
-    res.json({ 
+    res.json({
         success: true,
-        message: 'API работает!', 
+        message: 'API работает с SQLite!',
         time: new Date().toISOString(),
-        yandexConfigured: !!process.env.YANDEX_CLIENT_ID
+        yandexConfigured: !!process.env.YANDEX_CLIENT_ID,
+        database: 'SQLite'
     });
 });
 
 // Гостевой вход
-app.post('/api/guest', (req, res) => {
+app.post('/api/guest', async (req, res) => {
     try {
         const guestUser = {
-            id: 'guest_' + Date.now(),
             email: 'guest_' + Date.now() + '@temp.com',
             name: 'Гость',
-            userType: 'guest',
-            isAuthorized: false,
-            createdAt: new Date().toISOString()
+            user_type: 'guest',
+            is_authorized: 0
         };
         
-        console.log(`👤 Гостевой вход: ${guestUser.id}`);
+        console.log(`👤 Гостевой вход: ${guestUser.email}`);
+        
+        // Создаем запись гостя в базе
+        const result = await dbRun(
+            `INSERT INTO users (email, name, user_type, is_authorized) VALUES (?, ?, ?, ?)`,
+            [guestUser.email, guestUser.name, guestUser.user_type, guestUser.is_authorized]
+        );
+        
+        const user = await dbQuery('SELECT * FROM users WHERE id = ?', [result.id]);
         
         res.json({
             success: true,
-            user: guestUser
+            user: {
+                id: user[0].id,
+                email: user[0].email,
+                name: user[0].name,
+                userType: user[0].user_type,
+                isAuthorized: user[0].is_authorized
+            }
         });
         
     } catch (error) {
         console.error('❌ Ошибка гостевого входа:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
-            error: 'Ошибка гостевого входа' 
+            error: 'Ошибка гостевого входа'
         });
     }
 });
 
-// Получение пользователя по ID (для проверки сессии)
-app.get('/api/user/:userId', (req, res) => {
+// Получение пользователя по ID
+app.get('/api/user/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
         
-        let users = [];
-        if (fs.existsSync(USERS_FILE)) {
-            users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
-        }
+        const users = await dbQuery('SELECT * FROM users WHERE id = ?', [userId]);
         
-        const user = users.find(u => u.id === userId);
-        
-        if (user) {
+        if (users.length > 0) {
+            const user = users[0];
             res.json({
                 success: true,
                 user: {
                     id: user.id,
                     email: user.email,
                     name: user.name,
-                    userType: user.userType,
-                    isAuthorized: user.isAuthorized,
+                    userType: user.user_type,
+                    isAuthorized: user.is_authorized,
                     avatar: user.avatar,
-                    yandexId: user.yandexId
+                    yandexId: user.yandex_id
                 }
             });
         } else {
-            res.status(404).json({ 
+            res.status(404).json({
                 success: false,
-                error: 'Пользователь не найден' 
+                error: 'Пользователь не найден'
             });
         }
         
     } catch (error) {
         console.error('❌ Ошибка получения пользователя:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
-            error: 'Ошибка получения пользователя' 
+            error: 'Ошибка получения пользователя'
         });
     }
 });
@@ -344,60 +459,90 @@ app.get('/api/user/:userId', (req, res) => {
 // === ПРОГРЕСС ТРЕНАЖЕРА ===
 
 // Сохранение прогресса тренажера
-app.post('/api/trainer-progress', (req, res) => {
+app.post('/api/trainer-progress', async (req, res) => {
     try {
         const { userId, block, userAnswers, currentQuestionIndex } = req.body;
         
         if (!userId || !block) {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 success: false,
-                error: 'Неверные данные' 
+                error: 'Неверные данные'
             });
         }
         
-        // Создаем файл для конкретного пользователя
-        const userProgressFile = path.join(DATA_DIR, `trainer_progress_${userId}.json`);
+        // Проверяем существующую запись
+        const existing = await dbQuery(
+            'SELECT * FROM trainer_progress WHERE user_id = ? AND block = ?',
+            [userId, block]
+        );
         
-        let userProgress = {};
-        if (fs.existsSync(userProgressFile)) {
-            userProgress = JSON.parse(fs.readFileSync(userProgressFile, 'utf8'));
+        if (existing.length > 0) {
+            // Обновляем существующую запись
+            await dbRun(
+                `UPDATE trainer_progress SET 
+                question_index = ?, 
+                user_answers = ?, 
+                updated_at = ? 
+                WHERE user_id = ? AND block = ?`,
+                [
+                    currentQuestionIndex || 0,
+                    JSON.stringify(userAnswers || []),
+                    new Date().toISOString(),
+                    userId,
+                    block
+                ]
+            );
+        } else {
+            // Создаем новую запись
+            await dbRun(
+                `INSERT INTO trainer_progress 
+                (user_id, block, question_index, user_answers) 
+                VALUES (?, ?, ?, ?)`,
+                [
+                    userId,
+                    block,
+                    currentQuestionIndex || 0,
+                    JSON.stringify(userAnswers || [])
+                ]
+            );
         }
-        
-        // Обновляем прогресс для блока
-        userProgress[block] = {
-            userAnswers: userAnswers || [],
-            currentQuestionIndex: currentQuestionIndex || 0,
-            updatedAt: new Date().toISOString()
-        };
-        
-        fs.writeFileSync(userProgressFile, JSON.stringify(userProgress, null, 2));
         
         console.log(`💾 Сохранен прогресс тренажера: ${userId}, блок ${block}`);
         
-        res.json({ 
-            success: true 
+        res.json({
+            success: true
         });
         
     } catch (error) {
         console.error('❌ Ошибка сохранения прогресса тренажера:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
-            error: 'Ошибка сохранения прогресса тренажера' 
+            error: 'Ошибка сохранения прогресса тренажера'
         });
     }
 });
 
-// Получение прогресса тренажера
-app.get('/api/trainer-progress/:userId/:block', (req, res) => {
+// Получение прогресса тренажера для блока
+app.get('/api/trainer-progress/:userId/:block', async (req, res) => {
     try {
         const { userId, block } = req.params;
-        const userProgressFile = path.join(DATA_DIR, `trainer_progress_${userId}.json`);
         
-        console.log(`📥 Запрос прогресса тренажера: ${userId}, блок ${block}`);
+        const progress = await dbQuery(
+            'SELECT * FROM trainer_progress WHERE user_id = ? AND block = ?',
+            [userId, block]
+        );
         
-        if (!fs.existsSync(userProgressFile)) {
-            console.log('📭 Файл прогресса не найден');
-            return res.json({
+        if (progress.length > 0) {
+            const data = progress[0];
+            res.json({
+                success: true,
+                progress: {
+                    userAnswers: JSON.parse(data.user_answers || '[]'),
+                    currentQuestionIndex: data.question_index
+                }
+            });
+        } else {
+            res.json({
                 success: true,
                 progress: {
                     userAnswers: [],
@@ -406,58 +551,44 @@ app.get('/api/trainer-progress/:userId/:block', (req, res) => {
             });
         }
         
-        const userProgress = JSON.parse(fs.readFileSync(userProgressFile, 'utf8'));
-        const blockProgress = userProgress[block] || {
-            userAnswers: [],
-            currentQuestionIndex: 0
-        };
-        
-        console.log(`✅ Прогресс найден: блок ${block}`);
-        
-        res.json({
-            success: true,
-            progress: blockProgress
-        });
-        
     } catch (error) {
         console.error('❌ Ошибка получения прогресса тренажера:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
-            error: 'Ошибка получения прогресса тренажера' 
+            error: 'Ошибка получения прогресса тренажера'
         });
     }
 });
 
 // Получение всего прогресса пользователя
-app.get('/api/trainer-progress/:userId', (req, res) => {
+app.get('/api/trainer-progress/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
-        const userProgressFile = path.join(DATA_DIR, `trainer_progress_${userId}.json`);
         
-        console.log(`📥 Запрос всего прогресса: ${userId}`);
+        const progress = await dbQuery(
+            'SELECT * FROM trainer_progress WHERE user_id = ?',
+            [userId]
+        );
         
-        if (!fs.existsSync(userProgressFile)) {
-            console.log('📭 Файл прогресса не найден');
-            return res.json({
-                success: true,
-                progress: {}
-            });
-        }
-        
-        const userProgress = JSON.parse(fs.readFileSync(userProgressFile, 'utf8'));
-        
-        console.log(`✅ Найден прогресс по ${Object.keys(userProgress).length} блокам`);
+        const result = {};
+        progress.forEach(item => {
+            result[item.block] = {
+                userAnswers: JSON.parse(item.user_answers || '[]'),
+                currentQuestionIndex: item.question_index,
+                updatedAt: item.updated_at
+            };
+        });
         
         res.json({
             success: true,
-            progress: userProgress
+            progress: result
         });
         
     } catch (error) {
         console.error('❌ Ошибка получения прогресса:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
-            error: 'Ошибка получения прогресса' 
+            error: 'Ошибка получения прогресса'
         });
     }
 });
@@ -465,80 +596,92 @@ app.get('/api/trainer-progress/:userId', (req, res) => {
 // === ПОПЫТКИ ЭКЗАМЕНА ===
 
 // Сохранить попытку экзамена
-app.post('/api/exam-attempts', (req, res) => {
+app.post('/api/exam-attempts', async (req, res) => {
     try {
         const { userId, attempt } = req.body;
         
         if (!userId || !attempt) {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 success: false,
-                error: 'Неверные данные' 
+                error: 'Неверные данные'
             });
         }
         
-        const attemptsFile = path.join(DATA_DIR, `exam_attempts_${userId}.json`);
+        const attemptId = 'attempt_' + Date.now();
         
-        let attempts = [];
-        if (fs.existsSync(attemptsFile)) {
-            attempts = JSON.parse(fs.readFileSync(attemptsFile, 'utf8'));
-        }
+        await dbRun(
+            `INSERT INTO exam_attempts 
+            (user_id, attempt_id, block, score, total_questions, correct_answers, 
+            percentage, is_passed, time_spent, user_answers, questions_data) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                userId,
+                attemptId,
+                attempt.block || 'Неизвестный блок',
+                attempt.score || 0,
+                attempt.totalQuestions || 0,
+                attempt.correctAnswers || 0,
+                attempt.percentage || 0,
+                attempt.isPassed ? 1 : 0,
+                attempt.timeSpent || 0,
+                JSON.stringify(attempt.userAnswers || []),
+                JSON.stringify(attempt.questions || [])
+            ]
+        );
         
-        // Добавляем ID и дату
-        const attemptWithId = {
-            ...attempt,
-            id: Date.now().toString(),
-            userId: userId,
-            date: new Date().toISOString()
-        };
+        console.log(`💾 Сохранена попытка: ${userId}, ID: ${attemptId}`);
         
-        attempts.push(attemptWithId);
-        fs.writeFileSync(attemptsFile, JSON.stringify(attempts, null, 2));
-        
-        console.log(`💾 Сохранена попытка: ${userId}, ID: ${attemptWithId.id}`);
-        
-        res.json({ 
-            success: true, 
-            attemptId: attemptWithId.id 
+        res.json({
+            success: true,
+            attemptId: attemptId
         });
         
     } catch (error) {
         console.error('❌ Ошибка сохранения попытки:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
-            error: 'Ошибка сохранения попытки' 
+            error: 'Ошибка сохранения попытки'
         });
     }
 });
 
 // Получить все попытки пользователя
-app.get('/api/exam-attempts/:userId', (req, res) => {
-    console.log('=== 📥 ЗАПРОС ПОПЫТОК ЭКЗАМЕНА ===');
-    console.log('Пользователь:', req.params.userId);
+app.get('/api/exam-attempts/:userId', async (req, res) => {
+    console.log('📥 ЗАПРОС ПОПЫТОК ЭКЗАМЕНА для пользователя:', req.params.userId);
     
     try {
         const { userId } = req.params;
-        const attemptsFile = path.join(DATA_DIR, `exam_attempts_${userId}.json`);
         
-        console.log(`📁 Ищем файл: ${path.basename(attemptsFile)}`);
+        const attempts = await dbQuery(
+            'SELECT * FROM exam_attempts WHERE user_id = ? ORDER BY attempt_date DESC',
+            [userId]
+        );
         
-        let attempts = [];
-        if (fs.existsSync(attemptsFile)) {
-            const content = fs.readFileSync(attemptsFile, 'utf8');
-            attempts = JSON.parse(content || '[]');
-            console.log(`📊 Найдено попыток: ${attempts.length}`);
-        } else {
-            console.log('📭 Файл не найден, возвращаем пустой массив');
-        }
+        const formattedAttempts = attempts.map(attempt => ({
+            id: attempt.attempt_id,
+            userId: attempt.user_id,
+            block: attempt.block,
+            score: attempt.score,
+            totalQuestions: attempt.total_questions,
+            correctAnswers: attempt.correct_answers,
+            percentage: attempt.percentage,
+            isPassed: Boolean(attempt.is_passed),
+            timeSpent: attempt.time_spent,
+            userAnswers: JSON.parse(attempt.user_answers || '[]'),
+            questions: JSON.parse(attempt.questions_data || '[]'),
+            date: attempt.attempt_date
+        }));
+        
+        console.log(`📊 Найдено попыток: ${formattedAttempts.length}`);
         
         res.json({
             success: true,
-            attempts
+            attempts: formattedAttempts
         });
         
     } catch (error) {
         console.error('❌ Ошибка получения попыток:', error);
-        console.error('Детали ошибки:', error.message);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
             error: 'Ошибка получения попыток',
             details: error.message
@@ -547,35 +690,217 @@ app.get('/api/exam-attempts/:userId', (req, res) => {
 });
 
 // Удалить попытку
-app.delete('/api/exam-attempts/:userId/:attemptId', (req, res) => {
+app.delete('/api/exam-attempts/:userId/:attemptId', async (req, res) => {
     try {
         const { userId, attemptId } = req.params;
-        const attemptsFile = path.join(DATA_DIR, `exam_attempts_${userId}.json`);
         
-        if (!fs.existsSync(attemptsFile)) {
-            return res.json({ 
-                success: true 
-            });
-        }
+        const result = await dbRun(
+            'DELETE FROM exam_attempts WHERE user_id = ? AND attempt_id = ?',
+            [userId, attemptId]
+        );
         
-        let attempts = JSON.parse(fs.readFileSync(attemptsFile, 'utf8'));
-        const initialCount = attempts.length;
-        attempts = attempts.filter(a => a.id !== attemptId);
-        
-        if (attempts.length < initialCount) {
-            fs.writeFileSync(attemptsFile, JSON.stringify(attempts, null, 2));
+        if (result.changes > 0) {
             console.log(`🗑️ Удалена попытка: ${userId}, ID: ${attemptId}`);
         }
         
-        res.json({ 
-            success: true 
+        res.json({
+            success: true
         });
         
     } catch (error) {
         console.error('❌ Ошибка удаления попытки:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
-            error: 'Ошибка удаления попытки' 
+            error: 'Ошибка удаления попытки'
+        });
+    }
+});
+
+// === ПРОГРЕСС СИМУЛЯЦИИ ===
+
+// Сохранить прогресс симуляции
+app.post('/api/simulation-progress', async (req, res) => {
+    try {
+        const { userId, block, userAnswers, currentQuestionIndex } = req.body;
+        
+        if (!userId || !block) {
+            return res.status(400).json({
+                success: false,
+                error: 'Неверные данные'
+            });
+        }
+        
+        // Проверяем существующую запись
+        const existing = await dbQuery(
+            'SELECT * FROM simulation_progress WHERE user_id = ? AND block = ?',
+            [userId, block]
+        );
+        
+        if (existing.length > 0) {
+            // Обновляем существующую запись
+            await dbRun(
+                `UPDATE simulation_progress SET 
+                question_index = ?, 
+                user_answers = ?, 
+                updated_at = ? 
+                WHERE user_id = ? AND block = ?`,
+                [
+                    currentQuestionIndex || 0,
+                    JSON.stringify(userAnswers || []),
+                    new Date().toISOString(),
+                    userId,
+                    block
+                ]
+            );
+        } else {
+            // Создаем новую запись
+            await dbRun(
+                `INSERT INTO simulation_progress 
+                (user_id, block, question_index, user_answers) 
+                VALUES (?, ?, ?, ?)`,
+                [
+                    userId,
+                    block,
+                    currentQuestionIndex || 0,
+                    JSON.stringify(userAnswers || [])
+                ]
+            );
+        }
+        
+        console.log(`💾 Сохранен прогресс симуляции: ${userId}, блок ${block}`);
+        
+        res.json({
+            success: true
+        });
+        
+    } catch (error) {
+        console.error('❌ Ошибка сохранения прогресса симуляции:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Ошибка сохранения прогресса симуляции'
+        });
+    }
+});
+
+// Получить прогресс симуляции
+app.get('/api/simulation-progress/:userId/:block', async (req, res) => {
+    try {
+        const { userId, block } = req.params;
+        
+        const progress = await dbQuery(
+            'SELECT * FROM simulation_progress WHERE user_id = ? AND block = ?',
+            [userId, block]
+        );
+        
+        if (progress.length > 0) {
+            const data = progress[0];
+            res.json({
+                success: true,
+                progress: {
+                    userAnswers: JSON.parse(data.user_answers || '[]'),
+                    currentQuestionIndex: data.question_index
+                }
+            });
+        } else {
+            res.json({
+                success: true,
+                progress: null
+            });
+        }
+        
+    } catch (error) {
+        console.error('❌ Ошибка получения прогресса симуляции:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Ошибка получения прогресса симуляции'
+        });
+    }
+});
+
+// Удалить прогресс симуляции
+app.delete('/api/simulation-progress/:userId/:block', async (req, res) => {
+    try {
+        const { userId, block } = req.params;
+        
+        const result = await dbRun(
+            'DELETE FROM simulation_progress WHERE user_id = ? AND block = ?',
+            [userId, block]
+        );
+        
+        if (result.changes > 0) {
+            console.log(`🗑️ Удален прогресс симуляции: ${userId}, блок ${block}`);
+        }
+        
+        res.json({
+            success: true
+        });
+        
+    } catch (error) {
+        console.error('❌ Ошибка удаления прогресса симуляции:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Ошибка удаления прогресса симуляции'
+        });
+    }
+});
+
+// === СТАТИСТИКА ===
+
+// Получить статистику пользователя
+app.get('/api/stats/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        
+        // Общая статистика
+        const user = await dbQuery('SELECT * FROM users WHERE id = ?', [userId]);
+        const trainerProgress = await dbQuery('SELECT * FROM trainer_progress WHERE user_id = ?', [userId]);
+        const examAttempts = await dbQuery('SELECT * FROM exam_attempts WHERE user_id = ?', [userId]);
+        
+        let totalTrainerQuestions = 0;
+        let completedTrainerQuestions = 0;
+        let correctTrainerAnswers = 0;
+        
+        trainerProgress.forEach(progress => {
+            const userAnswers = JSON.parse(progress.user_answers || '[]');
+            const completed = userAnswers.filter(a => a !== null && a !== undefined).length;
+            completedTrainerQuestions += completed;
+            // Здесь можно добавить логику подсчета правильных ответов
+        });
+        
+        const totalExamAttempts = examAttempts.length;
+        const passedExamAttempts = examAttempts.filter(a => a.is_passed).length;
+        const averagePercentage = examAttempts.length > 0 
+            ? examAttempts.reduce((sum, a) => sum + a.percentage, 0) / examAttempts.length
+            : 0;
+        
+        res.json({
+            success: true,
+            stats: {
+                user: user[0] ? {
+                    id: user[0].id,
+                    name: user[0].name,
+                    email: user[0].email,
+                    type: user[0].user_type
+                } : null,
+                trainer: {
+                    completedQuestions: completedTrainerQuestions,
+                    totalQuestions: totalTrainerQuestions,
+                    correctAnswers: correctTrainerAnswers
+                },
+                exams: {
+                    totalAttempts: totalExamAttempts,
+                    passedAttempts: passedExamAttempts,
+                    successRate: totalExamAttempts > 0 ? (passedExamAttempts / totalExamAttempts) * 100 : 0,
+                    averagePercentage: averagePercentage
+                }
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ Ошибка получения статистики:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Ошибка получения статистики'
         });
     }
 });
@@ -599,9 +924,9 @@ app.get('/', (req, res) => {
 
 // Для API маршрутов - 404
 app.use('/api/*', (req, res) => {
-    res.status(404).json({ 
+    res.status(404).json({
         success: false,
-        error: 'API маршрут не найден' 
+        error: 'API маршрут не найден'
     });
 });
 
@@ -614,12 +939,25 @@ app.get('*', (req, res) => {
 app.listen(PORT, () => {
     console.log(`\n🚀 ======================================`);
     console.log(`✅ Сервер запущен: http://localhost:${PORT}`);
-    console.log(`📁 Статические файлы из: ${path.join(__dirname, '..')}`);
-    console.log(`💾 Данные сохраняются в: ${DATA_DIR}`);
+    console.log(`📁 База данных: ${DB_PATH}`);
+    console.log(`💾 SQLite версия: ${sqlite3.VERSION}`);
     console.log(`🔑 Яндекс OAuth: ${process.env.YANDEX_CLIENT_ID ? 'Настроен' : 'Не настроен'}`);
     console.log(`\n📄 Главная страница: http://localhost:${PORT}/`);
     console.log(`🔑 Страница входа: http://localhost:${PORT}/login.html`);
     console.log(`🧪 API тест: http://localhost:${PORT}/api/test`);
     console.log(`🔐 Яндекс вход: http://localhost:${PORT}/auth/yandex`);
+    console.log(`📊 Инициализация БД: npm run init-db`);
     console.log(`======================================\n`);
+});
+
+// Закрытие соединения с БД при завершении
+process.on('SIGINT', () => {
+    db.close((err) => {
+        if (err) {
+            console.error('❌ Ошибка закрытия базы данных:', err.message);
+        } else {
+            console.log('👋 Соединение с SQLite закрыто');
+        }
+        process.exit(0);
+    });
 });
