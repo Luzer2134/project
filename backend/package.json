@@ -15,8 +15,8 @@
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.1",
-    "sqlite3": "^5.1.6",
-    "sqlite": "^5.1.1"
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
@@ -27,5 +27,6 @@
     "sqlite"
   ],
   "author": "Exam Platform",
-  "license": "MIT"
+  "license": "MIT",
+  "type": "commonjs"
 }
