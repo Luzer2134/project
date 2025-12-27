@@ -280,7 +280,6 @@ function initTrainer() {
     currentQuestions = [...blockQuestions];
     userAnswers = new Array(currentQuestions.length).fill(null);
     
-    // Загружаем сохраненный прогресс (ИСПРАВЛЕНО)
     loadProgress();
     
     // Показываем первый вопрос
@@ -294,7 +293,6 @@ function initTrainer() {
     window.localProgress.debugStorage();
 }
 
-// Отображение вопроса (оставляем без изменений)
 function displayQuestion() {
     if (!currentQuestions || currentQuestions.length === 0) {
         console.error('❌ Нет вопросов для отображения!');
@@ -533,18 +531,22 @@ async function saveProgress() {
     console.log('💾 Сохраняем прогресс...');
     
     try {
+        // 1. Сохраняем через локальный менеджер (старый формат)
         const result = window.localProgress.saveTrainerProgress(
             currentBlock, 
             userAnswers, 
             currentQuestionIndex
         );
         
+        // 2. Сохраняем в ЕДИНУЮ структуру для страницы прогресса
+        saveProgressForStatsPage();
+        
         if (result.success) {
             console.log('✅ Прогресс сохранен локально');
         } else {
             console.warn('⚠️ Ошибка сохранения:', result.error);
             
-            // Резервное сохранение в самый простой формат
+            // Резервное сохранение
             const backupKey = `trainer_backup_${currentBlock}`;
             const backupData = {
                 block: currentBlock,
@@ -553,16 +555,60 @@ async function saveProgress() {
                 time: Date.now()
             };
             localStorage.setItem(backupKey, JSON.stringify(backupData));
-            console.log('💾 Резервная копия сохранена');
+            console.log('Резервная копия сохранена');
         }
     } catch (error) {
-        console.error('❌ Критическая ошибка при сохранении:', error);
+        console.error('Критическая ошибка при сохранении:', error);
     }
 }
 
-// Загрузка прогресса (УПРОЩЕНО)
+function saveProgressForStatsPage() {
+    try {
+        const user = window.localProgress.getUser();
+        if (!user) return;
+        
+        // Ключ, который ищет progress.js
+        const statsKey = `trainerProgress_${user.id || 'guest'}`;
+        
+        // Загружаем существующий прогресс или создаем новый
+        let allProgress = {};
+        try {
+            const existing = localStorage.getItem(statsKey);
+            if (existing) {
+                allProgress = JSON.parse(existing);
+            }
+        } catch (e) {
+            console.warn('Ошибка загрузки существующего прогресса:', e);
+        }
+        
+        // Вычисляем процент выполнения
+        const completed = userAnswers.filter(a => a !== null).length;
+        const total = currentQuestions.length;
+        const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+        
+        // Обновляем прогресс для текущего блока
+        allProgress[currentBlock] = {
+            userAnswers: userAnswers,
+            currentQuestionIndex: currentQuestionIndex,
+            completed: completed,
+            total: total,
+            percentage: percentage,
+            timestamp: new Date().toISOString(),
+            userId: user.id || 'guest',
+            userName: user.name || 'Гость'
+        };
+        
+        // Сохраняем
+        localStorage.setItem(statsKey, JSON.stringify(allProgress));
+        console.log('Прогресс сохранен для страницы статистики:', statsKey);
+        
+    } catch (error) {
+        console.error('Ошибка сохранения для статистики:', error);
+    }
+}
+
 async function loadProgress() {
-    console.log('📥 Загружаем прогресс...');
+    console.log('Загружаем прогресс...');
     
     try {
         const result = window.localProgress.getTrainerProgress(currentBlock);
@@ -572,22 +618,22 @@ async function loadProgress() {
             if (result.progress.userAnswers && result.progress.userAnswers.length === currentQuestions.length) {
                 userAnswers = result.progress.userAnswers;
                 currentQuestionIndex = result.progress.currentQuestionIndex || 0;
-                console.log('✅ Прогресс загружен локально');
-                console.log('📊 Состояние:', {
+                console.log('Прогресс загружен локально');
+                console.log('Состояние:', {
                     вопросов: userAnswers.length,
                     отвечено: userAnswers.filter(a => a !== null).length,
                     текущий: currentQuestionIndex
                 });
             } else {
-                console.warn('⚠️ Несовпадение количества вопросов, начинаем заново');
+                console.warn('Несовпадение количества вопросов, начинаем заново');
                 resetToDefault();
             }
         } else {
-            console.log('📭 Прогресс не найден, начинаем с нуля');
+            console.log('Прогресс не найден, начинаем с нуля');
             resetToDefault();
         }
     } catch (error) {
-        console.error('❌ Ошибка загрузки прогресса:', error);
+        console.error('Ошибка загрузки прогресса:', error);
         resetToDefault();
     }
 }
@@ -596,19 +642,41 @@ async function loadProgress() {
 function resetToDefault() {
     userAnswers = new Array(currentQuestions.length).fill(null);
     currentQuestionIndex = 0;
-    console.log('🔄 Прогресс сброшен к начальному состоянию');
+    console.log('Прогресс сброшен к начальному состоянию');
 }
 
 // Сброс прогресса
 async function resetProgress() {
-    if (confirm('⚠️ Вы уверены, что хотите начать тренажёр заново? Весь прогресс по этому блоку будет потерян.')) {
+    if (confirm('Вы уверены, что хотите начать тренажёр заново? Весь прогресс по этому блоку будет потерян.')) {
         try {
+            // Сбрасываем в локальном менеджере
             const result = window.localProgress.resetTrainerProgress(currentBlock);
+            
+            // Сбрасываем в основном формате для страницы прогресса
+            const user = window.localProgress.getUser();
+            if (user) {
+                const statsKey = `trainerProgress_${user.id || 'guest'}`;
+                let allProgress = {};
+                try {
+                    const existing = localStorage.getItem(statsKey);
+                    if (existing) {
+                        allProgress = JSON.parse(existing);
+                    }
+                } catch (e) {
+                    console.warn('Ошибка загрузки прогресса:', e);
+                }
+                
+                // Удаляем прогресс для текущего блока
+                delete allProgress[currentBlock];
+                localStorage.setItem(statsKey, JSON.stringify(allProgress));
+                console.log('Прогресс удален из статистики');
+            }
+            
             if (result.success) {
-                console.log('✅ Прогресс сброшен');
+                console.log('Прогресс сброшен');
             }
         } catch (error) {
-            console.error('❌ Ошибка сброса:', error);
+            console.error('Ошибка сброса:', error);
         }
         
         // Сбрасываем текущую сессию
@@ -616,7 +684,7 @@ async function resetProgress() {
         displayQuestion();
         updateProgress();
         
-        console.log('🔄 Тренажёр сброшен');
+        console.log('Тренажёр сброшен');
     }
 }
 

@@ -1,661 +1,390 @@
-// progress.js - основные функции статистики
+// progress.js - упрощенная версия только для отображения прогресса
 
-let questionsData = null;
+let trainerProgressData = null;
 
-// Загружаем данные вопросов с улучшенной обработкой ошибок
-async function loadQuestionsData() {
+// Количество вопросов в каждом блоке (фиксированные значения)
+const BLOCK_QUESTIONS = {
+    'Блок 1': 458,
+    'Блок 2': 1192,
+    'Блок 3': 711,
+    'Блок 4': 343
+};
+
+// Загружаем прогресс тренажера
+async function loadTrainerProgress() {
     try {
-        // Сначала проверяем глобальную переменную (может быть загружена из data-loader.js)
-        if (typeof window.questionsData !== 'undefined') {
-            questionsData = window.questionsData;
-            console.log('✅ Вопросы загружены из глобальной переменной');
-            return true;
+        const user = window.examAPI ? window.examAPI.getUserFromStorage() : null;
+        
+        if (!user) {
+            console.log('👤 Пользователь не найден');
+            return {};
         }
         
-        // Пробуем загрузить из data-loader.js если он есть
-        if (typeof loadQuestions === 'function') {
+        console.log('📥 Загружаем прогресс для пользователя:', user.name);
+        
+        // Для локального хранения
+        const storageKey = user.userType === 'guest' 
+            ? 'trainerProgress_guest' 
+            : `trainerProgress_${user.id}`;
+        
+        const savedProgress = localStorage.getItem(storageKey);
+        
+        if (savedProgress) {
             try {
-                await loadQuestions();
-                if (typeof window.questionsData !== 'undefined') {
-                    questionsData = window.questionsData;
-                    console.log('✅ Вопросы загружены из data-loader.js');
-                    return true;
-                }
-            } catch (loaderError) {
-                console.warn('⚠️ Ошибка загрузки из data-loader.js:', loaderError.message);
-            }
-        }
-        
-        // Пробуем загрузить из localStorage
-        try {
-            const savedData = localStorage.getItem('questionsData');
-            if (savedData) {
-                questionsData = JSON.parse(savedData);
-                console.log('✅ Вопросы загружены из localStorage');
-                return true;
-            }
-        } catch (storageError) {
-            console.warn('⚠️ Ошибка загрузки из localStorage:', storageError.message);
-        }
-        
-        // Пробуем загрузить через fetch
-        try {
-            // ВАЖНО: используем правильный путь к файлу
-            const response = await fetch('data/questions-data.json');
-            if (response.ok) {
-                const contentType = response.headers.get('content-type');
-                if (contentType && contentType.includes('application/json')) {
-                    questionsData = await response.json();
-                    console.log('✅ Вопросы загружены из questions-data.json');
-                    
-                    // Сохраняем в localStorage для будущего использования
-                    localStorage.setItem('questionsData', JSON.stringify(questionsData));
-                    return true;
-                } else {
-                    const text = await response.text();
-                    console.error('⚠️ Ответ не JSON:', text.substring(0, 200));
-                }
-            }
-        } catch (fetchError) {
-            console.warn('⚠️ Ошибка загрузки questions-data.json:', fetchError.message);
-        }
-        
-        console.warn('⚠️ Данные вопросов не найдены. Продолжаем без них.');
-        // Создаем пустую структуру для работы
-        questionsData = {
-            'Блок 1': [],
-            'Блок 2': [], 
-            'Блок 3': [],
-            'Блок 4': []
-        };
-        
-        return false;
-    } catch (error) {
-        console.error('❌ Критическая ошибка загрузки данных вопросов:', error);
-        // Создаем пустую структуру для работы
-        questionsData = {
-            'Блок 1': [],
-            'Блок 2': [], 
-            'Блок 3': [],
-            'Блок 4': []
-        };
-        return false;
-    }
-}
-
-// Получаем количество вопросов для блока
-function getQuestionsCountForBlock(block) {
-    if (!questionsData) return 0;
-    
-    const blockData = questionsData[block];
-    return blockData ? blockData.length : 0;
-}
-
-// Получаем данные тренажера для блока
-async function getBlockTrainerData(block) {
-    const user = window.examAPI ? window.examAPI.getUserFromStorage() : null;
-    
-    if (!user) {
-        return { completed: 0, correct: 0 };
-    }
-    
-    try {
-        const result = await window.examAPI.getTrainerProgress();
-        
-        if (result.success && result.progress && result.progress[block]) {
-            const blockProgress = result.progress[block];
-            const userAnswers = blockProgress.userAnswers || [];
-            
-            const completed = userAnswers.filter(answer => answer !== null && answer !== undefined).length;
-            let correct = 0;
-            
-            // Считаем правильные ответы
-            if (questionsData && questionsData[block]) {
-                userAnswers.forEach((answer, index) => {
-                    if (answer !== null && answer !== undefined && questionsData[block][index]) {
-                        const question = questionsData[block][index];
-                        if (checkSingleAnswer(question, answer)) {
-                            correct++;
-                        }
+                trainerProgressData = JSON.parse(savedProgress);
+                console.log('✅ Прогресс загружен из localStorage:', storageKey);
+                console.log('📊 Данные:', trainerProgressData);
+                
+                // Проверяем структуру данных
+                const blocks = ['Блок 1', 'Блок 2', 'Блок 3', 'Блок 4'];
+                blocks.forEach(block => {
+                    if (trainerProgressData[block]) {
+                        console.log(`${block}:`, trainerProgressData[block]);
                     }
                 });
+                
+            } catch (error) {
+                console.error('❌ Ошибка парсинга:', error);
+                trainerProgressData = {};
             }
-            
-            return { completed, correct };
+        } else {
+            console.log('📭 Прогресс не найден в основном формате, ищем устаревшие данные');
+            trainerProgressData = {};
         }
+        
+        await migrateLegacyProgress(user);
+        
+        return trainerProgressData;
+        
     } catch (error) {
-        console.error(`❌ Ошибка получения данных тренажера для блока ${block}:`, error);
+        console.error('Ошибка загрузки прогресса:', error);
+        trainerProgressData = {};
+        return trainerProgressData;
     }
-    
-    return { completed: 0, correct: 0 };
 }
 
-// Получаем данные экзамена для блока
-async function getBlockExamData(block) {
-    const user = window.examAPI ? window.examAPI.getUserFromStorage() : null;
+async function migrateLegacyProgress(user) {
+    console.log('Проверяем устаревшие данные для миграции...');
     
-    if (!user) {
-        return { attempts: 0, passed: 0 };
-    }
+    const blocks = ['Блок 1', 'Блок 2', 'Блок 3', 'Блок 4'];
+    let migratedCount = 0;
     
-    try {
-        const result = await window.examAPI.getExamAttempts();
-        
-        if (result.success && result.attempts) {
-            const blockAttempts = result.attempts.filter(attempt => attempt.block === block);
-            const passed = blockAttempts.filter(attempt => attempt.isPassed).length;
+    for (const block of blocks) {
+        const legacyProgress = findLegacyProgress(block);
+        if (legacyProgress && legacyProgress.userAnswers) {
+            console.log(`🔄 Мигрируем данные для ${block}`);
             
-            return { attempts: blockAttempts.length, passed };
+            // Добавляем в основной прогресс
+            if (!trainerProgressData[block]) {
+                const userAnswers = legacyProgress.userAnswers;
+                const completed = userAnswers.filter(a => a !== null && a !== undefined && a !== '').length;
+                const total = BLOCK_QUESTIONS[block];
+                const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+                
+                trainerProgressData[block] = {
+                    userAnswers: userAnswers,
+                    currentQuestionIndex: legacyProgress.currentQuestionIndex || 0,
+                    completed: completed,
+                    total: total,
+                    percentage: percentage,
+                    timestamp: legacyProgress.timestamp || new Date().toISOString(),
+                    migrated: true
+                };
+                
+                migratedCount++;
+            }
         }
-    } catch (error) {
-        console.error(`❌ Ошибка получения данных экзамена для блока ${block}:`, error);
     }
     
-    return { attempts: 0, passed: 0 };
+    if (migratedCount > 0) {
+        // Сохраняем мигрированные данные
+        const storageKey = user.userType === 'guest' 
+            ? 'trainerProgress_guest' 
+            : `trainerProgress_${user.id}`;
+        localStorage.setItem(storageKey, JSON.stringify(trainerProgressData));
+        console.log(`✅ Мигрировано ${migratedCount} блоков`);
+    }
+}
+function findLegacyProgress(block) {
+    console.log(`Ищем устаревший прогресс для ${block}`);
+    
+    const user = window.examAPI ? window.examAPI.getUserFromStorage() : null;
+    if (!user) return null;
+    
+    // Ключи, которые может использовать trainer.js
+    const legacyKeys = [
+        `trainer_${user.id}_${block}`,
+        `trainer_guest_${block}`,
+        `trainer_${user.id}_${block.replace(' ', '_')}`,
+        `trainer_guest_${block.replace(' ', '_')}`
+    ];
+    
+    for (const key of legacyKeys) {
+        const data = localStorage.getItem(key);
+        if (data) {
+            try {
+                const parsed = JSON.parse(data);
+                if (parsed.userAnswers && Array.isArray(parsed.userAnswers)) {
+                    console.log(`Найден устаревший прогресс в ключе: ${key}`);
+                    return parsed;
+                }
+            } catch (e) {
+                // Пропускаем некорректные данные
+            }
+        }
+    }
+    
+    return null;
+}
+
+// Получаем прогресс для блока
+function getBlockProgress(block) {
+    if (!trainerProgressData) {
+        console.log('📭 Нет данных прогресса в основном формате');
+        
+        // Пробуем найти в устаревшем формате
+        const legacyProgress = findLegacyProgress(block);
+        if (legacyProgress) {
+            const userAnswers = legacyProgress.userAnswers || [];
+            const total = BLOCK_QUESTIONS[block];
+            const completed = userAnswers.filter(answer => 
+                answer !== null && 
+                answer !== undefined && 
+                answer !== ''
+            ).length;
+            
+            const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+            
+            console.log(`📊 Найден устаревший прогресс для ${block}: ${completed}/${total}`);
+            
+            return { 
+                completed, 
+                total, 
+                percentage,
+                hasProgress: completed > 0,
+                source: 'legacy'
+            };
+        }
+        
+        return { completed: 0, total: BLOCK_QUESTIONS[block], percentage: 0 };
+    }
+    
+    const blockProgress = trainerProgressData[block];
+    
+    // Если нет прогресса для этого блока
+    if (!blockProgress) {
+        console.log(`📭 Нет прогресса для блока: ${block} в основном формате`);
+        
+        // Пробуем найти в устаревшем формате
+        const legacyProgress = findLegacyProgress(block);
+        if (legacyProgress) {
+            const userAnswers = legacyProgress.userAnswers || [];
+            const total = BLOCK_QUESTIONS[block];
+            const completed = userAnswers.filter(answer => 
+                answer !== null && 
+                answer !== undefined && 
+                answer !== ''
+            ).length;
+            
+            const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+            
+            console.log(`📊 Найден устаревший прогресс для ${block}: ${completed}/${total}`);
+            
+            return { 
+                completed, 
+                total, 
+                percentage,
+                hasProgress: completed > 0,
+                source: 'legacy'
+            };
+        }
+        
+        return { completed: 0, total: BLOCK_QUESTIONS[block], percentage: 0 };
+    }
+    
+    console.log(`📊 Прогресс для ${block}:`, blockProgress);
+    
+    const userAnswers = blockProgress.userAnswers || [];
+    const total = BLOCK_QUESTIONS[block];
+    
+    // Подсчитываем пройденные вопросы (не null/undefined)
+    let completed = 0;
+    
+    if (Array.isArray(userAnswers)) {
+        completed = userAnswers.filter(answer => 
+            answer !== null && 
+            answer !== undefined && 
+            answer !== '' &&
+            answer.length > 0
+        ).length;
+    } else if (typeof userAnswers === 'object' && userAnswers !== null) {
+        // Если userAnswers это объект, считаем его ключи
+        completed = Object.keys(userAnswers).length;
+    }
+    
+    console.log(`${block}: ${completed} из ${total} вопросов`);
+    
+    const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+    
+    return { 
+        completed, 
+        total, 
+        percentage,
+        hasProgress: completed > 0,
+        source: 'main'
+    };
 }
 
 // Инициализация страницы
 async function initProgressPage() {
     console.log('📊 Инициализация страницы прогресса');
     
-    const user = window.examAPI ? window.examAPI.getUserFromStorage() : null;
+    // Загружаем прогресс
+    await loadTrainerProgress();
     
-    if (!user) {
-        console.log('👤 Пользователь не найден, перенаправляем на логин');
-        alert('Пожалуйста, войдите в систему!');
-        window.location.href = 'login.html';
-        return;
-    }
-    
-    // Отображаем информацию о пользователе
-    document.getElementById('user-name').textContent = user.name || 'Гость';
-    document.getElementById('user-type').textContent = getUserTypeText(user.userType);
-    document.getElementById('user-id').textContent = user.id || 'не указан';
-    
-    const statusText = user.userType === 'guest' 
-        ? '⚠️ Только в этом браузере (данные удалятся при очистке кэша)' 
-        : '✅ Сохраняется на сервере и доступно на всех устройствах';
-    document.getElementById('progress-status').textContent = statusText;
-    
-    // Загружаем данные вопросов
-    const loaded = await loadQuestionsData();
-    if (!loaded) {
-        console.log('⚠️ Работаем без полных данных вопросов');
-        showNotification('Некоторые данные вопросов недоступны, но статистика все равно будет показана', 'warning');
-    }
-    
-    // Рассчитываем статистику
-    await calculateAllStats();
+    // Отображаем 4 блока
+    displayBlocks();
     
     console.log('✅ Страница прогресса инициализирована');
 }
 
-// Показ уведомления
-function showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 15px;
-        border-radius: 8px;
-        color: white;
-        z-index: 1000;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        animation: slideIn 0.3s ease;
-    `;
-    
-    if (type === 'warning') {
-        notification.style.background = '#ff9800';
-    } else if (type === 'error') {
-        notification.style.background = '#f44336';
-    } else {
-        notification.style.background = '#4CAF50';
-    }
-    
-    notification.textContent = message;
-    document.body.appendChild(notification);
-    
-    // Автоматическое скрытие через 5 секунд
-    setTimeout(() => {
-        notification.style.animation = 'slideOut 0.3s ease';
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.parentNode.removeChild(notification);
-            }
-        }, 300);
-    }, 5000);
-}
-
-// Добавляем стили для анимации
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideIn {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
-    }
-    @keyframes slideOut {
-        from { transform: translateX(0); opacity: 1; }
-        to { transform: translateX(100%); opacity: 0; }
-    }
-`;
-document.head.appendChild(style);
-
-// Текст для типа пользователя
-function getUserTypeText(userType) {
-    switch(userType) {
-        case 'guest': return 'Гость';
-        case 'yandex': return 'Яндекс ID';
-        case 'registered': return 'Зарегистрированный пользователь';
-        default: return userType || 'Неизвестно';
-    }
-}
-
-// Расчет всей статистики
-async function calculateAllStats() {
-    console.log('📊 Расчет всей статистики...');
-    
-    try {
-        await calculateTrainerStats();
-        await calculateExamStats();
-        await calculateBlocksStats();
-        await calculateDetailedBlockProgress();
-    } catch (error) {
-        console.error('❌ Ошибка расчета статистики:', error);
-        showNotification('Ошибка при расчете статистики', 'error');
-    }
-}
-
-// Статистика тренажера
-async function calculateTrainerStats() {
-    const user = window.examAPI ? window.examAPI.getUserFromStorage() : null;
-    
-    if (!user) {
-        console.log('👤 Пользователь не найден');
-        displayEmptyStats('trainer');
-        return;
-    }
-    
-    console.log(`📊 Расчет статистики тренажера для: ${user.name} (${user.userType})`);
-    
-    try {
-        const result = await window.examAPI.getTrainerProgress();
-        
-        if (result.success) {
-            const progress = result.progress || {};
-            const blocks = ['Блок 1', 'Блок 2', 'Блок 3', 'Блок 4'];
-            let totalCompleted = 0;
-            let totalCorrect = 0;
-            
-            blocks.forEach(block => {
-                const blockProgress = progress[block];
-                
-                if (blockProgress) {
-                    const userAnswers = blockProgress.userAnswers || [];
-                    const completed = userAnswers.filter(answer => answer !== null && answer !== undefined).length;
-                    totalCompleted += completed;
-                    
-                    // Считаем правильные ответы
-                    if (questionsData && questionsData[block]) {
-                        let correctInBlock = 0;
-                        userAnswers.forEach((answer, index) => {
-                            if (answer !== null && answer !== undefined && questionsData[block][index]) {
-                                const question = questionsData[block][index];
-                                if (checkSingleAnswer(question, answer)) {
-                                    correctInBlock++;
-                                }
-                            }
-                        });
-                        totalCorrect += correctInBlock;
-                    }
-                }
-            });
-            
-            const percentage = totalCompleted > 0 ? Math.round((totalCorrect / totalCompleted) * 100) : 0;
-            
-            updateTrainerStats(totalCompleted, totalCorrect, percentage);
-        } else {
-            displayEmptyStats('trainer');
-        }
-    } catch (error) {
-        console.error('❌ Ошибка расчета статистики тренажера:', error);
-        displayEmptyStats('trainer');
-    }
-}
-
-// Обновление статистики тренажера в DOM
-function updateTrainerStats(completed, correct, percentage) {
-    document.getElementById('trainer-completed').textContent = completed;
-    document.getElementById('trainer-correct').textContent = correct;
-    document.getElementById('trainer-percentage').textContent = `${percentage}%`;
-    
-    console.log(`✅ Статистика тренажера: ${completed} пройдено, ${correct} правильно (${percentage}%)`);
-}
-
-// Отображение пустой статистики
-function displayEmptyStats(type) {
-    if (type === 'trainer') {
-        document.getElementById('trainer-completed').textContent = '0';
-        document.getElementById('trainer-correct').textContent = '0';
-        document.getElementById('trainer-percentage').textContent = '0%';
-    } else if (type === 'exam') {
-        document.getElementById('exam-attempts').textContent = '0';
-        document.getElementById('exam-passed').textContent = '0';
-        document.getElementById('exam-average').textContent = '0%';
-        document.getElementById('exam-best').textContent = '0%';
-    }
-}
-
-// Статистика экзаменов
-async function calculateExamStats() {
-    const user = window.examAPI ? window.examAPI.getUserFromStorage() : null;
-    
-    if (!user) {
-        displayEmptyStats('exam');
-        return;
-    }
-    
-    console.log(`📊 Расчет статистики экзаменов для: ${user.name} (${user.userType})`);
-    
-    try {
-        const result = await window.examAPI.getExamAttempts();
-        
-        if (result.success) {
-            const attempts = result.attempts || [];
-            
-            document.getElementById('exam-attempts').textContent = attempts.length;
-            
-            const passedAttempts = attempts.filter(attempt => attempt.isPassed).length;
-            document.getElementById('exam-passed').textContent = passedAttempts;
-            
-            if (attempts.length > 0) {
-                const totalPercentage = attempts.reduce((sum, attempt) => {
-                    const perc = attempt.percentage || 0;
-                    return sum + (typeof perc === 'number' ? perc : parseFloat(perc) || 0);
-                }, 0);
-                const averagePercentage = Math.round(totalPercentage / attempts.length);
-                document.getElementById('exam-average').textContent = `${averagePercentage}%`;
-                
-                // Лучший результат
-                const bestResult = attempts.reduce((best, attempt) => {
-                    const perc = attempt.percentage || 0;
-                    const currentPerc = typeof perc === 'number' ? perc : parseFloat(perc) || 0;
-                    return currentPerc > best ? currentPerc : best;
-                }, 0);
-                document.getElementById('exam-best').textContent = `${bestResult}%`;
-                
-                console.log(`✅ Статистика экзаменов: ${attempts.length} попыток, ${passedAttempts} сдано, лучший: ${bestResult}%`);
-            } else {
-                document.getElementById('exam-average').textContent = '0%';
-                document.getElementById('exam-best').textContent = '0%';
-                console.log('📭 Нет попыток экзамена');
-            }
-        } else {
-            displayEmptyStats('exam');
-        }
-    } catch (error) {
-        console.error('❌ Ошибка расчета статистики экзаменов:', error);
-        displayEmptyStats('exam');
-    }
-}
-
-// Статистика по блокам
-async function calculateBlocksStats() {
+// Отображение 4 блоков
+function displayBlocks() {
     const blocks = ['Блок 1', 'Блок 2', 'Блок 3', 'Блок 4'];
-    
-    // Рассчитываем изученные блоки
-    let studiedBlocks = 0;
-    let totalQuestions = 0;
-    
-    if (questionsData) {
-        blocks.forEach(block => {
-            if (questionsData[block] && questionsData[block].length > 0) {
-                totalQuestions += questionsData[block].length;
-                studiedBlocks++;
-            }
-        });
-    }
-    
-    document.getElementById('blocks-studied').textContent = studiedBlocks;
-    document.getElementById('total-questions').textContent = totalQuestions;
-    document.getElementById('best-block').textContent = '-';
-    document.getElementById('worst-block').textContent = '-';
-}
-
-// Детальный прогресс по блокам
-async function calculateDetailedBlockProgress() {
-    const blocks = ['Блок 1', 'Блок 2', 'Блок 3', 'Блок 4'];
-    const container = document.getElementById('blocks-progress');
+    const container = document.getElementById('blocks-container');
     
     if (!container) {
-        console.error('❌ Контейнер блок-прогресса не найден');
+        console.error('❌ Контейнер блоков не найден');
         return;
     }
     
     container.innerHTML = '';
     
-    for (const block of blocks) {
-        const blockElement = await createBlockProgressElement(block);
+    blocks.forEach((block, index) => {
+        const blockElement = createBlockElement(block, index + 1);
         container.appendChild(blockElement);
-    }
+    });
+    
+    console.log('✅ Блоки отображены');
 }
 
-// Проверка одиночного ответа
-function checkSingleAnswer(question, userAnswer) {
-    if (!question || !userAnswer) return false;
+// Создание элемента блока
+function createBlockElement(block, blockNumber) {
+    const progress = getBlockProgress(block);
     
-    const correctAnswers = question.correctAnswers || [];
-    const userAnswers = Array.isArray(userAnswer) ? userAnswer : [userAnswer];
+    console.log(`Создаем элемент для ${block}:`, progress);
     
-    // Сортируем и сравниваем
-    const userSorted = [...userAnswers].sort().join('');
-    const correctSorted = [...correctAnswers].sort().join('');
-    
-    return userSorted === correctSorted;
-}
-
-// Создание элемента прогресса для блока
-async function createBlockProgressElement(block) {
     const element = document.createElement('div');
-    element.className = 'block-progress';
+    element.className = `block-card block-${blockNumber}`;
     
-    try {
-        // Получаем данные о прогрессе
-        const trainerData = await getBlockTrainerData(block);
-        const examData = await getBlockExamData(block);
+    element.innerHTML = `
+        <div class="block-title">${block}</div>
         
-        const completedQuestions = trainerData.completed || 0;
-        const correctAnswers = trainerData.correct || 0;
-        const examAttempts = examData.attempts || 0;
-        const examPassed = examData.passed || 0;
+        <div class="progress-info">
+            Пройдено: <span>${progress.completed}</span> из <span>${progress.total}</span> вопросов
+            <span class="total-questions">Всего вопросов: ${progress.total}</span>
+        </div>
         
-        const questionsCount = getQuestionsCountForBlock(block);
-        const completionPercentage = questionsCount > 0 
-            ? Math.round((completedQuestions / questionsCount) * 100)
-            : 0;
-        
-        const accuracyPercentage = completedQuestions > 0 
-            ? Math.round((correctAnswers / completedQuestions) * 100)
-            : 0;
-        
-        const examSuccessPercentage = examAttempts > 0 
-            ? Math.round((examPassed / examAttempts) * 100)
-            : 0;
-        
-        element.innerHTML = `
-            <h4>${block}</h4>
-            
-            <div style="margin: 10px 0;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                    <span>Тренажер: ${completedQuestions}/${questionsCount} вопросов</span>
-                    <span>${completionPercentage}%</span>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: ${completionPercentage}%; background: #2196F3;"></div>
-                </div>
+        <div class="progress-bar-container">
+            <div class="progress-bar-fill" style="width: ${progress.percentage}%">
+                <div class="progress-percentage">${progress.percentage}%</div>
             </div>
-            
-            <div style="margin: 10px 0;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                    <span>Точность ответов: ${correctAnswers}/${completedQuestions}</span>
-                    <span>${accuracyPercentage}%</span>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: ${accuracyPercentage}%; background: #4CAF50;"></div>
-                </div>
-            </div>
-            
-            <div style="margin: 10px 0;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                    <span>Экзамены: ${examPassed}/${examAttempts} сдано</span>
-                    <span>${examSuccessPercentage}%</span>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: ${examSuccessPercentage}%; background: #FF9800;"></div>
-                </div>
-            </div>
-            
-            <div style="display: flex; gap: 10px; margin-top: 15px;">
-                <button class="button" onclick="startTrainer('${block}')" style="padding: 8px 15px; font-size: 14px; background: #2196F3;">Продолжить тренажер</button>
-                <button class="button" onclick="startExam('${block}')" style="padding: 8px 15px; font-size: 14px; background: #4CAF50;">Начать экзамен</button>
-            </div>
-        `;
-    } catch (error) {
-        console.error(`❌ Ошибка создания элемента для блока ${block}:`, error);
-        element.innerHTML = `
-            <h4>${block}</h4>
-            <p style="color: #f44336;">⚠️ Ошибка загрузки данных для этого блока</p>
-        `;
-    }
+        </div>
+        
+        <div class="progress-info">
+            Прогресс: <span>${progress.percentage}%</span>
+        </div>
+    `;
     
     return element;
 }
 
-// Запуск тренажера
-function startTrainer(block) {
-    console.log(`🎯 Запуск тренажера для блока: ${block}`);
-    localStorage.setItem('selectedBlock', block);
-    
-    // Проверяем, есть ли страница тренажера
-    const hasTrainerPage = true; // Временно true, так как тренажер должен быть
-    
-    if (hasTrainerPage) {
-        window.location.href = 'trainer.html';
-    } else {
-        alert('Страница тренажера не найдена. Переходим на главную.');
-        window.location.href = 'index.html';
+// Удалить весь прогресс
+function clearAllProgress() {
+    if (confirm('❌ ВЫ УВЕРЕНЫ, ЧТО ХОТИТЕ УДАЛИТЬ ВЕСЬ ПРОГРЕСС?\n\nЭто действие:\n• Удалит все ответы в тренажере\n• Сбросит прогресс по всем блокам\n• Нельзя будет отменить!')) {
+        const user = window.examAPI ? window.examAPI.getUserFromStorage() : null;
+        
+        if (user) {
+            // Удаляем прогресс тренажера
+            const trainerKey = user.userType === 'guest' 
+                ? 'trainerProgress_guest' 
+                : `trainerProgress_${user.id}`;
+            
+            localStorage.removeItem(trainerKey);
+            console.log('🗑️ Удален ключ:', trainerKey);
+            
+            // Удаляем другие возможные ключи прогресса
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.includes('trainer') || key.includes('progress')) {
+                    keysToRemove.push(key);
+                }
+            }
+            
+            keysToRemove.forEach(key => {
+                localStorage.removeItem(key);
+                console.log('🗑️ Удален ключ:', key);
+            });
+            
+            // Обнуляем переменные
+            trainerProgressData = {};
+            
+            // Показываем сообщение
+            alert('✅ Весь прогресс успешно удален!');
+            
+            // Обновляем отображение
+            displayBlocks();
+        } else {
+            alert('❌ Ошибка: пользователь не найден!');
+        }
     }
 }
 
-// Запуск экзамена
-function startExam(block) {
-    console.log(`🎯 Запуск экзамена для блока: ${block}`);
-    localStorage.setItem('selectedBlock', block);
-    window.location.href = 'simulation.html';
-}
-
-// Функции кнопок
+// Вернуться на главную
 function goToMain() {
     window.location.href = 'index.html';
 }
 
-function refreshStats() {
-    console.log('🔄 Обновление статистики...');
-    calculateAllStats();
-    showNotification('Статистика обновлена', 'info');
-}
-
-async function exportProgress() {
+// Проверяем, откуда берется прогресс
+function debugProgress() {
+    console.log('🔍 ДЕБАГ: Проверка прогресса');
+    
     const user = window.examAPI ? window.examAPI.getUserFromStorage() : null;
-    
-    if (!user) {
-        alert('Пользователь не найден!');
-        return;
-    }
-    
-    try {
-        showNotification('Подготовка данных для экспорта...', 'info');
+    if (user) {
+        console.log('👤 Текущий пользователь:', user);
         
-        // Собираем все данные
-        const progressData = {
-            user: {
-                name: user.name,
-                id: user.id,
-                type: user.userType
-            },
-            date: new Date().toISOString(),
-            exportInfo: {
-                appName: 'Exam Trainer',
-                exportDate: new Date().toLocaleString('ru-RU'),
-                totalAttempts: document.getElementById('exam-attempts').textContent,
-                successRate: document.getElementById('trainer-percentage').textContent
+        // Проверяем все ключи в localStorage
+        console.log('📋 Все ключи в localStorage:');
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key.includes('trainer') || key.includes('progress')) {
+                try {
+                    const value = JSON.parse(localStorage.getItem(key));
+                    console.log(`  ${key}:`, value);
+                } catch {
+                    console.log(`  ${key}:`, localStorage.getItem(key));
+                }
             }
-        };
-        
-        // Создаем файл для скачивания
-        const dataStr = JSON.stringify(progressData, null, 2);
-        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-        
-        const exportFileDefaultName = `progress_${user.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.json`;
-        
-        const linkElement = document.createElement('a');
-        linkElement.setAttribute('href', dataUri);
-        linkElement.setAttribute('download', exportFileDefaultName);
-        linkElement.click();
-        
-        console.log('✅ Прогресс экспортирован');
-        showNotification('Прогресс успешно экспортирован в файл!', 'success');
-        
-    } catch (error) {
-        console.error('❌ Ошибка экспорта прогресса:', error);
-        showNotification('Ошибка при экспорте прогресса: ' + error.message, 'error');
-    }
-}
-
-function clearProgress() {
-    if (confirm('Вы уверены, что хотите очистить весь прогресс тренажера?')) {
-        const user = window.examAPI ? window.examAPI.getUserFromStorage() : null;
-        
-        if (user) {
-            // Удаляем локальный прогресс тренажера
-            const storageKey = user.userType === 'guest' 
-                ? 'trainerProgress_guest' 
-                : `trainerProgress_${user.id}`;
-            
-            localStorage.removeItem(storageKey);
-            
-            showNotification('Прогресс тренажера очищен', 'info');
-            refreshStats();
         }
     }
 }
 
-function clearExamHistory() {
-    if (confirm('Вы уверены, что хотите очистить всю историю экзаменов?')) {
-        const user = window.examAPI ? window.examAPI.getUserFromStorage() : null;
-        
-        if (user) {
-            // Удаляем локальные попытки экзамена
-            const storageKey = `examAttempts_${user.id}`;
-            localStorage.removeItem(storageKey);
-            
-            showNotification('История экзаменов очищена', 'info');
-            refreshStats();
-        }
-    }
-}
-
-// Загружаем прогресс при загрузке страницы
+// Загружаем при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
     console.log('📊 Страница прогресса загружена');
+    
+    // Дебаг
+    debugProgress();
     
     // Ждем инициализации API
     setTimeout(() => {
         if (window.examAPI) {
             initProgressPage();
         } else {
-            console.error('API не инициализирован');
-            showNotification('Ошибка инициализации системы. Попробуйте обновить страницу.', 'error');
+            console.error('❌ API не инициализирован');
+            document.getElementById('blocks-container').innerHTML = 
+                '<div class="loading" style="color: red;">Ошибка: API не загружен</div>';
         }
     }, 100);
 });
