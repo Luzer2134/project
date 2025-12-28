@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Симуляция экзамена</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    Симуляция экзамена: <span id="current-block-name">Загрузка...</span>
+  </header>
+
+  <nav>
+    <button class="button_quit" onclick="confirmExit()">Завершить досрочно</button>
+    <div id="timer" style="color: #d32f2f; font-weight: bold; margin-left: 20px;">Осталось времени: 45:00</div>
+  </nav>
+
+  <main>
+    <div id="exam-container">
+      <div id="question-number" style="font-size: 18px; margin-bottom: 20px;">Вопрос 1 из 30</div>
+      <div id="question-text" style="font-size: 20px; margin-bottom: 20px; line-height: 1.5;"></div>
+      <div id="question-image" style="margin-bottom: 20px;"></div>
+      <div id="options-container" style="text-align: left; max-width: 600px; margin: 0 auto;"></div>
+      
+      <div style="margin-top: 30px;">
+        <button id="prev-btn" class="button" onclick="prevQuestion()" style="display:none;">Назад</button>
+        <button id="next-btn" class="button" onclick="nextQuestion()">Следующий вопрос</button>
+        <button id="finish-btn" class="button" style="display:none; background-color: #4CAF50;" onclick="finishExam()">Завершить экзамен</button>
+      </div>
+    </div>
+    
+    <div id="results-container" style="display:none;">
+      <h2>Результаты симуляции экзамена</h2>
+      <div class="block" style="max-width: 500px; margin: 20px auto;">
+        <p><strong>Правильных ответов:</strong> <span id="correct-answers" style="color: #4CAF50; font-size: 24px;">0</span> из <span id="total-questions">30</span></p>
+        <p><strong>Оценка:</strong> <span id="grade" style="font-size: 24px;">0</span></p>
+        <p><strong>Затрачено времени:</strong> <span id="time-spent">00:00</span></p>
+      </div>
+      <button class="button" onclick="saveAttempt()">Сохранить и выйти</button>
+    </div>
+  </main>
+  <script src="api.js"></script>
+  <script src="data-loader.js"></script>
+  <script src="simulation.js"></script>
+</body>
+</html>

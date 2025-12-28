@@ -1,0 +1,16 @@
+.vercel
+.env
+backend/.env
+
+# Папка с зависимостями Node.js
+node_modules/
+backend/node_modules/
+
+# Папки с данными приложения
+data/
+backend/data/
+
+# Системные файлы и логи
+*.log
+.DS_Store
+Thumbs.db
