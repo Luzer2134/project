@@ -736,14 +736,26 @@ main {
     }
     
     .profile-info {
-        padding: 20px;
-    }
-    
-    .user-avatar {
-        width: 56px;
-        height: 56px;
-        font-size: 24px;
-    }
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 24px 20px 24px;
+    gap: 10px; /* Расстояние между аватаром и текстом */
+}
+
+/* Аватар */
+.user-avatar {
+    width: 194px;
+    height: 194px;
+    border-radius: 100px;
+    background-image: url('images/user-avatar.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    margin-bottom: 10px; /* Отступ снизу для текста */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    border: 3px solid white;
+}
 
     /* Оверлей для панели профиля */
     .overlay {
@@ -769,4 +781,147 @@ main {
         pointer-events: none;
         opacity: 0.7;
     }
+
+    /* Меню панели профиля */
+.profile-menu {
+    display: flex;
+    flex-direction: column;
+    padding: 0 24px 24px 24px;
+    gap: 10px;
+}
+
+/* Кнопки меню */
+.menu-item {
+    /* Размеры и позиционирование */
+    width: 100%;
+    height: 56px;
+    position: relative;
+    
+    /* Фон и границы */
+    background: none;
+    border: none;
+    border-radius: 8px;
+    
+    /* Выравнивание содержимого */
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    
+    /* Текст */
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: 24px;
+    line-height: 100%;
+    color: #282828;
+    text-align: left;
+    
+    /* Курсор */
+    cursor: pointer;
+    
+    /* Анимация */
+    transition: all 0.3s ease;
+    
+    /* Отступы и тень */
+    margin: 0;
+}
+
+/* Иконка в меню */
+.menu-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 16px;
+    font-size: 24px;
+}
+
+/* Текст в меню */
+.menu-text {
+    /* Точные размеры как в макете */
+    height: 24px;
+    display: flex;
+    align-items: center;
+    
+    /* Убираем стандартные стили кнопки */
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+/* Яндекс Алиса - точные размеры */
+.menu-item:nth-child(1) .menu-text {
+    width: 178px;
+}
+
+/* Прогресс - точные размеры */
+.menu-item:nth-child(2) .menu-text {
+    width: 123px;
+}
+
+/* История попыток - точные размеры */
+.menu-item:nth-child(3) .menu-text {
+    width: 223px;
+}
+
+/* База вопросов - точные размеры */
+.menu-item:nth-child(4) .menu-text {
+    width: 188px;
+}
+
+/* Эффекты при наведении */
+.menu-item:hover {
+    background-color: #f8f9fa;
+    transform: translateX(5px);
+}
+
+/* Эффекты при нажатии */
+.menu-item:active {
+    background-color: #e9ecef;
+    transform: translateX(2px);
+}
+
+/* Контейнер для абсолютного позиционирования (если нужно) */
+.menu-absolute-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+}
+
+/* Яндекс Алиса - абсолютное позиционирование */
+.yandex-alice-btn {
+    position: absolute;
+    top: 407px;
+    left: 1146px;
+    width: 178px;
+    height: 24px;
+}
+
+/* Прогресс - абсолютное позиционирование */
+.progress-btn {
+    position: absolute;
+    top: 447px;
+    left: 1146px;
+    width: 123px;
+    height: 24px;
+}
+
+/* История попыток - абсолютное позиционирование */
+.history-btn {
+    position: absolute;
+    top: 487px;
+    left: 1146px;
+    width: 223px;
+    height: 24px;
+}
+
+/* База вопросов - абсолютное позиционирование */
+.base-btn {
+    position: absolute;
+    top: 527px;
+    left: 1146px;
+    width: 188px;
+    height: 24px;
+}
 }

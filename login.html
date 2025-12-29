@@ -51,17 +51,48 @@
     </div>
 
     <!-- ПАНЕЛЬ ПРОФИЛЯ - ТОЛЬКО ОДИН ЭКЗЕМПЛЯР -->
-    <div class="profile-panel" id="profile-panel">
-        <div class="profile-info">
-            <div class="user-avatar"></div>
-            <div class="user-details">
-                <h4>Гость</h4>
-                <p>Гостевой режим</p>
-            </div>
-        </div>
-        
-        <!-- Можно добавить дополнительные секции при необходимости -->
+<div class="profile-panel" id="profile-panel">
+    <div class="profile-header">
+        <button class="close-panel" onclick="closeProfilePanel()">×</button>
     </div>
+    
+    <div class="profile-info">
+        <!-- Аватар -->
+        <div class="user-avatar"></div>
+        
+        <!-- Детали пользователя - ПОД аватаром -->
+        <div class="user-details">
+            <h4>Гость</h4>
+        </div>
+    </div>
+    
+    <!-- Меню панели профиля -->
+    <div class="profile-menu">
+        <!-- Кнопка Яндекс Алиса -->
+        <button class="menu-item" onclick="navigateTo('yandex-alice.html')">
+            <span class="menu-icon"></span>
+            <span class="menu-text">Яндекс Алиса</span>
+        </button>
+        
+        <!-- Кнопка Прогресс -->
+        <button class="menu-item" onclick="navigateTo('progress.html')">
+            <span class="menu-icon"></span>
+            <span class="menu-text">Прогресс</span>
+        </button>
+        
+        <!-- Кнопка История попыток -->
+        <button class="menu-item" onclick="navigateTo('history.html')">
+            <span class="menu-icon"></span>
+            <span class="menu-text">История попыток</span>
+        </button>
+        
+        <!-- Кнопка База вопросов -->
+        <button class="menu-item" onclick="navigateTo('base.html')">
+            <span class="menu-icon"></span>
+            <span class="menu-text">База вопросов</span>
+        </button>
+    </div>
+</div>
 
     <!-- ОВЕРЛЕЙ -->
     <div class="overlay" id="overlay" onclick="closeProfilePanel()"></div>
@@ -130,7 +161,7 @@
         }
     }
 
-    function navigateTo(page) {
+        function navigateTo(page) {
         closeProfilePanel();
         setTimeout(() => {
             window.location.href = page;
