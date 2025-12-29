@@ -247,28 +247,14 @@ header nav {
     z-index: 2000;
     transition: right 0.3s ease;
     overflow-y: auto;
+    /* Убрали pointer-events когда скрыта */
+    pointer-events: none;
 }
 
 /* Когда панель открыта */
 .profile-panel.active {
     right: 0;
-}
-
-/* Шапка панели */
-.profile-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 24px;
-    border-bottom: 1px solid #eee;
-}
-
-.profile-header h3 {
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 600;
-    font-size: 20px;
-    color: #262626;
-    margin: 0;
+    pointer-events: auto; /* Включаем события мыши только когда открыта */
 }
 
 /* Кнопка закрытия */
@@ -285,6 +271,8 @@ header nav {
     align-items: center;
     justify-content: center;
     border-radius: 4px;
+    /* Гарантируем, что кнопка закрытия всегда кликабельна */
+    pointer-events: auto;
 }
 
 .close-panel:hover {
@@ -300,24 +288,60 @@ header nav {
 }
 
 .user-avatar {
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #3F8FD2 0%, #2D6BA3 100%);
+    /* Размеры как в макете */
+    width: 194px;
+    height: 194px;
+    border-radius: 100px; /* Радиус 100px как в макете */
+    
+    /* Фоновое изображение из папки images */
+    background-image: url('images/icon.png');
+    background-size: cover; /* Изображение заполняет весь элемент */
+    background-position: center; /* Центрируем изображение */
+    background-repeat: no-repeat; /* Не повторяем изображение */
+    
+    /* Выравнивание */
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 28px;
-    font-weight: 600;
-    color: white;
+    
+    /* Отступы и позиционирование */
+    margin: 30px auto 20px auto; /* Верхний отступ 30px для приближения к 130px от верха панели */
+    
+    /* Тень для объема */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    
+    /* Граница */
+    border: 3px solid white;
 }
 
+/* Текст "Гость" в панели профиля */
 .user-details h4 {
+    /* Размеры как в макете */
+    width: 89px;
+    height: 32px;
+    
+    /* Типографика */
     font-family: 'Montserrat', sans-serif;
-    font-weight: 600;
-    font-size: 18px;
+    font-weight: 500; /* Medium */
+    font-style: normal;
+    font-size: 32px;
+    line-height: 100%;
+    letter-spacing: 0%;
+    
+    /* Цвет */
     color: #262626;
-    margin: 0 0 4px 0;
+    
+    /* Выравнивание */
+    text-align: center;
+    
+    /* Отступы и позиционирование */
+    margin: 0 auto 8px auto; /* Центрируем и добавляем отступ снизу */
+    padding: 0;
+    
+    /* Для правильного отображения */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .user-details p {
@@ -402,45 +426,22 @@ header nav {
     background-color: #ffebee;
 }
 
-/* Затемнение фона при открытой панели */
-.overlay {
+/* Боковая панель профиля */
+.profile-panel {
     position: fixed;
     top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1999;
-    display: none;
+    right: -364px;
+    width: 364px;
+    height: 100vh;
+    background-color: #FFFFFF;
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+    z-index: 2000;
+    transition: right 0.3s ease;
+    overflow-y: auto;
 }
 
-.overlay.active {
-    display: block;
-}
-
-/* Адаптивность */
-@media (max-width: 768px) {
-    .profile-panel {
-        width: 300px;
-        right: -300px;
-    }
-}
-
-@media (max-width: 480px) {
-    .profile-panel {
-        width: 280px;
-        right: -280px;
-    }
-    
-    .profile-info {
-        padding: 20px;
-    }
-    
-    .user-avatar {
-        width: 56px;
-        height: 56px;
-        font-size: 24px;
-    }
+.profile-panel.active {
+    right: 0;
 }
 
 /* Основной контент */
@@ -450,7 +451,7 @@ main {
     min-height: 1024px;
     margin: 0 auto;
     background-color: white;
-    padding-top: 80px; /* Добавил padding для шапки */
+    padding-top: 80px; 
 }
 
 /* Логотип или заголовок в шапке */
@@ -613,6 +614,11 @@ main {
     box-sizing: border-box;
 }
 
+.guest-button:hover {
+    background-color: #3579B0;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(63, 143, 210, 0.3);
+}
 
 .guest-button:active {
     background-color: #2D6BA3;
@@ -640,7 +646,6 @@ main {
     box-shadow: none;
 }
 
-/* Информационная секция - СКОРРЕКТИРОВАННЫЕ КООРДИНАТЫ */
 .info-section {
     position: absolute;
     width: 950px;
@@ -684,7 +689,7 @@ main {
 /* Сообщение об ошибке */
 .error-message {
     position: absolute;
-    top: 280px; /* Скорректировал для шапки */
+    top: 280px; 
     left: 50%;
     transform: translateX(-50%);
     width: 500px;
@@ -714,4 +719,54 @@ main {
 .yandex-logo {
     font-weight: bold;
     color: #FF0000;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .profile-panel {
+        width: 300px;
+        right: -300px;
+    }
+}
+
+@media (max-width: 480px) {
+    .profile-panel {
+        width: 280px;
+        right: -280px;
+    }
+    
+    .profile-info {
+        padding: 20px;
+    }
+    
+    .user-avatar {
+        width: 56px;
+        height: 56px;
+        font-size: 24px;
+    }
+
+    /* Оверлей для панели профиля */
+    .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1999;
+        display: none;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .overlay.active {
+        display: block;
+        opacity: 1;
+    }
+
+    /* Когда панель профиля активна, делаем кнопки в шапке неактивными */
+    .profile-panel.active ~ .page-container header nav button {
+        pointer-events: none;
+        opacity: 0.7;
+    }
 }
