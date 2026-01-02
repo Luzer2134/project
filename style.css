@@ -6,13 +6,7 @@ body {
       padding: 0;
       color: #333;
     }
-    header {
-      background-color: #dd2222;
-      color: white;
-      padding: 15px 20px;
-      text-align: center;
-      font-size: 24px;
-    }
+
     nav {
       display: flex;
       justify-content: center;
@@ -55,14 +49,6 @@ body {
       transition: background 0.3s;
     }
     .button_base {
-      text-decoration: none;
-      color: #333;
-      font-weight: bold;
-      padding: 8px 16px;
-      border-radius: 6px;
-      transition: background 0.3s;
-    }
-    .button_quit {
       text-decoration: none;
       color: #333;
       font-weight: bold;
@@ -119,7 +105,6 @@ body {
       
     }
 
-    /* Добавьте в style.css */
 .question-review.correct {
     border-left: 5px solid #4CAF50;
     background: #f1f8e9;
@@ -208,21 +193,6 @@ body {
     opacity: 0.8;
 }
 
-/* login_style.css - добавьте эти стили */
-
-/* Шапка с навигацией */
-header {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 80px;
-    background-color: white;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-}
-
-/* Контейнер навигации */
 header nav {
     display: flex;
     justify-content: center;
@@ -262,7 +232,7 @@ header nav {
 }
 
 .button_documentation:hover:not(:disabled) {
-    background-color: #e9ecef;
+    background-color: #357ABD;
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
@@ -274,7 +244,7 @@ header nav {
 }
 
 .button_simulation:not(:disabled):hover {
-    background-color: #e0e0e0;
+    background-color: #357ABD;
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
@@ -380,7 +350,6 @@ header nav {
         padding: 0 5px;
     }
     
-    /* Скрыть текст на очень маленьких экранах */
     .button_documentation span,
     .button_simulation span,
     .button_trainer span {
@@ -390,16 +359,16 @@ header nav {
     .button_documentation::after,
     .button_simulation::after,
     .button_trainer::after {
-        content: "📄";
+        content: "";
         font-size: 14px;
     }
     
     .button_simulation::after {
-        content: "📝";
+        content: "";
     }
     
     .button_trainer::after {
-        content: "💪";
+        content: "";
     }
 }
 
@@ -578,4 +547,909 @@ header nav {
         height: 90px;
         font-size: 20px;
     }
+}
+
+/* login_style.css */
+
+/* Импорт шрифта Montserrat */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap');
+
+/* Сброс стилей и базовые настройки */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f7f7f9;
+    margin: 0;
+    padding: 0;
+    color: #333;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Контейнер для всей страницы */
+.page-container {
+    position: relative;
+    width: 1440px;
+    min-height: 1024px; 
+    margin: 0 auto;
+    background-color: #DCDCDC;
+}
+
+/* Шапка - ФИКСИРОВАННАЯ версия */
+header {
+    position: absolute; /* или fixed если нужно фиксированное */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 80px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+/* Контейнер навигации в шапке */
+header nav {
+    display: flex;
+    justify-content: flex-end; /* Кнопки справа */
+    align-items: center;
+    height: 100%;
+    gap: 20px;
+    padding: 0 40px;
+    max-width: 1440px;
+    margin: 0 auto;
+}
+
+/* Общие стили для кнопок в шапке */
+.button_documentation,
+.button_simulation,
+.button_trainer {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: white;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    white-space: nowrap;
+}
+
+/* Кнопка "Документация" */
+.button_documentation {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    
+    /* Размеры и отступы как в макете */
+    width: fit-content;
+    height: 56px;
+    padding: 12px 8px;
+    
+    /* Расположение элементов */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    /* Внешний вид - как текст */
+    background: none;
+    border: none;
+    color: #262626;
+    cursor: pointer;
+    text-decoration: none;
+    
+    /* Для правильного отображения */
+    box-sizing: border-box;
+    white-space: nowrap;
+    
+    /* Позиционирование слева */
+    position: absolute;
+    left: 40px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* Кнопка "Экзамен" - чистый текст слева */
+.button_simulation {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    
+    /* Размеры и отступы как в макете */
+    width: fit-content;
+    height: 56px;
+    padding: 12px 8px;
+    
+    /* Расположение элементов */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    /* Внешний вид - как текст (без границы) */
+    background: none;
+    border: none;
+    color: #262626;
+    cursor: pointer;
+    text-decoration: none;
+    
+    /* Для правильного отображения */
+    box-sizing: border-box;
+    white-space: nowrap;
+    
+    /* Позиционирование слева после документации */
+    position: absolute;
+    left: 200px; /* Увеличил отступ, было 160px */
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.button_simulation:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Кнопка "Тренажёр" - чистый текст слева */
+.button_trainer {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    
+    /* Размеры и отступы как в макете */
+    width: fit-content;
+    height: 56px;
+    padding: 12px 8px;
+    
+    /* Расположение элементов */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    /* Внешний вид - как текст */
+    background: none;
+    border: none;
+    color: #262626;
+    cursor: pointer;
+    text-decoration: none;
+    
+    /* Для правильного отображения */
+    box-sizing: border-box;
+    white-space: nowrap;
+    
+    /* Позиционирование слева после экзамена */
+    position: absolute;
+    left: 320px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.skill-button {
+    /* Размеры и отступы */
+    width: 56px;
+    height: 56px;
+    
+    /* Внешний вид */
+    background: none;
+    border: none;
+    cursor: pointer;
+    
+    /* Для фонового изображения из папки images */
+    background-image: url('images/skill-button.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    
+    /* Для правильного отображения */
+    box-sizing: border-box;
+    
+    /* Отступ между кнопками */
+    margin-left: 20px;
+}
+
+/* Кнопка profile-button */
+.profile-button {
+    /* Размеры и отступы */
+    width: 56px;
+    height: 56px;
+    
+    /* Внешний вид */
+    background: none;
+    border: none;
+    cursor: pointer;
+    
+    /* Для фонового изображения из папки images */
+    background-image: url('images/profile-button.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    
+    /* Для правильного отображения */
+    box-sizing: border-box;
+    
+    /* Отступ между кнопками */
+    margin-left: 20px;
+}
+
+/* Активное состояние кнопок */
+.button_documentation:active,
+.button_simulation:active,
+.button_trainer:active {
+    transform: translateY(0);
+}
+
+/* Боковая панель профиля */
+.profile-panel {
+    position: fixed;
+    top: 0;
+    right: -364px; /* Скрыта за правым краем */
+    width: 364px;
+    height: 100vh;
+    background-color: #FFFFFF;
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+    z-index: 2000;
+    transition: right 0.3s ease;
+    overflow-y: auto;
+    pointer-events: none;
+}
+
+/* Когда панель открыта */
+.profile-panel.active {
+    right: 0;
+    pointer-events: auto;
+}
+
+/* Кнопка закрытия */
+.close-panel {
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: #666;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    pointer-events: auto;
+}
+
+.close-panel:hover {
+    background-color: #f5f5f5;
+}
+
+/* Информация о пользователе */
+.profile-info {
+    display: flex;
+    align-items: center;
+    padding: 24px;
+    gap: 16px;
+}
+
+.user-avatar {
+    width: 194px;
+    height: 194px;
+    border-radius: 100px;
+    
+    /* Фоновое изображение из папки images */
+    background-image: url('images/icon.png');
+    background-size: cover; /* Изображение заполняет весь элемент */
+    background-position: center; /* Центрируем изображение */
+    background-repeat: no-repeat; /* Не повторяем изображение */
+    
+    /* Выравнивание */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    /* Отступы и позиционирование */
+    margin: 30px auto 20px auto; /* Верхний отступ 30px для приближения к 130px от верха панели */
+    
+    /* Тень для объема */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    
+    /* Граница */
+    border: 3px solid white;
+}
+
+/* Текст "Гость" в панели профиля */
+.user-details h4 {
+    /* Размеры как в макете */
+    width: 89px;
+    height: 32px;
+    
+    /* Типографика */
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500; /* Medium */
+    font-style: normal;
+    font-size: 32px;
+    line-height: 100%;
+    letter-spacing: 0%;
+    
+    /* Цвет */
+    color: #262626;
+    
+    /* Выравнивание */
+    text-align: center;
+    
+    /* Отступы и позиционирование */
+    margin: 0 auto 8px auto; /* Центрируем и добавляем отступ снизу */
+    padding: 0;
+    
+    /* Для правильного отображения */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.user-details p {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    color: #666;
+    margin: 0;
+}
+
+/* Статистика */
+.profile-stats {
+    padding: 0 24px 24px 24px;
+    border-bottom: 1px solid #eee;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+}
+
+.stat-label {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    color: #666;
+}
+
+.stat-value {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    color: #3F8FD2;
+}
+
+/* Меню профиля */
+.profile-menu {
+    padding: 24px;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 16px;
+    background: none;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    margin-bottom: 8px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 16px;
+    color: #262626;
+}
+
+.menu-item:hover {
+    background-color: #f8f9fa;
+}
+
+.menu-item:active {
+    background-color: #e9ecef;
+}
+
+.menu-icon {
+    font-size: 18px;
+    width: 24px;
+    text-align: center;
+}
+
+/* Боковая панель профиля */
+.profile-panel {
+    position: fixed;
+    top: 0;
+    right: -364px;
+    width: 364px;
+    height: 100vh;
+    background-color: #FFFFFF;
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+    z-index: 2000;
+    transition: right 0.3s ease;
+    overflow-y: auto;
+}
+
+.profile-panel.active {
+    right: 0;
+}
+
+/* Основной контент */
+main {
+    position: relative;
+    width: 1440px;
+    min-height: 1024px;
+    margin: 0 auto;
+    background-color: white;
+    padding-top: 80px; 
+}
+
+/* Логотип или заголовок в шапке */
+.header-logo {
+    position: absolute;
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 36px;
+    font-weight: 600;
+    color: #3F8FD2;
+}
+
+.login-title {
+    position: absolute;
+    width: 685px;
+    height: 64px;
+    top: 387px; /* Было 307px, +80px для шапки */
+    left: 377px;
+    
+    /* Текст */
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-style: normal;
+    font-size: 64px;
+    line-height: 100%;
+    letter-spacing: 0%;
+    
+    /* Цвет */
+    color: #3F8FD2;
+    
+    /* Выравнивание */
+    text-align: left;
+    white-space: nowrap;
+    
+    /* Отступы и границы */
+    margin: 0;
+    padding: 0;
+    
+    /* Эффекты */
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.login-subtitle {
+    position: absolute;
+    width: 890px;
+    height: 200px;
+    top: 476px; /* Было 396px, +80px для шапки */
+    left: 275px;
+    
+    /* Текст */
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    font-size: 32px;
+    line-height: 100%;
+    letter-spacing: 0%;
+    
+    /* Цвет */
+    color: #262626;
+    
+    /* Выравнивание */
+    text-align: center;
+    
+    /* Отступы */
+    margin: 0;
+    padding: 0;
+    
+    /* Перенос текста */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.auth-buttons {
+    position: absolute;
+    top: 726px; 
+    left: 552px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 336px;
+}
+
+/* Кнопка Яндекс */
+.yandex-button {
+    background: #FFCC00;
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    padding: 18px 30px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    font-weight: 600;
+    font-family: 'Montserrat', sans-serif;
+    width: 100%;
+}
+
+.yandex-button:hover {
+    background: #E6B800;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 204, 0, 0.3);
+}
+
+.yandex-button:active {
+    transform: translateY(0);
+}
+
+.yandex-button img {
+    width: 32px;
+    height: 32px;
+}
+
+/* Кнопка "НАЧАТЬ" */
+.guest-button {
+    /* Размеры и форма */
+    width: 336px;
+    height: 110px;
+    border-radius: 77px;
+    
+    /* Отступы */
+    padding: 31px 87px;
+    
+    /* Фон и границы */
+    background-color: #3F8FD2;
+    border: none;
+    
+    /* Текст */
+    color: white;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 100%;
+    letter-spacing: 0%;
+    
+    /* Выравнивание */
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    /* Эффекты */
+    cursor: pointer;
+    transition: all 0.3s ease;
+    
+    /* Тень и граница */
+    box-shadow: 0 4px 15px rgba(63, 143, 210, 0.2);
+    
+    /* Запрет выделения текста */
+    user-select: none;
+    
+    /* Для правильного отображения */
+    box-sizing: border-box;
+}
+
+.guest-button:hover {
+    background-color: #3579B0;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(63, 143, 210, 0.3);
+}
+
+.guest-button:active {
+    background-color: #2D6BA3;
+    transform: translateY(0);
+    box-shadow: 0 2px 10px rgba(63, 143, 210, 0.2);
+}
+
+.guest-button:focus {
+    outline: 2px solid #3F8FD2;
+    outline-offset: 2px;
+}
+
+/* Состояние загрузки кнопки */
+.guest-button.loading {
+    background-color: #2D6BA3;
+    cursor: wait;
+    opacity: 0.8;
+}
+
+/* Отключенное состояние кнопки */
+.guest-button:disabled {
+    background-color: #B0B0B0;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.info-section {
+    position: absolute;
+    width: 950px;
+    height: 48px;
+    top: 925px;
+    left: 183px;
+    
+    /* Текст */
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 100%;
+    letter-spacing: 0%;
+    
+    /* Цвет */
+    color: #262626;
+    
+    /* Выравнивание */
+    text-align: center;
+    
+    /* Отступы */
+    margin: 0;
+    padding: 0;
+    
+    /* Перенос текста */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    
+    /* Эффекты */
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Жирный текст в информационной секции */
+.info-section strong {
+    font-weight: 500;
+}
+
+/* Сообщение об ошибке */
+.error-message {
+    position: absolute;
+    top: 280px; 
+    left: 50%;
+    transform: translateX(-50%);
+    width: 500px;
+    background-color: #ffebee;
+    color: #c62828;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    display: none;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 16px;
+    text-align: center;
+    z-index: 100;
+}
+
+.error-message.show {
+    display: block;
+}
+
+/* Класс для состояния загрузки */
+.loading {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Логотип Яндекс */
+.yandex-logo {
+    font-weight: bold;
+    color: #FF0000;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .profile-panel {
+        width: 300px;
+        right: -300px;
+    }
+}
+
+@media (max-width: 480px) {
+    .profile-panel {
+        width: 280px;
+        right: -280px;
+    }
+    
+    .profile-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 24px 20px 24px;
+    gap: 10px; /* Расстояние между аватаром и текстом */
+}
+
+/* Аватар */
+.user-avatar {
+    width: 194px;
+    height: 194px;
+    border-radius: 100px;
+    background-image: url('images/user-avatar.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    margin-bottom: 10px; /* Отступ снизу для текста */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    border: 3px solid white;
+}
+
+    /* Оверлей для панели профиля */
+    .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1999;
+        display: none;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .overlay.active {
+        display: block;
+        opacity: 1;
+    }
+
+    /* Когда панель профиля активна, делаем кнопки в шапке неактивными */
+    .profile-panel.active ~ .page-container header nav button {
+        pointer-events: none;
+        opacity: 0.7;
+    }
+
+    /* Меню панели профиля */
+.profile-menu {
+    display: flex;
+    flex-direction: column;
+    padding: 0 24px 24px 24px;
+    gap: 10px;
+}
+
+/* Кнопки меню */
+.menu-item {
+    /* Размеры и позиционирование */
+    width: 100%;
+    height: 56px;
+    position: relative;
+    
+    /* Фон и границы */
+    background: none;
+    border: none;
+    border-radius: 8px;
+    
+    /* Выравнивание содержимого */
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    
+    /* Текст */
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: 24px;
+    line-height: 100%;
+    color: #282828;
+    text-align: left;
+    
+    /* Курсор */
+    cursor: pointer;
+    
+    /* Анимация */
+    transition: all 0.3s ease;
+    
+    /* Отступы и тень */
+    margin: 0;
+}
+
+/* Иконка в меню */
+.menu-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 16px;
+    font-size: 24px;
+}
+
+/* Текст в меню */
+.menu-text {
+    /* Точные размеры как в макете */
+    height: 24px;
+    display: flex;
+    align-items: center;
+    
+    /* Убираем стандартные стили кнопки */
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+.menu-item:nth-child(1) .menu-text {
+    width: 178px;
+}
+
+.menu-item:nth-child(2) .menu-text {
+    width: 123px;
+}
+
+.menu-item:nth-child(3) .menu-text {
+    width: 223px;
+}
+
+.menu-item:nth-child(4) .menu-text {
+    width: 188px;
+}
+
+/* Эффекты при наведении */
+.menu-item:hover {
+    background-color: #f8f9fa;
+    transform: translateX(5px);
+}
+
+/* Эффекты при нажатии */
+.menu-item:active {
+    background-color: #e9ecef;
+    transform: translateX(2px);
+}
+
+.menu-absolute-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+}
+
+.yandex-alice-btn {
+    position: absolute;
+    top: 407px;
+    left: 1146px;
+    width: 178px;
+    height: 24px;
+}
+
+.progress-btn {
+    position: absolute;
+    top: 447px;
+    left: 1146px;
+    width: 123px;
+    height: 24px;
+}
+
+.history-btn {
+    position: absolute;
+    top: 487px;
+    left: 1146px;
+    width: 223px;
+    height: 24px;
+}
+
+.base-btn {
+    position: absolute;
+    top: 527px;
+    left: 1146px;
+    width: 188px;
+    height: 24px;
+}
 }

@@ -78,24 +78,73 @@
 </head>
 <body>
   <header>
-
-  </header>
+            <nav>
+                <button class="button_documentation" onclick="navigateTo('documentation.html')">
+                    Документация
+                </button>
+                <button class="button_simulation" id="simulation-btn" onclick="navigateTo('simulation.html')" disabled>
+                    Экзамен
+                </button>
+                <button class="button_trainer" onclick="navigateTo('trainer.html')">
+                    Тренажёр
+                </button>
+                <button class="skill-button" onclick="navigateTo('skills.html')"></button>
+                <button class="profile-button" id="profile-btn"></button>
+            </nav>
+        </header>
 
   <div id="user-panel" class="user-info-panel" style="display: none;">
     <!-- Заполнится JavaScript -->
   </div>
-
-  <nav>
-    <button class="button_documentation" onclick="navigateTo('documentation.html')">Документация</button>
-    <button class="button_simulation" id="simulation-btn" onclick="navigateTo('simulation.html')" disabled>
-        Экзамен
-    </button>
-    <button class="button_trainer" onclick="navigateTo('trainer.html')">Тренажёр</button>
-    <button class="button_progress" onclick="navigateTo('progress.html')">Прогресс</button>
-    <button class="button_history" onclick="navigateTo('history.html')">История попыток</button>
-    <button class="button_base" onclick="navigateTo('base.html')">База вопросов</button>
-    <button class="button_quit" onclick="logout()">Выйти</button>
-  </nav>
+  <!-- ПАНЕЛЬ ПРОФИЛЯ -->
+<div class="profile-panel" id="profile-panel">
+    <div class="profile-header">
+        <button class="close-panel" onclick="closeProfilePanel()">×</button>
+    </div>
+    
+    <div class="profile-info">
+        <!-- Аватар -->
+        <div class="user-avatar"></div>
+        
+        <!-- Детали пользователя -->
+        <div class="user-details">
+            <h4>Гость</h4>
+        </div>
+    </div>
+    <!-- Меню панели профиля -->
+    <div class="profile-menu">
+        <!-- Кнопка Яндекс Алиса -->
+        <button class="menu-item" onclick="navigateTo('yandex-alice.html')">
+            <span class="menu-icon"></span>
+            <span class="menu-text">Яндекс Алиса</span>
+        </button>
+        
+        <!-- Кнопка Прогресс -->
+        <button class="menu-item" onclick="navigateTo('progress.html')">
+            <span class="menu-icon"></span>
+            <span class="menu-text">Прогресс</span>
+        </button>
+        
+        <!-- Кнопка История попыток -->
+        <button class="menu-item" onclick="navigateTo('history.html')">
+            <span class="menu-icon"></span>
+            <span class="menu-text">История попыток</span>
+        </button>
+        
+        <!-- Кнопка База вопросов -->
+        <button class="menu-item" onclick="navigateTo('base.html')">
+            <span class="menu-icon"></span>
+            <span class="menu-text">База вопросов</span>
+        </button>
+        
+        <div class="yandex-auth-section">
+        <button class="yandex-login-button" onclick="loginWithYandex()">
+            ВОЙТИ
+        </button>
+        <p class="login-hint"></p>
+    </div>
+    </div>
+</div>
 
   <main>
     <h3 class="custom-heading">Выберите программу для тренировки</h3>
@@ -111,7 +160,7 @@
       font-weight: 500;
       font-style: normal;
       font-size: 48px;
-      line-height: 48px; /* 100% от 48px */
+      line-height: 48px; 
       letter-spacing: 0;
       
       color: #262626;
@@ -121,11 +170,6 @@
       display: block;
     }
     </style>
-    
-    <!-- <div id="selected-block-info" style="display:none; background:#e8f4fd; padding:15px; margin:20px 0; border-radius:8px; border-left:4px solid #2196F3;">
-      <strong>Выбран блок: <span id="current-selected-block">-</span></strong>
-      <p style="margin:5px 0 0 0; font-size:14px; color:#666;">Теперь вы можете запустить симуляцию экзамена</p>
-    </div> -->
     
     <div class="blocks">
   <div class="image-block">
@@ -237,84 +281,29 @@
 }
 </style>
   </main>
+  <!-- ОВЕРЛЕЙ -->
+    <div class="overlay" id="overlay" onclick="closeProfilePanel()"></div>
 
   <script src="api.js"></script>
   <script>
-    // Функция отображения информации о пользователе
-    function displayUserInfo(user) {
-      const panel = document.getElementById('user-panel');
+    function selectBlock(blockName) {
+      console.log('Выбран блок:', blockName);
       
-      if (!user) return;
+      // Сохраняем выбранный блок
+      localStorage.setItem('selectedBlock', blockName);
       
-      let avatarHtml = '';
-      if (user.avatar) {
-        avatarHtml = `<img src="${user.avatar}" alt="Аватар" class="user-avatar">`;
-      } else {
-        const initials = user.name.charAt(0).toUpperCase();
-        avatarHtml = `<div class="user-avatar-placeholder">${initials}</div>`;
+      // Включаем кнопку "Экзамен"
+      const simulationBtn = document.getElementById('simulation-btn');
+      if (simulationBtn) {
+        simulationBtn.disabled = false;
+        console.log('Кнопка "Экзамен" активирована');
       }
-      
-      const badge = user.userType === 'yandex' 
-        ? '<span class="yandex-badge">Яндекс</span>' 
-        : '<span class="guest-badge">Гость</span>';
-      
-      panel.innerHTML = `
-        ${avatarHtml}
-        <div class="user-details">
-          <div class="user-name">${user.name} ${badge}</div>
-          <div class="user-type">${user.email}</div>
-        </div>
-      `;
-      panel.style.display = 'flex';
     }
-    
-    // Функция проверки пользователя из URL (для Яндекс OAuth)
-    function checkUserFromURL() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const userParam = urlParams.get('user');
-      
-      if (userParam) {
-        try {
-          const user = JSON.parse(decodeURIComponent(userParam));
-          console.log('👤 Яндекс пользователь из URL:', user);
-          
-          // Сохраняем пользователя
-          window.examAPI.saveUserToStorage(user);
-          
-          // Пробуем перенести гостевые данные
-          setTimeout(async () => {
-            try {
-              const result = await examAPI.migrateGuestData(user.id);
-              if (result.success && result.migratedAttempts > 0) {
-                console.log(`✅ Перенесено ${result.migratedAttempts} попыток и ${result.migratedBlocks} блоков`);
-              }
-            } catch (migrateError) {
-              console.error('Ошибка переноса данных:', migrateError);
-            }
-          }, 1000);
-          
-          // Убираем параметр из URL
-          window.history.replaceState({}, document.title, window.location.pathname);
-          
-          return user;
-        } catch (error) {
-          console.error('Ошибка парсинга пользователя из URL:', error);
-        }
-      }
-      return null;
-    }
-    
     // Проверяем авторизацию при загрузке
     document.addEventListener('DOMContentLoaded', function() {
       console.log('=== ПРОВЕРКА АВТОРИЗАЦИИ ===');
       
-      // 1. Проверяем пользователя из URL (для Яндекс OAuth)
-      const userFromURL = checkUserFromURL();
-      if (userFromURL) {
-        console.log('✅ Яндекс пользователь загружен из URL');
-      }
-      
-      // 2. Проверяем пользователя из localStorage
+      // Проверяем пользователя
       const user = window.examAPI ? window.examAPI.getUserFromStorage() : null;
       
       if (!user) {
@@ -327,25 +316,25 @@
       
       console.log('✅ Пользователь авторизован:', user.name, `(${user.userType})`);
       
-      // Отображаем информацию о пользователе
-      displayUserInfo(user);
-      
-      // Проверяем выбранный блок
+      // Проверяем, выбран ли уже блок
       const selectedBlock = localStorage.getItem('selectedBlock');
       if (selectedBlock) {
-        document.getElementById('current-selected-block').textContent = selectedBlock;
-        document.getElementById('selected-block-info').style.display = 'block';
-        document.getElementById('simulation-btn').disabled = false;
+        console.log('📝 Ранее выбран блок:', selectedBlock);
+        // Активируем кнопку "Экзамен"
+        const simulationBtn = document.getElementById('simulation-btn');
+        if (simulationBtn) {
+          simulationBtn.disabled = false;
+          console.log('✅ Кнопка "Экзамен" активирована (ранее выбранный блок)');
+        }
+        
+        // Показываем, какой блок выбран
+        showBlockSelectedNotification(selectedBlock);
+      } else {
+        console.log('📭 Блок еще не выбран');
       }
     });
     
-    function selectBlock(blockName) {
-      localStorage.setItem('selectedBlock', blockName);
-      document.getElementById('current-selected-block').textContent = blockName;
-      document.getElementById('selected-block-info').style.display = 'block';
-      document.getElementById('simulation-btn').disabled = false;
-    }
-    
+    // Остальные функции без изменений
     function navigateTo(page) {
       window.location.href = page;
     }
@@ -353,6 +342,164 @@
     function logout() {
       window.examAPI.logout();
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('📄 Страница входа загружена');
+        
+        // Проверяем ошибки из URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const error = urlParams.get('error');
+        
+        if (error) {
+            showError(decodeURIComponent(error));
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+        
+        // Инициализация
+        initProfilePanel();
+        checkSimulationAccess();
+        
+        // Назначаем обработчик на кнопку профиля
+        const profileBtn = document.getElementById('profile-btn');
+        if (profileBtn) {
+            profileBtn.onclick = toggleProfilePanel;
+        }
+    });
+    
+    function showError(message) {
+        const errorEl = document.getElementById('error-message');
+        if (errorEl) {
+            errorEl.textContent = message;
+            errorEl.classList.add('show');
+            
+            setTimeout(() => {
+                errorEl.classList.remove('show');
+            }, 10000);
+        }
+    }
+    
+    async function loginGuest() {
+        const button = document.getElementById('guest-button');
+        
+        button.disabled = true;
+        button.textContent = 'Подключение...';
+        button.classList.add('loading');
+        
+        try {
+            console.log('👤 Гостевой вход...');
+            const result = await window.examAPI.guestLogin();
+            
+            if (result.success) {
+                console.log('✅ Гостевой вход успешен');
+                window.location.href = 'index.html';
+            } else {
+                showError(result.error || 'Ошибка гостевого входа');
+            }
+        } catch (error) {
+            console.error('❌ Ошибка гостевого входа:', error);
+            showError('Ошибка подключения к серверу');
+        } finally {
+            button.disabled = false;
+            button.textContent = 'НАЧАТЬ';
+            button.classList.remove('loading');
+        }
+    }
+
+        function navigateTo(page) {
+        closeProfilePanel();
+        setTimeout(() => {
+            window.location.href = page;
+        }, 300);
+    }
+
+    function checkSimulationAccess() {
+        const hasCompletedTraining = localStorage.getItem('training_completed');
+        const simBtn = document.getElementById('simulation-btn');
+        
+        if (simBtn && hasCompletedTraining === 'true') {
+            simBtn.disabled = false;
+        }
+    }
+
+    // ===== ФУНКЦИИ ДЛЯ ПАНЕЛИ ПРОФИЛЯ =====
+    let isPanelOpen = false;
+
+    function initProfilePanel() {
+        // Закрытие по клику вне панели
+        document.addEventListener('click', function(event) {
+            const panel = document.getElementById('profile-panel');
+            const profileBtn = document.getElementById('profile-btn');
+            
+            if (isPanelOpen && panel && !panel.contains(event.target) && 
+                profileBtn && !profileBtn.contains(event.target)) {
+                closeProfilePanel();
+            }
+        });
+        
+        // Закрытие при нажатии ESC
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && isPanelOpen) {
+                closeProfilePanel();
+            }
+        });
+    }
+
+    function toggleProfilePanel(event) {
+        if (event) {
+            event.stopPropagation(); // Предотвращаем всплытие
+        }
+        
+        if (isPanelOpen) {
+            closeProfilePanel();
+        } else {
+            openProfilePanel();
+        }
+    }
+
+    function openProfilePanel() {
+        const panel = document.getElementById('profile-panel');
+        const overlay = document.getElementById('overlay');
+        
+        if (panel) {
+            panel.classList.add('active');
+            if (overlay) overlay.classList.add('active');
+            isPanelOpen = true;
+        }
+    }
+
+    function closeProfilePanel() {
+        const panel = document.getElementById('profile-panel');
+        const overlay = document.getElementById('overlay');
+        
+        if (panel) {
+            panel.classList.remove('active');
+            if (overlay) overlay.classList.remove('active');
+            isPanelOpen = false;
+        }
+    }
+
+    function logout() {
+        if (confirm('Вы уверены, что хотите выйти?')) {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+    }
+
+    function loginWithYandex() {
+    console.log('🔐 Вход через Яндекс...');
+    closeProfilePanel(); // Закрываем панель при нажатии
+    
+    // Можно показать индикатор загрузки
+    const button = document.querySelector('.yandex-login-button');
+    const originalText = button.innerHTML;
+    button.innerHTML = '<span>Подключение к Яндекс...</span>';
+    button.disabled = true;
+    
+    // Перенаправляем на авторизацию
+    setTimeout(() => {
+        window.location.href = '/auth/yandex';
+    }, 500);
+}
   </script>
 </body>
 </html>
