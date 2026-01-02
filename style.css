@@ -1,62 +1,3 @@
-/* index.html */
-body {
-      font-family: Arial, sans-serif;
-      background-color: #f7f7f9;
-      margin: 0;
-      padding: 0;
-      color: #333;
-    }
-
-    nav {
-      display: flex;
-      justify-content: center;
-      background-color: #eee;
-      padding: 10px;
-      gap: 20px;
-    }
-
-  /*кнопки в index */
-    .button_simulation {
-      text-decoration: none;
-      color: #333;
-      font-weight: bold;
-      padding: 8px 16px;
-      border-radius: 6px;
-      transition: background 0.3s;
-    }
-    .button_trainer {
-      text-decoration: none;
-      color: #333;
-      font-weight: bold;
-      padding: 8px 16px;
-      border-radius: 6px;
-      transition: background 0.3s;
-    }
-    .button_progress {
-      text-decoration: none;
-      color: #333;
-      font-weight: bold;
-      padding: 8px 16px;
-      border-radius: 6px;
-      transition: background 0.3s;
-    }
-    .button_history {
-      text-decoration: none;
-      color: #333;
-      font-weight: bold;
-      padding: 8px 16px;
-      border-radius: 6px;
-      transition: background 0.3s;
-    }
-    .button_base {
-      text-decoration: none;
-      color: #333;
-      font-weight: bold;
-      padding: 8px 16px;
-      border-radius: 6px;
-      transition: background 0.3s;
-    }
-
     nav a:hover {
       background-color: #ddd;
     }
@@ -462,74 +403,6 @@ header nav {
     box-shadow: 0 2px 8px rgba(244, 67, 54, 0.2);
 }
 
-/* Блоки тем/разделов */
-.blocks {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 25px;
-    margin-top: 40px;
-}
-
-.block {
-    background: white;
-    border-radius: 12px;
-    padding: 25px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s ease;
-    border: 2px solid transparent;
-    cursor: pointer;
-}
-
-.block:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
-    border-color: #3F8FD2;
-}
-
-.block h3 {
-    color: #3F8FD2;
-    margin-bottom: 15px;
-    font-size: 20px;
-}
-
-.block p {
-    color: #666;
-    line-height: 1.5;
-    margin-bottom: 20px;
-}
-
-.block .stats {
-    display: flex;
-    justify-content: space-between;
-    color: #888;
-    font-size: 14px;
-    margin-top: 15px;
-}
-
-/* Кнопка старта на главной */
-.start-button-main {
-    display: block;
-    width: 336px;
-    height: 110px;
-    margin: 40px auto;
-    border-radius: 77px;
-    background-color: #3F8FD2;
-    border: none;
-    color: white;
-    font-family: 'Montserrat', sans-serif;
-    font-size: 24px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s;
-    box-shadow: 0 4px 15px rgba(63, 143, 210, 0.2);
-}
-
-.start-button-main:hover {
-    background-color: #357ABD;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(63, 143, 210, 0.3);
-}
-
 /* Адаптивность для главной страницы */
 @media (max-width: 768px) {
     .blocks {
@@ -549,8 +422,6 @@ header nav {
     }
 }
 
-/* login_style.css */
-
 /* Импорт шрифта Montserrat */
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap');
 
@@ -559,26 +430,6 @@ header nav {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-}
-
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f7f7f9;
-    margin: 0;
-    padding: 0;
-    color: #333;
-    min-height: 100vh;
-    position: relative;
-    overflow-x: hidden;
-}
-
-/* Контейнер для всей страницы */
-.page-container {
-    position: relative;
-    width: 1440px;
-    min-height: 1024px; 
-    margin: 0 auto;
-    background-color: #DCDCDC;
 }
 
 /* Шапка - ФИКСИРОВАННАЯ версия */
