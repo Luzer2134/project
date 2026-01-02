@@ -50,7 +50,7 @@
         </main>
     </div>
 
-    <!-- ПАНЕЛЬ ПРОФИЛЯ - ТОЛЬКО ОДИН ЭКЗЕМПЛЯР -->
+<!-- ПАНЕЛЬ ПРОФИЛЯ -->
 <div class="profile-panel" id="profile-panel">
     <div class="profile-header">
         <button class="close-panel" onclick="closeProfilePanel()">×</button>
@@ -60,12 +60,11 @@
         <!-- Аватар -->
         <div class="user-avatar"></div>
         
-        <!-- Детали пользователя - ПОД аватаром -->
+        <!-- Детали пользователя -->
         <div class="user-details">
             <h4>Гость</h4>
         </div>
     </div>
-    
     <!-- Меню панели профиля -->
     <div class="profile-menu">
         <!-- Кнопка Яндекс Алиса -->
@@ -91,6 +90,13 @@
             <span class="menu-icon"></span>
             <span class="menu-text">База вопросов</span>
         </button>
+        
+        <div class="yandex-auth-section">
+        <button class="yandex-login-button" onclick="loginWithYandex()">
+            ВОЙТИ
+        </button>
+        <p class="login-hint"></p>
+    </div>
     </div>
 </div>
 
@@ -240,6 +246,22 @@
             window.location.href = 'login.html';
         }
     }
+
+    function loginWithYandex() {
+    console.log('🔐 Вход через Яндекс...');
+    closeProfilePanel(); // Закрываем панель при нажатии
+    
+    // Можно показать индикатор загрузки
+    const button = document.querySelector('.yandex-login-button');
+    const originalText = button.innerHTML;
+    button.innerHTML = '<span>Подключение к Яндекс...</span>';
+    button.disabled = true;
+    
+    // Перенаправляем на авторизацию
+    setTimeout(() => {
+        window.location.href = '/auth/yandex';
+    }, 500);
+}
     </script>
 </body>
 </html>
