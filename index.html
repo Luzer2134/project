@@ -98,41 +98,144 @@
   </nav>
 
   <main>
-    <!-- Ваш контент без изменений -->
-    <h3 style="margin-top:40px;">Выберите блок для обучения:</h3>
+    <h3 class="custom-heading">Выберите программу для тренировки</h3>
+
+    <style>
+    .custom-heading {
+      width: 980px;
+      height: 48px;
+      margin-top: 50px;
+      margin-left: 229.02px;
+      
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 500;
+      font-style: normal;
+      font-size: 48px;
+      line-height: 48px; /* 100% от 48px */
+      letter-spacing: 0;
+      
+      color: #262626;
+      
+      /* Дополнительные стили для лучшего отображения */
+      box-sizing: border-box;
+      display: block;
+    }
+    </style>
     
-    <div id="selected-block-info" style="display:none; background:#e8f4fd; padding:15px; margin:20px 0; border-radius:8px; border-left:4px solid #2196F3;">
+    <!-- <div id="selected-block-info" style="display:none; background:#e8f4fd; padding:15px; margin:20px 0; border-radius:8px; border-left:4px solid #2196F3;">
       <strong>Выбран блок: <span id="current-selected-block">-</span></strong>
       <p style="margin:5px 0 0 0; font-size:14px; color:#666;">Теперь вы можете запустить симуляцию экзамена</p>
-    </div>
+    </div> -->
     
     <div class="blocks">
-      <div class="block">
-        <h4>СИЗ</h4>
-        <p>Основные темы и задачи. Вопросы по нормативной документации.</p>
-        <button class="button select-block-btn" data-block="Блок 1" onclick="selectBlock('Блок 1')">Выбрать блок</button>
-      </div>
-      <div class="block">
-        <h4>А</h4>
-        <p>Практические навыки и тесты. Применение СИЗ на практике.</p>
-        <button class="button select-block-btn" data-block="Блок 2" onclick="selectBlock('Блок 2')">Выбрать блок</button>
-      </div>
-      <div class="block">
-        <h4>ОПП</h4>
-        <p>Теоретические основы. Классификация и требования к СИЗ.</p>
-        <button class="button select-block-btn" data-block="Блок 3" onclick="selectBlock('Блок 3')">Выбрать блок</button>
-      </div>
-      <div class="block">
-        <h4>Б</h4>
-        <p>Продвинутая практика. Сложные случаи и исключения.</p>
-        <button class="button select-block-btn" data-block="Блок 4" onclick="selectBlock('Блок 4')">Выбрать блок</button>
-      </div>
-      <div class="block">
-        <h4>В</h4>
-        <p>Блок 5.</p>
-        <button class="button select-block-btn" data-block="Блок 5" onclick="selectBlock('Блок 5')">Выбрать блок</button>
-      </div>
-    </div>
+  <div class="image-block">
+    <h4>Программа А</h4>
+    <p>общие вопросы охраны труда и функционирования СУОТ</p>
+    <button class="button select-block-btn" data-block="Блок 1" onclick="selectBlock('Блок 1')">Выбрать блок</button>
+  </div>
+  <div class="image-block">
+    <h4>Программа Б</h4>
+    <p>безопасные методы работы при воздействии вредных факторов</p>
+    <button class="button select-block-btn" data-block="Блок 2" onclick="selectBlock('Блок 2')">Выбрать блок</button>
+  </div>
+  <div class="image-block">
+    <h4>Программа В</h4>
+    <p>безопасные методы и приемы выполнения работ повышенной опасности</p>
+    <button class="button select-block-btn" data-block="Блок 3" onclick="selectBlock('Блок 3')">Выбрать блок</button>
+  </div>
+  <div class="image-block">
+    <h4>Программа ПП</h4>
+    <p>обучение по оказанию первой помощи пострадавшим</p>
+    <button class="button select-block-btn" data-block="Блок 4" onclick="selectBlock('Блок 4')">Выбрать блок</button>
+  </div>
+  <div class="image-block">
+    <h4>Программа СЗ</h4>
+    <p>использование средств индивидуальной защиты(СИЗ) </p>
+    <button class="button select-block-btn" data-block="Блок 5" onclick="selectBlock('Блок 5')">Выбрать блок</button>
+  </div>
+</div>
+
+<style>
+.image-block {
+  /* Layout */
+  width: 1094.02px;
+  height: 111px;
+  margin-top: 259px;
+  margin-left: 172px;
+  border-radius: 30px;
+  
+  /* Colors */
+  background-color: #FFFFFF;
+  
+  /* Borders */
+  border: 5px solid #CFEAFF;
+  
+  /* Inner alignment */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 30px;
+  box-sizing: border-box;
+  
+  /* Для позиционирования блоков друг под другом */
+  margin-bottom: -30px;
+}
+
+/* Для первого блока уберем верхний отступ */
+.blocks .image-block:first-child {
+  margin-top: 100px; /* Используем значение из предыдущего заголовка */
+}
+
+/* Для последующих блоков */
+.blocks .image-block:not(:first-child) {
+  margin-top: 20px; /* Отступ между блоками */
+}
+
+/* Стили для содержимого внутри блоков */
+.image-block h4 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 32px;
+  font-weight: 600;
+  color: #262626;
+  margin: 0;
+  min-width: 80px;
+}
+
+.image-block p {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 18px;
+  color: #262626;
+  margin: 0;
+  flex-grow: 1;
+  padding: 0 30px;
+}
+
+.image-block .button {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+  color: #262626;
+  background-color: #FFFFFF;
+  border: 2px solid #CFEAFF;
+  border-radius: 15px;
+  padding: 12px 30px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 180px;
+}
+
+.image-block .button:hover {
+  background-color: #CFEAFF;
+}
+
+/* Контейнер для всех блоков */
+.blocks {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+</style>
   </main>
 
   <script src="api.js"></script>
@@ -236,7 +339,6 @@
       }
     });
     
-    // Остальные ваши функции без изменений
     function selectBlock(blockName) {
       localStorage.setItem('selectedBlock', blockName);
       document.getElementById('current-selected-block').textContent = blockName;
