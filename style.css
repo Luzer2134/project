@@ -2,8 +2,12 @@
       background-color: #ddd;
     }
     main {
-      padding: 40px;
-      text-align: center;
+      position: relative;
+      width: 1440px;
+      min-height: 1024px;
+      margin: 0 auto;
+      background-color: white;
+      padding-top: 80px; 
     }
     .button {
       background-color: #dd2222;
@@ -154,80 +158,176 @@ header nav {
     font-size: 16px;
     padding: 12px 24px;
     border-radius: 8px;
-    border: 1px solid #e0e0e0;
     cursor: pointer;
     transition: all 0.3s ease;
     background-color: white;
-    color: #333;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     min-height: 44px;
+    white-space: nowrap;
 }
 
 /* Кнопка "Документация" */
 .button_documentation {
-    background-color: #f8f9fa;
-    color: #666;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    
+    /* Размеры и отступы как в макете */
+    width: fit-content;
+    height: 56px;
+    padding: 12px 8px;
+    
+    /* Расположение элементов */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    /* Внешний вид - как текст */
+    background: none;
+    border: none;
+    color: #262626;
+    cursor: pointer;
+    text-decoration: none;
+    
+    /* Для правильного отображения */
+    box-sizing: border-box;
+    white-space: nowrap;
+    
+    /* Позиционирование слева */
+    position: absolute;
+    left: 40px;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
-.button_documentation:hover:not(:disabled) {
-    background-color: #357ABD;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* Кнопка "Экзамен" (Симуляция) */
+/* Кнопка "Экзамен" - чистый текст слева */
 .button_simulation {
-    background-color: #f0f0f0;
-    color: #666;
-}
-
-.button_simulation:not(:disabled):hover {
-    background-color: #357ABD;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    
+    /* Размеры и отступы как в макете */
+    width: fit-content;
+    height: 56px;
+    padding: 12px 8px;
+    
+    /* Расположение элементов */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    /* Внешний вид - как текст (без границы) */
+    background: none;
+    border: none;
+    color: #262626;
+    cursor: pointer;
+    text-decoration: none;
+    
+    /* Для правильного отображения */
+    box-sizing: border-box;
+    white-space: nowrap;
+    
+    /* Позиционирование слева после документации */
+    position: absolute;
+    left: 200px; /* Увеличил отступ, было 160px */
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 .button_simulation:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-    background-color: #f0f0f0 !important;
-    color: #999 !important;
 }
 
-.button_simulation:disabled:hover {
-    transform: none !important;
-    box-shadow: none !important;
-}
-
-/* Кнопка "Тренажёр" */
+/* Кнопка "Тренажёр" - чистый текст слева */
 .button_trainer {
-    background-color: #3F8FD2;
-    color: white;
-    border-color: #3F8FD2;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    
+    /* Размеры и отступы как в макете */
+    width: fit-content;
+    height: 56px;
+    padding: 12px 8px;
+    
+    /* Расположение элементов */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    /* Внешний вид - как текст */
+    background: none;
+    border: none;
+    color: #262626;
+    cursor: pointer;
+    text-decoration: none;
+    
+    /* Для правильного отображения */
+    box-sizing: border-box;
+    white-space: nowrap;
+    
+    /* Позиционирование слева после экзамена */
+    position: absolute;
+    left: 320px; /* 40px (документация) + 120px (документация) + 160px (экзамен) */
+    top: 50%;
+    transform: translateY(-50%);
 }
 
-.button_trainer:hover {
-    background-color: #357ABD;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(63, 143, 210, 0.2);
+.skill-button {
+    /* Размеры и отступы */
+    width: 56px;
+    height: 56px;
+    
+    /* Внешний вид */
+    background: none;
+    border: none;
+    cursor: pointer;
+    
+    /* Для фонового изображения из папки images */
+    background-image: url('images/skill-button.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    
+    /* Для правильного отображения */
+    box-sizing: border-box;
+    
+    /* Отступ между кнопками */
+    margin-left: 20px;
 }
 
-/* Активное состояние кнопки */
+/* Кнопка profile-button */
+.profile-button {
+    /* Размеры и отступы */
+    width: 56px;
+    height: 56px;
+    
+    /* Внешний вид */
+    background: none;
+    border: none;
+    cursor: pointer;
+    
+    /* Для фонового изображения из папки images */
+    background-image: url('images/profile-button.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    
+    /* Для правильного отображения */
+    box-sizing: border-box;
+    
+    /* Отступ между кнопками */
+    margin-left: 20px;
+}
+
+/* Активное состояние кнопок */
 .button_documentation:active,
 .button_simulation:active,
 .button_trainer:active {
     transform: translateY(0);
-}
-
-/* Фокус состояние */
-.button_documentation:focus,
-.button_simulation:focus,
-.button_trainer:focus {
-    outline: 2px solid #3F8FD2;
-    outline-offset: 2px;
 }
 
 /* Адаптивность для шапки */
@@ -1162,6 +1262,14 @@ main {
     .overlay.active {
         display: block;
         opacity: 1;
+    }
+
+    .page-container {
+    position: relative;
+    width: 1440px;
+    min-height: 1024px; 
+    margin: 0 auto;
+    background-color: #DCDCDC;
     }
 
     /* Когда панель профиля активна, делаем кнопки в шапке неактивными */
