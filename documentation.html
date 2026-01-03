@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Документация</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="login_style.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        .page-container {
+            position: relative;
+            width: 1440px;
+            min-height: 1024px;
+            margin: 0 auto;
+            background-color: #FFFFFF;
+        }
+        
+        .main-content {
+            position: relative;
+            width: 100%;
+            min-height: 1024px;
+            padding-top: 140px;
+        }
+        
+        .links-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .links-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .link-item {
+            padding: 20px;
+            border: 2px solid #CFEAFF;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .link-item:hover {
+            border-color: #3F8FD2;
+            background: #f0f8ff;
+            transform: translateY(-2px);
+        }
+        
+        .link-item a {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            font-size: 18px;
+            color: #3F8FD2;
+            text-decoration: none;
+            display: block;
+            word-break: break-all;
+        }
+        
+        .link-item a:hover {
+            color: #2D6BA3;
+        }
+        
+        .section-title {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            font-size: 24px;
+            color: #262626;
+            margin: 30px 0 15px 0;
+        }
+        
+        .section-title:first-child {
+            margin-top: 0;
+        }
+        
+        @media (max-width: 768px) {
+            .page-container {
+                width: 100%;
+            }
+            
+            .links-container {
+                padding: 20px;
+            }
+            
+            .link-item a {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <header>
+            <nav>
+                <button class="button_documentation" onclick="navigateTo('documentation.html')">
+                    Документация
+                </button>
+                <button class="button_simulation" onclick="navigateTo('simulation.html')">
+                    Экзамен
+                </button>
+                <button class="button_trainer" onclick="navigateTo('trainer.html')">
+                    Тренажёр
+                </button>
+                <button class="skill-button" onclick="navigateTo('skills.html')"></button>
+                <button class="profile-button" id="profile-btn"></button>
+            </nav>
+        </header>
+
+        <main class="main-content">
+            <div class="links-container">
+                <h3 class="section-title">СИЗ:</h3>
+                <div class="links-grid">
+                    <div class="link-item">
+                        <a href="https://normativ.kontur.ru/document?moduleId=1&documentId=410891" target="_blank">
+                            https://normativ.kontur.ru/document?moduleId=1&documentId=410891
+                        </a>
+                    </div>
+                </div>
+
+                <h3 class="section-title">Программа А:</h3>
+                <div class="links-grid">
+                    <div class="link-item">
+                        <a href="https://normativ.kontur.ru/document?moduleId=1&documentId=475952&cwi=2139" target="_blank">
+                            https://normativ.kontur.ru/document?moduleId=1&documentId=475952&cwi=2139
+                        </a>
+                    </div>
+                </div>
+
+                <h3 class="section-title">Программа Б:</h3>
+                <div class="links-grid">
+                    <div class="link-item">
+                        <a href="https://professional-ipk.ru/zakony/federalnye-zakony/federalnyy-zakon-o-spetsialnoy-otsenki-usloviy-truda-426-fz-ot-28-12-2013-g/" target="_blank">
+                            https://professional-ipk.ru/zakony/federalnye-zakony/federalnyy-zakon-o-spetsialnoy-otsenki-usloviy-truda-426-fz-ot-28-12-2013-g/
+                        </a>
+                    </div>
+                </div>
+
+                <h3 class="section-title">ОПП:</h3>
+                <div class="links-grid">
+                    <div class="link-item">
+                        <a href="https://normativ.kontur.ru/document?moduleId=1&documentId=208762" target="_blank">
+                            https://normativ.kontur.ru/document?moduleId=1&documentId=208762
+                        </a>
+                    </div>
+                </div>
+
+                <h3 class="section-title">Программа В:</h3>
+                <div class="links-grid">
+                    <div class="link-item">
+                        <a href="https://normativ.kontur.ru/document?moduleId=1&documentId=501440" target="_blank">
+                            https://normativ.kontur.ru/document?moduleId=1&documentId=501440
+                        </a>
+                    </div>
+                    <div class="link-item">
+                        <a href="https://normativ.kontur.ru/document?moduleId=1&documentId=501499" target="_blank">
+                            https://normativ.kontur.ru/document?moduleId=1&documentId=501499
+                        </a>
+                    </div>
+                    <div class="link-item">
+                        <a href="https://normativ.kontur.ru/document?moduleId=1&documentId=501427" target="_blank">
+                            https://normativ.kontur.ru/document?moduleId=1&documentId=501427
+                        </a>
+                    </div>
+                    <div class="link-item">
+                        <a href="https://normativ.kontur.ru/document?moduleId=1&documentId=501456" target="_blank">
+                            https://normativ.kontur.ru/document?moduleId=1&documentId=501456
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ПАНЕЛЬ ПРОФИЛЯ -->
+    <div class="profile-panel" id="profile-panel">
+        <div class="profile-header">
+            <button class="close-panel" onclick="closeProfilePanel()">×</button>
+        </div>
+        
+        <div class="profile-info">
+            <div class="user-avatar"></div>
+            <div class="user-details">
+                <h4>Гость</h4>
+            </div>
+        </div>
+        
+        <div class="profile-menu">
+            <button class="menu-item" onclick="navigateTo('yandex-alice.html')">
+                <span class="menu-icon"></span>
+                <span class="menu-text">Яндекс Алиса</span>
+            </button>
+            
+            <button class="menu-item" onclick="navigateTo('progress.html')">
+                <span class="menu-icon"></span>
+                <span class="menu-text">Прогресс</span>
+            </button>
+            
+            <button class="menu-item" onclick="navigateTo('history.html')">
+                <span class="menu-icon"></span>
+                <span class="menu-text">История попыток</span>
+            </button>
+            
+            <button class="menu-item" onclick="navigateTo('base.html')">
+                <span class="menu-icon"></span>
+                <span class="menu-text">База вопросов</span>
+            </button>
+            
+            <div class="yandex-auth-section">
+                <button class="yandex-login-button" onclick="loginWithYandex()">
+                    ВОЙТИ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ОВЕРЛЕЙ -->
+    <div class="overlay" id="overlay" onclick="closeProfilePanel()"></div>
+
+    <script>
+        // Функции для работы с профилем
+        let isPanelOpen = false;
+        
+        function initProfilePanel() {
+            const panel = document.getElementById('profile-panel');
+            const profileBtn = document.getElementById('profile-btn');
+            const overlay = document.getElementById('overlay');
+            
+            if (profileBtn) {
+                profileBtn.onclick = toggleProfilePanel;
+            }
+            
+            document.addEventListener('click', function(event) {
+                if (isPanelOpen && panel && !panel.contains(event.target) && 
+                    profileBtn && !profileBtn.contains(event.target)) {
+                    closeProfilePanel();
+                }
+            });
+            
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape' && isPanelOpen) {
+                    closeProfilePanel();
+                }
+            });
+            
+            if (overlay) {
+                overlay.onclick = closeProfilePanel;
+            }
+        }
+        
+        function toggleProfilePanel(event) {
+            if (event) event.stopPropagation();
+            
+            if (isPanelOpen) {
+                closeProfilePanel();
+            } else {
+                openProfilePanel();
+            }
+        }
+        
+        function openProfilePanel() {
+            const panel = document.getElementById('profile-panel');
+            const overlay = document.getElementById('overlay');
+            
+            if (panel) {
+                panel.classList.add('active');
+                if (overlay) overlay.classList.add('active');
+                isPanelOpen = true;
+            }
+        }
+        
+        function closeProfilePanel() {
+            const panel = document.getElementById('profile-panel');
+            const overlay = document.getElementById('overlay');
+            
+            if (panel) {
+                panel.classList.remove('active');
+                if (overlay) overlay.classList.remove('active');
+                isPanelOpen = false;
+            }
+        }
+        
+        // Функции навигации
+        function navigateTo(page) {
+            closeProfilePanel();
+            setTimeout(() => {
+                window.location.href = page;
+            }, 300);
+        }
+        
+        function loginWithYandex() {
+            console.log('🔐 Вход через Яндекс...');
+            closeProfilePanel();
+            
+            const button = document.querySelector('.yandex-login-button');
+            const originalText = button.innerHTML;
+            button.innerHTML = '<span>Подключение к Яндекс...</span>';
+            button.disabled = true;
+            
+            setTimeout(() => {
+                window.location.href = '/auth/yandex';
+            }, 500);
+        }
+        
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', function() {
+            initProfilePanel();
+            
+            // Автоматически открываем все ссылки в новой вкладке
+            document.querySelectorAll('a[href^="http"]').forEach(link => {
+                link.setAttribute('target', '_blank');
+                link.setAttribute('rel', 'noopener noreferrer');
+            });
+        });
+    </script>
+</body>
+</html>
