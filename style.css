@@ -814,11 +814,9 @@ header nav {
 
 /* Текст "Гость" в панели профиля */
 .user-details h4 {
-    /* Размеры как в макете */
     width: 89px;
     height: 32px;
-    
-    /* Типографика */
+
     font-family: 'Montserrat', sans-serif;
     font-weight: 500; /* Medium */
     font-style: normal;
@@ -958,7 +956,7 @@ main {
     position: absolute;
     width: 685px;
     height: 64px;
-    top: 387px; /* Было 307px, +80px для шапки */
+    top: 387px; 
     left: 377px;
     
     /* Текст */
@@ -990,7 +988,7 @@ main {
     position: absolute;
     width: 890px;
     height: 200px;
-    top: 476px; /* Было 396px, +80px для шапки */
+    top: 476px; 
     left: 275px;
     
     /* Текст */
@@ -1231,20 +1229,6 @@ main {
     gap: 10px; /* Расстояние между аватаром и текстом */
 }
 
-/* Аватар */
-.user-avatar {
-    width: 194px;
-    height: 194px;
-    border-radius: 100px;
-    background-image: url('images/user-avatar.png');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    margin-bottom: 10px; /* Отступ снизу для текста */
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    border: 3px solid white;
-}
-
     /* Оверлей для панели профиля */
     .overlay {
         position: fixed;
@@ -1334,12 +1318,10 @@ main {
 
 /* Текст в меню */
 .menu-text {
-    /* Точные размеры как в макете */
     height: 24px;
     display: flex;
     align-items: center;
-    
-    /* Убираем стандартные стили кнопки */
+
     background: none;
     border: none;
     padding: 0;

@@ -227,6 +227,99 @@ header nav {
     margin-left: 20px;
 }
 
+.yandex-auth-section {
+    padding: 20px 24px;
+    text-align: center;
+    margin-top: 170px; /* Отступ от меню */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.yandex-login-button {
+    width: 244px;          
+    height: 80px;      
+    border-radius: 77px;    
+
+    padding: 31px 87px;    
+    
+    /* Фон и границы */
+    background-color: #3F8FD2; 
+    border: none;
+    
+    /* Текст */
+    color: white;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 100%;
+    letter-spacing: 0%;
+    
+    /* Выравнивание по центру */
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    /* Позиционирование */
+    margin: 0 auto; /* Центрирование по горизонтали */
+    
+    /* Эффекты */
+    cursor: pointer;
+    transition: all 0.3s ease;
+    
+    /* Тень */
+    box-shadow: 0 4px 15px rgba(63, 143, 210, 0.2);
+    
+    /* Запрет выделения текста */
+    user-select: none;
+    
+    /* Для правильного отображения */
+    box-sizing: border-box;
+}
+
+.yandex-login-button:hover {
+    background-color: #3579B0;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(63, 143, 210, 0.3);
+}
+
+.yandex-login-button:active {
+    background-color: #2D6BA3;
+    transform: translateY(0);
+    box-shadow: 0 2px 10px rgba(63, 143, 210, 0.2);
+}
+
+.yandex-login-button:focus {
+    outline: 2px solid #3F8FD2;
+    outline-offset: 2px;
+}
+
+/* Состояние загрузки кнопки */
+.yandex-login-button.loading {
+    background-color: #2D6BA3;
+    cursor: wait;
+    opacity: 0.8;
+}
+
+/* Отключенное состояние кнопки */
+.yandex-login-button:disabled {
+    background-color: #B0B0B0;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.login-hint {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px;
+    color: #666;
+    margin-top: auto; /* Отступ от кнопки */
+    text-align: center;
+    max-width: 244px; /* Такая же ширина как у кнопки */
+}
+
 /* Активное состояние кнопок */
 .button_documentation:active,
 .button_simulation:active,
@@ -287,31 +380,31 @@ header nav {
 }
 
 .user-avatar {
-    /* Размеры как в макете */
-    width: 194px;
-    height: 194px;
-    border-radius: 100px; /* Радиус 100px как в макете */
-    
-    /* Фоновое изображение из папки images */
-    background-image: url('images/icon.png');
-    background-size: cover; /* Изображение заполняет весь элемент */
-    background-position: center; /* Центрируем изображение */
-    background-repeat: no-repeat; /* Не повторяем изображение */
-    
-    /* Выравнивание */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    
-    /* Отступы и позиционирование */
-    margin: 30px auto 20px auto; /* Верхний отступ 30px для приближения к 130px от верха панели */
-    
-    /* Тень для объема */
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    
-    /* Граница */
-    border: 3px solid white;
-}
+            /* Размеры как в макете */
+            width: 194px;
+            height: 194px;
+            border-radius: 100px; /* Радиус 100px как в макете */
+            
+            /* Фоновое изображение из папки images */
+            background-image: url('images/icon.png');
+            background-size: cover; /* Изображение заполняет весь элемент */
+            background-position: center; /* Центрируем изображение */
+            background-repeat: no-repeat; /* Не повторяем изображение */
+            
+            /* Выравнивание */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            
+            /* Отступы и позиционирование */
+            margin: 30px auto 20px auto; /* Верхний отступ 30px для приближения к 130px от верха панели */
+            
+            /* Тень для объема */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            
+            /* Граница */
+            border: 3px solid white;
+        }
 
 /* Текст "Гость" в панели профиля */
 .user-details h4 {
@@ -740,20 +833,6 @@ main {
     align-items: center;
     padding: 40px 24px 20px 24px;
     gap: 10px; /* Расстояние между аватаром и текстом */
-}
-
-/* Аватар */
-.user-avatar {
-    width: 194px;
-    height: 194px;
-    border-radius: 100px;
-    background-image: url('images/user-avatar.png');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    margin-bottom: 10px; /* Отступ снизу для текста */
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    border: 3px solid white;
 }
 
     /* Оверлей для панели профиля */

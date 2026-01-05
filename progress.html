@@ -5,36 +5,211 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Прогресс обучения</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Импорт шрифта Montserrat -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-        body {
+        /* Сброс стилей и базовые настройки */
+        * {
             margin: 0;
-            padding: 20px;
-            background: #f5f5f5;
-            font-family: Arial, sans-serif;
+            padding: 0;
+            box-sizing: border-box;
         }
-        
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f7f9;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Контейнер для всей страницы */
+        .page-container {
+            position: relative;
+            width: 1440px;
+            min-height: 1024px;
+            margin: 0 auto;
+            background-color: #DCDCDC;
+        }
+
+        /* Шапка - ФИКСИРОВАННАЯ версия */
+        header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 80px;
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        /* Контейнер навигации в шапке */
+        header nav {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            height: 100%;
+            gap: 20px;
+            padding: 0 40px;
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+
+        /* Общие стили для кнопок в шапке */
+        .button_documentation,
+        .button_simulation,
+        .button_trainer {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            font-size: 16px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: white;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
+            white-space: nowrap;
+        }
+
+        /* Кнопка "Документация" */
+        .button_documentation {
+            width: fit-content;
+            height: 56px;
+            padding: 12px 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: none;
+            border: none;
+            color: #262626;
+            cursor: pointer;
+            text-decoration: none;
+            box-sizing: border-box;
+            white-space: nowrap;
+            position: absolute;
+            left: 40px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        /* Кнопка "Экзамен" */
+        .button_simulation {
+            width: fit-content;
+            height: 56px;
+            padding: 12px 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: none;
+            border: none;
+            color: #262626;
+            cursor: pointer;
+            text-decoration: none;
+            box-sizing: border-box;
+            white-space: nowrap;
+            position: absolute;
+            left: 200px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .button_simulation:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Кнопка "Тренажёр" */
+        .button_trainer {
+            width: fit-content;
+            height: 56px;
+            padding: 12px 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: none;
+            border: none;
+            color: #262626;
+            cursor: pointer;
+            text-decoration: none;
+            box-sizing: border-box;
+            white-space: nowrap;
+            position: absolute;
+            left: 320px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .skill-button {
+            width: 56px;
+            height: 56px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            background-image: url('images/skill-button.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            box-sizing: border-box;
+            margin-left: 20px;
+        }
+
+        .profile-button {
+            width: 56px;
+            height: 56px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            background-image: url('images/profile-button.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            box-sizing: border-box;
+            margin-left: 20px;
+        }
+
+        /* Основной контент */
+        main {
+            position: relative;
+            width: 1440px;
+            min-height: 1024px;
+            margin: 0 auto;
+            background-color: white;
+            padding-top: 80px;
+        }
+
+        /* Стили для страницы прогресса */
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 40px 20px;
         }
         
         .page-title {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 50px;
             color: #333;
-            font-size: 32px;
-            padding: 20px;
+            font-size: 36px;
+            padding: 30px;
             background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
         }
         
         .blocks-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 25px;
-            margin-bottom: 50px;
+            gap: 30px;
+            margin-bottom: 60px;
         }
         
         @media (max-width: 1200px) {
@@ -51,33 +226,34 @@
         
         .block-card {
             background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
             text-align: center;
-            transition: transform 0.3s ease;
-            border-top: 5px solid;
+            transition: all 0.3s ease;
+            border-top: 6px solid;
         }
         
         .block-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
         }
         
         .block-title {
             font-size: 24px;
             font-weight: bold;
-            margin-bottom: 25px;
+            margin-bottom: 30px;
             color: #333;
-            padding-bottom: 10px;
+            padding-bottom: 15px;
             border-bottom: 2px solid #f0f0f0;
+            font-family: 'Montserrat', sans-serif;
         }
         
         .progress-bar-container {
-            height: 30px;
+            height: 35px;
             background: #f0f0f0;
-            border-radius: 15px;
-            margin: 25px 0;
+            border-radius: 18px;
+            margin: 30px 0;
             overflow: hidden;
             position: relative;
             border: 2px solid #ddd;
@@ -85,7 +261,7 @@
         
         .progress-bar-fill {
             height: 100%;
-            border-radius: 15px;
+            border-radius: 16px;
             transition: width 0.8s ease;
             position: relative;
         }
@@ -98,78 +274,70 @@
             font-weight: bold;
             color: white;
             text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
-            font-size: 16px;
+            font-size: 18px;
             z-index: 2;
+            font-family: 'Montserrat', sans-serif;
         }
         
         .progress-info {
-            margin: 20px 0;
+            margin: 25px 0;
             font-size: 16px;
             color: #555;
             line-height: 1.6;
+            font-family: 'Montserrat', sans-serif;
         }
         
         .progress-info span {
             font-weight: bold;
-            font-size: 18px;
+            font-size: 20px;
             color: #333;
         }
         
         .total-questions {
             display: block;
-            margin-top: 10px;
+            margin-top: 12px;
             font-size: 14px;
             color: #777;
+            font-style: italic;
         }
-        
+
         .controls {
             text-align: center;
-            margin-top: 50px;
-            padding: 30px;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin: 50px auto;
+            max-width: 200px;
+            background: transparent;
+            padding: 0;
+            border-radius: 0;
+            box-shadow: none;
+            border: none;
         }
         
         .clear-button {
-            padding: 15px 40px;
-            background: linear-gradient(135deg, #f44336, #d32f2f);
-            color: white;
+            width: 55px;      
+            height: 55px;     
+            padding: 0;     
+            background: url('images/корзина.png') no-repeat center center;
+            background-size: contain; 
+            color: transparent; 
             border: none;
-            border-radius: 10px;
-            font-size: 18px;
+            border-radius: 12px;
             cursor: pointer;
             transition: all 0.3s ease;
-            font-weight: bold;
-            box-shadow: 0 4px 10px rgba(244, 67, 54, 0.3);
+            display: block;
+            margin: 0 auto;
         }
-        
+
         .clear-button:hover {
-            background: linear-gradient(135deg, #d32f2f, #c62828);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(244, 67, 54, 0.4);
+            transform: translateY(-2px) scale(1.1);
         }
         
-        .back-button {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            padding: 12px 25px;
-            background: linear-gradient(135deg, #666, #555);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            font-weight: bold;
-            z-index: 100;
-            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
-        }
-        
-        .back-button:hover {
-            background: linear-gradient(135deg, #555, #444);
-            transform: translateY(-2px);
+        .clear-button-label {
+            display: block;
+            margin-top: 8px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            color: #666;
+            font-weight: 500;
         }
         
         @keyframes shimmer {
@@ -180,17 +348,18 @@
         .loading {
             grid-column: 1 / -1;
             text-align: center;
-            padding: 60px;
+            padding: 80px;
             color: #666;
-            font-size: 18px;
+            font-size: 20px;
+            font-family: 'Montserrat', sans-serif;
         }
         
         .loading:after {
             content: '';
             display: inline-block;
-            width: 20px;
-            height: 20px;
-            margin-left: 10px;
+            width: 24px;
+            height: 24px;
+            margin-left: 12px;
             border: 3px solid #f3f3f3;
             border-top: 3px solid #3498db;
             border-radius: 50%;
@@ -201,28 +370,555 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        .profile-panel {
+            position: fixed;
+            top: 0;
+            right: -364px;
+            width: 364px;
+            height: 100vh;
+            background-color: #FFFFFF;
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+            z-index: 2000;
+            transition: right 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .profile-panel.active {
+            right: 0;
+        }
+
+        /* Кнопка закрытия */
+        .close-panel {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #666;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+        }
+
+        .close-panel:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* Информация о пользователе */
+        .profile-info {
+            display: flex;
+            align-items: center;
+            padding: 24px;
+            gap: 16px;
+        }
+
+        .user-avatar {
+            width: 194px;
+            height: 194px;
+            border-radius: 100px; 
+            
+            background-image: url('images/icon.png');
+            background-size: cover; 
+            background-position: center; 
+            background-repeat: no-repeat; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 30px auto 20px auto; 
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 3px solid white;
+        }
+
+        .user-details h4 {
+            width: 89px;
+            height: 32px;
+            
+            /* Типографика */
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500; /* Medium */
+            font-style: normal;
+            font-size: 32px;
+            line-height: 100%;
+            letter-spacing: 0%;
+            
+            /* Цвет */
+            color: #262626;
+            
+            /* Выравнивание */
+            text-align: center;
+            
+            /* Отступы и позиционирование */
+            margin: 0 auto 8px auto;
+            padding: 0;
+            
+            /* Для правильного отображения */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-details p {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 400;
+            font-size: 14px;
+            color: #666;
+            margin: 0;
+        }
+
+        /* Статистика */
+        .profile-stats {
+            padding: 0 24px 24px 24px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+        }
+
+        .stat-label {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 400;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .stat-value {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            font-size: 16px;
+            color: #3F8FD2;
+        }
+
+        /* Меню профиля */
+        .profile-menu {
+            padding: 24px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 16px;
+            background: none;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            margin-bottom: 8px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 16px;
+            color: #262626;
+        }
+
+        .menu-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .menu-item:active {
+            background-color: #e9ecef;
+        }
+
+        .menu-icon {
+            font-size: 18px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .logout-btn:hover {
+            background-color: #ffebee;
+        }
+
+        .yandex-auth-section {
+            padding: 20px 24px;
+            text-align: center;
+        }
+
+        .yandex-auth-section {
+    padding: 20px 24px;
+    text-align: center;
+    margin-top: 170px; /* Отступ от меню */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+        .yandex-login-button {
+            width: 244px;          
+            height: 80px;      
+            border-radius: 77px;    
+
+            padding: 31px 87px;    
+            
+            /* Фон и границы */
+            background-color: #3F8FD2; 
+            border: none;
+            
+            /* Текст */
+            color: white;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 24px;
+            font-weight: 600;
+            line-height: 100%;
+            letter-spacing: 0%;
+            
+            /* Выравнивание по центру */
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            
+            /* Позиционирование */
+            margin: 0 auto; /* Центрирование по горизонтали */
+            
+            /* Эффекты */
+            cursor: pointer;
+            transition: all 0.3s ease;
+            
+            /* Тень */
+            box-shadow: 0 4px 15px rgba(63, 143, 210, 0.2);
+            
+            /* Запрет выделения текста */
+            user-select: none;
+            
+            /* Для правильного отображения */
+            box-sizing: border-box;
+        }
+
+        .yandex-login-button:hover {
+            background-color: #3579B0;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(63, 143, 210, 0.3);
+        }
+
+        .yandex-login-button:active {
+            background-color: #2D6BA3;
+            transform: translateY(0);
+            box-shadow: 0 2px 10px rgba(63, 143, 210, 0.2);
+        }
+
+        .yandex-login-button:focus {
+            outline: 2px solid #3F8FD2;
+            outline-offset: 2px;
+        }
+
+        /* Состояние загрузки кнопки */
+        .yandex-login-button.loading {
+            background-color: #2D6BA3;
+            cursor: wait;
+            opacity: 0.8;
+        }
+
+        /* Отключенное состояние кнопки */
+        .yandex-login-button:disabled {
+            background-color: #B0B0B0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .login-hint {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            color: #666;
+            margin-top: auto; /* Отступ от кнопки */
+            text-align: center;
+            max-width: 244px; /* Такая же ширина как у кнопки */
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1999;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .page-container {
+                width: 100%;
+                min-height: auto;
+            }
+            
+            main {
+                width: 100%;
+                padding-top: 60px;
+            }
+            
+            .blocks-grid {
+                gap: 20px;
+            }
+            
+            .container {
+                padding: 20px 15px;
+            }
+            
+            .page-title {
+                font-size: 28px;
+                padding: 20px;
+                margin-bottom: 30px;
+            }
+            
+            .block-card {
+                padding: 20px;
+            }
+            
+            .block-title {
+                font-size: 20px;
+            }
+            
+            .progress-bar-container {
+                height: 30px;
+            }
+            
+            .progress-percentage {
+                font-size: 16px;
+            }
+            
+            .controls {
+                margin: 30px auto;
+                max-width: 150px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .page-title {
+                font-size: 24px;
+            }
+            
+            .block-title {
+                font-size: 18px;
+            }
+            
+            .progress-info {
+                font-size: 14px;
+            }
+            
+            .progress-info span {
+                font-size: 16px;
+            }
+            
+            .loading {
+                padding: 50px;
+                font-size: 16px;
+            }
+        }
     </style>
 </head>
 <body>
-    <button class="back-button" onclick="goToMain()">← На главную</button>
-    
-    <div class="container">
-        <h1 class="page-title">Прогресс обучения</h1>
+    <div class="page-container">
+        <header>
+            <nav>
+                <button class="button_documentation" onclick="navigateTo('documentation.html')">
+                    Документация
+                </button>
+                <button class="button_simulation" id="simulation-btn" onclick="navigateTo('simulation.html')" disabled>
+                    Экзамен
+                </button>
+                <button class="button_trainer" onclick="navigateTo('trainer.html')">
+                    Тренажёр
+                </button>
+                <button class="skill-button" onclick="navigateTo('skills.html')"></button>
+                <button class="profile-button" id="profile-btn"></button>
+            </nav>
+        </header>
         
-        <!-- 4 колонки с блоками -->
-        <div class="blocks-grid" id="blocks-container">
-            <div class="loading">Загрузка прогресса...</div>
+        <main>
+            <div class="container">
+                <h1 class="page-title">Прогресс обучения</h1>
+                
+                <!-- 4 колонки с блоками -->
+                <div class="blocks-grid" id="blocks-container">
+                    <div class="loading">Загрузка прогресса...</div>
+                </div>
+                
+                <!-- Кнопка удаления прогресса -->
+                <div class="controls">
+                    <button class="clear-button" onclick="clearAllProgress()" title="Удалить весь прогресс">
+                    </button>
+                    <span class="clear-button-label"></span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="profile-panel" id="profile-panel">
+        <div class="profile-header">
+            <button class="close-panel" onclick="closeProfilePanel()">×</button>
         </div>
         
-        <!-- Кнопка удаления прогресса -->
-        <div class="controls">
-            <button class="clear-button" onclick="clearAllProgress()">
-                Удалить весь прогресс
+        <div class="profile-info">
+            <!-- Аватар -->
+            <div class="user-avatar"></div>
+            
+            <!-- Детали пользователя -->
+            <div class="user-details">
+                <h4>Гость</h4>
+            </div>
+        </div>
+        
+        <!-- Меню панели профиля -->
+        <div class="profile-menu">
+            <!-- Кнопка Яндекс Алиса -->
+            <button class="menu-item" onclick="navigateTo('yandex-alice.html')">
+                <span class="menu-icon"></span>
+                <span class="menu-text">Яндекс Алиса</span>
             </button>
+            
+            <!-- Кнопка Прогресс (активная) -->
+            <button class="menu-item" onclick="navigateTo('progress.html')">
+                <span class="menu-icon"></span>
+                <span class="menu-text">Прогресс</span>
+            </button>
+            
+            <!-- Кнопка История попыток -->
+            <button class="menu-item" onclick="navigateTo('history.html')">
+                <span class="menu-icon"></span>
+                <span class="menu-text">История попыток</span>
+            </button>
+            
+            <!-- Кнопка База вопросов -->
+            <button class="menu-item" onclick="navigateTo('base.html')">
+                <span class="menu-icon"></span>
+                <span class="menu-text">База вопросов</span>
+            </button>
+            
+            <div class="yandex-auth-section">
+                <button class="yandex-login-button" onclick="loginWithYandex()">
+                    ВОЙТИ
+                </button>
+            </div>
         </div>
     </div>
-    
+
+    <!-- ОВЕРЛЕЙ -->
+    <div class="overlay" id="overlay" onclick="closeProfilePanel()"></div>
+
     <script src="api.js"></script>
     <script src="progress.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('📊 Страница прогресса загружена');
+        
+        // Назначаем обработчик на кнопку профиля
+        const profileBtn = document.getElementById('profile-btn');
+        if (profileBtn) {
+            profileBtn.onclick = toggleProfilePanel;
+        }
+        
+        // Проверяем доступ к экзамену
+        checkSimulationAccess();
+        
+        // Инициализация панели профиля
+        initProfilePanel();
+    });
+    
+    function navigateTo(page) {
+        closeProfilePanel();
+        setTimeout(() => {
+            window.location.href = page;
+        }, 300);
+    }
+
+    function checkSimulationAccess() {
+        const hasCompletedTraining = localStorage.getItem('training_completed');
+        const simBtn = document.getElementById('simulation-btn');
+        
+        if (simBtn && hasCompletedTraining === 'true') {
+            simBtn.disabled = false;
+        }
+    }
+
+    // ===== ФУНКЦИИ ДЛЯ ПАНЕЛИ ПРОФИЛЯ =====
+    let isPanelOpen = false;
+
+    function initProfilePanel() {
+        // Закрытие по клику вне панели
+        document.addEventListener('click', function(event) {
+            const panel = document.getElementById('profile-panel');
+            const profileBtn = document.getElementById('profile-btn');
+            
+            if (isPanelOpen && panel && !panel.contains(event.target) && 
+                profileBtn && !profileBtn.contains(event.target)) {
+                closeProfilePanel();
+            }
+        });
+        
+        // Закрытие при нажатии ESC
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && isPanelOpen) {
+                closeProfilePanel();
+            }
+        });
+    }
+
+    function toggleProfilePanel(event) {
+        if (event) {
+            event.stopPropagation();
+        }
+        
+        if (isPanelOpen) {
+            closeProfilePanel();
+        } else {
+            openProfilePanel();
+        }
+    }
+
+    function openProfilePanel() {
+        const panel = document.getElementById('profile-panel');
+        const overlay = document.getElementById('overlay');
+        
+        if (panel) {
+            panel.classList.add('active');
+            if (overlay) overlay.classList.add('active');
+            isPanelOpen = true;
+        }
+    }
+
+    function closeProfilePanel() {
+        const panel = document.getElementById('profile-panel');
+        const overlay = document.getElementById('overlay');
+        
+        if (panel) {
+            panel.classList.remove('active');
+            if (overlay) overlay.classList.remove('active');
+            isPanelOpen = false;
+        }
+    }
+
+    function loginWithYandex() {
+        console.log('🔐 Вход через Яндекс...');
+        closeProfilePanel();
+        
+        const button = document.querySelector('.yandex-login-button');
+        const originalText = button.innerHTML;
+        button.innerHTML = '<span>Подключение к Яндекс...</span>';
+        button.disabled = true;
+        
+        setTimeout(() => {
+            window.location.href = '/auth/yandex';
+        }, 500);
+    }
+    </script>
 </body>
 </html>

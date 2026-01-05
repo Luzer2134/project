@@ -1,190 +1,596 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Веб‑платформа подготовки</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="login_style.css">
-  <style>
-    .user-info-panel {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: rgba(255, 255, 255, 0.9);
-      padding: 10px 15px;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    
-    .user-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid #ddd;
-    }
-    
-    .user-avatar-placeholder {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: #2196F3;
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      font-size: 18px;
-    }
-    
-    .user-details {
-      display: flex;
-      flex-direction: column;
-    }
-    
-    .user-name {
-      font-weight: bold;
-      font-size: 16px;
-    }
-    
-    .user-type {
-      font-size: 12px;
-      color: #666;
-    }
-    
-    .yandex-badge {
-      background: #FFCC00;
-      color: #000;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 10px;
-      font-weight: bold;
-      margin-left: 5px;
-    }
-    
-    .guest-badge {
-      background: #6c757d;
-      color: white;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 10px;
-      font-weight: bold;
-      margin-left: 5px;
-    }
-    
-    /* Стили для главной страницы */
-    .main-content {
-        position: relative;
-        width: 1440px;
-        min-height: 1024px;
-        margin: 0 auto;
-        background-color: white;
-        padding-top: 80px;
-    }
-    
-    .custom-heading {
-        width: 980px;
-        height: 48px;
-        margin-top: 50px;
-        margin-left: 229.02px;
-        font-family: 'Montserrat', sans-serif;
-        font-weight: 500;
-        font-size: 48px;
-        line-height: 48px;
-        color: #262626;
-        box-sizing: border-box;
-        display: block;
-    }
-    
-    .blocks {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        width: 100%;
-        margin-top: 100px;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Веб‑платформа подготовки</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Импорт шрифта Montserrat -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /* Сброс стилей и базовые настройки */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    .image-block {
-        width: 1094.02px;
-        height: 111px;
-        margin-top: 20px;
-        margin-left: auto;
-        margin-right: auto;
-        border-radius: 30px;
-        background-color: #FFFFFF;
-        border: 5px solid #CFEAFF;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 30px;
-        box-sizing: border-box;
-        cursor: pointer; /* Добавляем курсор указателя */
-        transition: all 0.3s ease; /* Плавный переход для эффектов */
-    }
-    
-    .image-block:first-child {
-        margin-top: 0;
-    }
-    
-    /* Эффект при наведении на блок */
-    .image-block:hover {
-        background-color: #f0f8ff;
-        border-color: #2196F3;
-        transform: translateY(-3px);
-        box-shadow: 0 5px 15px rgba(33, 150, 243, 0.1);
-    }
-    
-    /* Эффект при клике */
-    .image-block:active {
-        transform: translateY(-1px);
-        background-color: #e3f2fd;
-    }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f7f9;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
 
-    .image-block h4 {
-        font-family: 'Montserrat', sans-serif;
-        font-size: 32px;
-        font-weight: 600;
-        color: #262626;
-        margin: 0;
-        min-width: 80px;
-    }
-    
-    .image-block p {
-        font-family: 'Montserrat', sans-serif;
-        font-size: 18px;
-        color: #262626;
-        margin: 0;
-        flex-grow: 1;
-        padding: 0 30px;
-    }
-    
-    /* Убираем старую кнопку и заменяем на текстовый индикатор */
-    .image-block .button {
-        font-family: 'Montserrat', sans-serif;
-        font-size: 18px;
-        font-weight: 500;
-        color: #262626;
-        background-color: #FFFFFF;
-        border: 2px solid #CFEAFF;
-        border-radius: 15px;
-        padding: 12px 30px;
-        min-width: 180px;
-        pointer-events: none; /* Отключаем события мыши, так как кликабелен весь блок */
-    }
-    
-    /* Стиль для текста "Выбрать блок" при наведении на весь блок */
-    .image-block:hover .button {
-        background-color: #CFEAFF;
-    }
-    
-  </style>
+        /* Контейнер для всей страницы */
+        .page-container {
+            position: relative;
+            width: 1440px;
+            min-height: 1024px;
+            margin: 0 auto;
+            background-color: #DCDCDC;
+        }
+
+        header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 80px;
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        /* Контейнер навигации в шапке */
+        header nav {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            height: 100%;
+            gap: 20px;
+            padding: 0 40px;
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+
+        /* Общие стили для кнопок в шапке */
+        .button_documentation,
+        .button_simulation,
+        .button_trainer {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            font-size: 16px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: white;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
+            white-space: nowrap;
+        }
+
+        /* Кнопка "Документация" */
+        .button_documentation {
+            width: fit-content;
+            height: 56px;
+            padding: 12px 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: none;
+            border: none;
+            color: #262626;
+            cursor: pointer;
+            text-decoration: none;
+            box-sizing: border-box;
+            white-space: nowrap;
+            position: absolute;
+            left: 40px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        /* Кнопка "Экзамен" */
+        .button_simulation {
+            width: fit-content;
+            height: 56px;
+            padding: 12px 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: none;
+            border: none;
+            color: #262626;
+            cursor: pointer;
+            text-decoration: none;
+            box-sizing: border-box;
+            white-space: nowrap;
+            position: absolute;
+            left: 200px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .button_simulation:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Кнопка "Тренажёр" */
+        .button_trainer {
+            width: fit-content;
+            height: 56px;
+            padding: 12px 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: none;
+            border: none;
+            color: #262626;
+            cursor: pointer;
+            text-decoration: none;
+            box-sizing: border-box;
+            white-space: nowrap;
+            position: absolute;
+            left: 320px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .skill-button {
+            width: 56px;
+            height: 56px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            background-image: url('images/skill-button.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            box-sizing: border-box;
+            margin-left: 20px;
+        }
+
+        .profile-button {
+            width: 56px;
+            height: 56px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            background-image: url('images/profile-button.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            box-sizing: border-box;
+            margin-left: 20px;
+        }
+
+        /* Основной контент */
+        main {
+            position: relative;
+            width: 1440px;
+            min-height: 1024px;
+            margin: 0 auto;
+            background-color: white;
+            padding-top: 80px;
+        }
+
+        /* Стили для главной страницы */
+        .main-content {
+            position: relative;
+            width: 1440px;
+            min-height: 1024px;
+            margin: 0 auto;
+            background-color: white;
+            padding-top: 80px;
+        }
+        
+        .custom-heading {
+            width: 980px;
+            height: 48px;
+            margin-top: 50px;
+            margin-left: 229.02px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            font-size: 48px;
+            line-height: 48px;
+            color: #262626;
+            box-sizing: border-box;
+            display: block;
+        }
+        
+        .blocks {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            margin-top: 100px;
+        }
+
+        .image-block {
+            width: 1094.02px;
+            height: 111px;
+            margin-top: 20px;
+            margin-left: auto;
+            margin-right: auto;
+            border-radius: 30px;
+            background-color: #FFFFFF;
+            border: 5px solid #CFEAFF;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            box-sizing: border-box;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .image-block:first-child {
+            margin-top: 0;
+        }
+        
+        /* Эффект при наведении на блок */
+        .image-block:hover {
+            background-color: #f0f8ff;
+            border-color: #2196F3;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.1);
+        }
+        
+        /* Эффект при клике */
+        .image-block:active {
+            transform: translateY(-1px);
+            background-color: #e3f2fd;
+        }
+
+        .image-block.selected {
+            background-color: #e3f2fd;
+            border-color: #2196F3;
+            box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+        }
+
+        .image-block h4 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 32px;
+            font-weight: 600;
+            color: #262626;
+            margin: 0;
+            min-width: 80px;
+        }
+        
+        .image-block p {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 18px;
+            color: #262626;
+            margin: 0;
+            flex-grow: 1;
+            padding: 0 30px;
+        }
+        
+        .image-block .button {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 18px;
+            font-weight: 500;
+            color: #262626;
+            background-color: #FFFFFF;
+            border: 2px solid #CFEAFF;
+            border-radius: 15px;
+            padding: 12px 30px;
+            min-width: 180px;
+            pointer-events: none;
+        }
+        
+        /* Стиль для текста "Выбрать блок" при наведении на весь блок */
+        .image-block:hover .button {
+            background-color: #CFEAFF;
+        }
+
+        .profile-panel {
+            position: fixed;
+            top: 0;
+            right: -364px;
+            width: 364px;
+            height: 100vh;
+            background-color: #FFFFFF;
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+            z-index: 2000;
+            transition: right 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .profile-panel.active {
+            right: 0;
+        }
+
+        /* Кнопка закрытия */
+        .close-panel {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #666;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+        }
+
+        .close-panel:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* Информация о пользователе */
+        .profile-info {
+            display: flex;
+            align-items: center;
+            padding: 24px;
+            gap: 16px;
+        }
+
+        /* Аватар */
+        .user-avatar {
+            width: 194px;
+            height: 194px;
+            border-radius: 100px;
+            background-image: url('images/icon.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            margin: 30px auto 20px auto;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 3px solid white;
+        }
+
+        /* Текст "Гость" в панели профиля */
+        .user-details h4 {
+            width: 89px;
+            height: 32px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            font-style: normal;
+            font-size: 32px;
+            line-height: 100%;
+            letter-spacing: 0%;
+            color: #262626;
+            text-align: center;
+            margin: 0 auto 8px auto;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-details p {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 400;
+            font-size: 14px;
+            color: #666;
+            margin: 0;
+        }
+
+        /* Меню профиля */
+        .profile-menu {
+            padding: 24px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 16px;
+            background: none;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            margin-bottom: 8px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 16px;
+            color: #262626;
+        }
+
+        .menu-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .menu-item:active {
+            background-color: #e9ecef;
+        }
+
+        .menu-icon {
+            font-size: 18px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .yandex-auth-section {
+            padding: 20px 24px;
+            text-align: center;
+            margin-top: 170px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .yandex-login-button {
+            width: 244px;          
+            height: 80px;      
+            border-radius: 77px;    
+            padding: 31px 87px;    
+            background-color: #3F8FD2; 
+            border: none;
+            color: white;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 24px;
+            font-weight: 600;
+            line-height: 100%;
+            letter-spacing: 0%;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(63, 143, 210, 0.2);
+            user-select: none;
+            box-sizing: border-box;
+        }
+
+        .yandex-login-button:hover {
+            background-color: #3579B0;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(63, 143, 210, 0.3);
+        }
+
+        .yandex-login-button:active {
+            background-color: #2D6BA3;
+            transform: translateY(0);
+            box-shadow: 0 2px 10px rgba(63, 143, 210, 0.2);
+        }
+
+        .yandex-login-button:focus {
+            outline: 2px solid #3F8FD2;
+            outline-offset: 2px;
+        }
+
+        /* Состояние загрузки кнопки */
+        .yandex-login-button.loading {
+            background-color: #2D6BA3;
+            cursor: wait;
+            opacity: 0.8;
+        }
+
+        /* Отключенное состояние кнопки */
+        .yandex-login-button:disabled {
+            background-color: #B0B0B0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .login-hint {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            color: #666;
+            margin-top: 15px;
+            text-align: center;
+            max-width: 244px;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1999;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .page-container {
+                width: 100%;
+                min-height: auto;
+            }
+            
+            main {
+                width: 100%;
+                padding-top: 60px;
+            }
+            
+            .main-content {
+                width: 100%;
+                padding-top: 60px;
+            }
+            
+            .custom-heading {
+                width: 90%;
+                margin-left: 5%;
+                font-size: 32px;
+                text-align: center;
+            }
+            
+            .image-block {
+                width: 95%;
+                height: auto;
+                min-height: 100px;
+                padding: 20px;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .image-block h4 {
+                margin-bottom: 10px;
+            }
+            
+            .image-block p {
+                padding: 0;
+                margin-bottom: 10px;
+            }
+            
+            .blocks {
+                margin-top: 50px;
+            }
+            
+            .yandex-login-button {
+                width: 200px;
+                height: 70px;
+                padding: 20px 40px;
+                font-size: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .custom-heading {
+                font-size: 24px;
+            }
+            
+            .image-block h4 {
+                font-size: 24px;
+            }
+            
+            .image-block p {
+                font-size: 16px;
+            }
+            
+            .yandex-login-button {
+                width: 180px;
+                height: 60px;
+                padding: 15px 30px;
+                font-size: 18px;
+                border-radius: 60px;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="page-container">
+        <!-- Шапка -->
         <header>
             <nav>
                 <button class="button_documentation" onclick="navigateTo('documentation.html')">
@@ -200,12 +606,12 @@
                 <button class="profile-button" id="profile-btn"></button>
             </nav>
         </header>
-
+        
         <main class="main-content">
             <h3 class="custom-heading">Выберите программу для тренировки</h3>
             
             <div class="blocks">
-                <!-- Каждый блок теперь является кликабельным элементом -->
+                <!-- Каждый блок является кликабельным элементом -->
                 <div class="image-block" data-block="Блок 1" onclick="selectBlock(this, 'Блок 1')">
                     <h4>Программа А</h4>
                     <p>общие вопросы охраны труда и функционирования СУОТ</p>
@@ -230,10 +636,6 @@
         </main>
     </div>
 
-    <div id="user-panel" class="user-info-panel" style="display: none;">
-        <!-- Заполнится JavaScript -->
-    </div>
-    
     <!-- ПАНЕЛЬ ПРОФИЛЯ -->
     <div class="profile-panel" id="profile-panel">
         <div class="profile-header">
@@ -249,6 +651,7 @@
                 <h4>Гость</h4>
             </div>
         </div>
+        
         <!-- Меню панели профиля -->
         <div class="profile-menu">
             <!-- Кнопка Яндекс Алиса -->
@@ -275,11 +678,11 @@
                 <span class="menu-text">База вопросов</span>
             </button>
             
+            <!-- Кнопка ВОЙТИ -->
             <div class="yandex-auth-section">
                 <button class="yandex-login-button" onclick="loginWithYandex()">
                     ВОЙТИ
                 </button>
-                <p class="login-hint"></p>
             </div>
         </div>
     </div>
@@ -393,7 +796,7 @@
         
         function toggleProfilePanel(event) {
             if (event) {
-                event.stopPropagation(); // Предотвращаем всплытие
+                event.stopPropagation();
             }
             
             if (isPanelOpen) {
@@ -434,15 +837,14 @@
         
         function loginWithYandex() {
             console.log('🔐 Вход через Яндекс...');
-            closeProfilePanel(); // Закрываем панель при нажатии
+            closeProfilePanel();
             
-            // Можно показать индикатор загрузки
             const button = document.querySelector('.yandex-login-button');
             const originalText = button.innerHTML;
-            button.innerHTML = '<span>Подключение к Яндекс...</span>';
+            button.innerHTML = 'Подключение...';
             button.disabled = true;
+            button.classList.add('loading');
             
-            // Перенаправляем на авторизацию
             setTimeout(() => {
                 window.location.href = '/auth/yandex';
             }, 500);
