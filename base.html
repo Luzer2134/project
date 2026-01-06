@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>База вопросов - Веб-платформа подготовки</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #f7f7f9;
+            color: #333;
+            min-height: 100vh;
+        }
+
+        .page-container {
+            width: 1440px;
+            min-height: 1024px;
+            margin: 0 auto;
+            background-color: white;
+            position: relative;
+        }
+
+        header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 80px;
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        header nav {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            height: 100%;
+            gap: 20px;
+            padding: 0 40px;
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+
+        .button_documentation,
+        .button_simulation,
+        .button_trainer {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            font-size: 16px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: white;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
+            white-space: nowrap;
+        }
+
+        .button_documentation {
+            width: fit-content;
+            height: 56px;
+            padding: 12px 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: none;
+            border: none;
+            color: #262626;
+            cursor: pointer;
+            text-decoration: none;
+            box-sizing: border-box;
+            white-space: nowrap;
+            position: absolute;
+            left: 40px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .button_simulation {
+            width: fit-content;
+            height: 56px;
+            padding: 12px 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: none;
+            border: none;
+            color: #262626;
+            cursor: pointer;
+            text-decoration: none;
+            box-sizing: border-box;
+            white-space: nowrap;
+            position: absolute;
+            left: 200px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .button_trainer {
+            width: fit-content;
+            height: 56px;
+            padding: 12px 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: none;
+            border: none;
+            color: #262626;
+            cursor: pointer;
+            text-decoration: none;
+            box-sizing: border-box;
+            white-space: nowrap;
+            position: absolute;
+            left: 320px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .skill-button {
+            width: 56px;
+            height: 56px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            background-image: url('images/skill-button.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            box-sizing: border-box;
+            margin-left: 20px;
+        }
+
+        .profile-button {
+            width: 56px;
+            height: 56px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            background-image: url('images/profile-button.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            box-sizing: border-box;
+            margin-left: 20px;
+        }
+
+        main {
+            padding-top: 80px;
+            min-height: 1024px;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .page-header {
+    text-align: left;
+    margin-bottom: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.page-title {
+    font-size: 36px;
+    font-weight: 600;
+    color: #262626;
+    margin-bottom: 0;
+    flex: 1;
+}
+
+.search-section {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    border: 2px solid #eef5ff;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    width: auto;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    margin-bottom: 0;
+    margin-left: 20px;
+}
+
+.search-box {
+    position: relative;
+    width: 370px;
+    height: 62px;
+}
+
+.search-button {
+    width: 370px;
+    height: 62px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    background-image: url('images/search-button.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    box-sizing: border-box;
+    border-radius: 77px;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.search-button:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+}
+
+.search-button:active {
+    opacity: 0.8;
+    transform: translateY(0);
+}
+
+.search-button::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border: 4px solid #CFEAFF;
+    border-radius: 77px;
+    pointer-events: none;
+}
+
+        /* Блоки вопросов */
+        .blocks-container {
+            margin-top: 20px;
+        }
+
+        .block-item {
+            background: white;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            border: 2px solid #f0f7ff;
+        }
+
+        .block-header {
+            padding: 25px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #f8faff 0%, #eef5ff 100%);
+        }
+
+        .block-header:hover {
+            background: linear-gradient(135deg, #eef5ff 0%, #e3f2fd 100%);
+        }
+
+        .block-header.active {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        }
+
+        .block-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .block-number {
+            font-size: 28px;
+            font-weight: 600;
+            color: #2196F3;
+            width: 50px;
+            height: 50px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(33, 150, 243, 0.2);
+        }
+
+        .block-info h3 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 5px;
+        }
+
+        .block-info p {
+            font-size: 16px;
+            color: #666;
+        }
+
+        /* .block-count {
+            font-size: 16px;
+            color: #666;
+            background: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid #cfeaff;
+        } */
+
+        .block-toggle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: white;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            color: #2196F3;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
+        }
+
+        .block-toggle:hover {
+            background: #2196F3;
+            color: white;
+            transform: rotate(90deg);
+        }
+
+        .block-toggle.active {
+            transform: rotate(180deg);
+            background: #2196F3;
+            color: white;
+        }
+
+        .block-content {
+            padding: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease, padding 0.3s ease;
+        }
+
+        .block-content.active {
+            padding: 0 30px 30px 30px;
+            max-height: 5000px;
+        }
+
+        /* Стили для вопросов внутри блоков */
+        .questions-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+        }
+
+        .questions-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .questions-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .questions-container::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+        .questions-container::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+
+        .question-card {
+            background: white;
+            border: 2px solid #eef5ff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .question-card:hover {
+            border-color: #2196F3;
+            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.1);
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .question-number {
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+            background: #2196F3;
+            padding: 4px 12px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .question-text {
+            font-size: 16px;
+            line-height: 1.5;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .answers-list {
+            list-style: none;
+            margin-top: 12px;
+        }
+
+        .answer-item {
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            background: #fafafa;
+            position: relative;
+            padding-left: 40px;
+        }
+
+        .answer-item.correct {
+            background-color: #e8f5e9;
+            border-color: #4caf50;
+            color: #2e7d32;
+        }
+
+        .answer-item.correct::before {
+            content: "";
+            position: absolute;
+            left: 15px;
+            font-weight: bold;
+        }
+
+        .commentary {
+            margin-top: 15px;
+            padding: 12px 15px;
+            background-color: #e3f2fd;
+            border-radius: 8px;
+            border-left: 4px solid #2196F3;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .commentary strong {
+            color: #1976D2;
+        }
+
+        .no-questions {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        .no-questions-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #ccc;
+        }
+
+        .no-questions h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 18px;
+            color: #666;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #2196F3;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Панель профиля */
+        .profile-panel {
+            position: fixed;
+            top: 0;
+            right: -364px;
+            width: 364px;
+            height: 100vh;
+            background-color: #FFFFFF;
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+            z-index: 2000;
+            transition: right 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .profile-panel.active {
+            right: 0;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1999;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .profile-info {
+            display: flex;
+            align-items: center;
+            padding: 24px;
+            gap: 16px;
+        }
+
+        .user-avatar {
+            width: 194px;
+            height: 194px;
+            border-radius: 100px;
+            background-image: url('images/icon.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            margin: 30px auto 20px auto;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 3px solid white;
+        }
+
+        .user-details h4 {
+            width: 89px;
+            height: 32px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            font-style: normal;
+            font-size: 32px;
+            line-height: 100%;
+            letter-spacing: 0%;
+            color: #262626;
+            text-align: center;
+            margin: 0 auto 8px auto;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .profile-menu {
+            padding: 24px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 16px;
+            background: none;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            margin-bottom: 8px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 16px;
+            color: #262626;
+        }
+
+        .menu-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .menu-item:active {
+            background-color: #e9ecef;
+        }
+
+        .yandex-auth-section {
+            padding: 20px 24px;
+            text-align: center;
+            margin-top: 170px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .yandex-login-button {
+            width: 244px;          
+            height: 80px;      
+            border-radius: 77px;    
+            padding: 31px 87px;    
+            background-color: #3F8FD2; 
+            border: none;
+            color: white;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 24px;
+            font-weight: 600;
+            line-height: 100%;
+            letter-spacing: 0%;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(63, 143, 210, 0.2);
+            user-select: none;
+            box-sizing: border-box;
+        }
+
+        .yandex-login-button:hover {
+            background-color: #3579B0;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(63, 143, 210, 0.3);
+        }
+
+        .yandex-login-button:active {
+            background-color: #2D6BA3;
+            transform: translateY(0);
+            box-shadow: 0 2px 10px rgba(63, 143, 210, 0.2);
+        }
+
+        .yandex-login-button:focus {
+            outline: 2px solid #3F8FD2;
+            outline-offset: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .page-container {
+                width: 100%;
+                min-height: auto;
+            }
+            
+            main {
+                padding-top: 60px;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+            
+            .page-title {
+                font-size: 28px;
+            }
+            
+            .search-box {
+                width: 300px;
+            }
+            
+            .search-button {
+                width: 300px;
+                height: 52px;
+            }
+            
+            .block-header {
+                padding: 20px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .block-title {
+                width: 100%;
+            }
+            
+            .block-info h3 {
+                font-size: 20px;
+            }
+            
+            .question-card {
+                padding: 15px;
+            }
+            
+            .question-text {
+                font-size: 15px;
+            }
+
+            @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 20px;
+            }
+            
+            .search-section {
+                margin-left: 0;
+                width: 100%;
+                justify-content: flex-start;
+            }
+            
+            .search-box {
+                width: 100%;
+                max-width: 300px;
+            }
+            
+            .search-button {
+                width: 100%;
+                height: 52px;
+            }
+        }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <!-- Шапка -->
+        <header>
+            <nav>
+                <button class="button_documentation" onclick="navigateTo('documentation.html')">
+                    Документация
+                </button>
+                <button class="button_simulation" onclick="navigateTo('simulation.html')">
+                    Экзамен
+                </button>
+                <button class="button_trainer" onclick="navigateTo('trainer.html')">
+                    Тренажёр
+                </button>
+                <button class="skill-button" onclick="navigateTo('skills.html')"></button>
+                <button class="profile-button" id="profile-btn"></button>
+            </nav>
+        </header>
+        
+        <main>
+            <div class="main-content">
+    <div class="page-header">
+        <h1 class="page-title">База вопросов</h1>
+        <div class="search-section">
+            <div class="search-box">
+                <button class="search-button" onclick="performSearchFromButton()"></button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Контейнер для блоков -->
+    <div class="blocks-container" id="blocksContainer">
+        <div class="loading">
+            <div class="loading-spinner"></div>
+            <p>Загрузка вопросов...</p>
+        </div>
+    </div>
+</div>
+        </main>
+    </div>
+
+    <!-- Панель профиля -->
+    <div class="profile-panel" id="profile-panel">
+        <div class="profile-info">
+            <div class="user-avatar"></div>
+            <div class="user-details">
+                <h4>Гость</h4>
+            </div>
+        </div>
+        
+        <div class="profile-menu">
+            <button class="menu-item" onclick="navigateTo('yandex-alice.html')">
+                <span class="menu-icon"></span>
+                <span class="menu-text">Яндекс Алиса</span>
+            </button>
+            
+            <button class="menu-item" onclick="navigateTo('progress.html')">
+                <span class="menu-icon"></span>
+                <span class="menu-text">Прогресс</span>
+            </button>
+            
+            <button class="menu-item" onclick="navigateTo('history.html')">
+                <span class="menu-icon"></span>
+                <span class="menu-text">История попыток</span>
+            </button>
+            
+            <button class="menu-item" onclick="navigateTo('base.html')">
+                <span class="menu-icon"></span>
+                <span class="menu-text">База вопросов</span>
+            </button>
+            
+            <div class="yandex-auth-section">
+                <button class="yandex-login-button" onclick="loginWithYandex()">
+                    ВОЙТИ
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="overlay" id="overlay" onclick="closeProfilePanel()"></div>
+
+    <!-- Диалог поиска -->
+    <div id="search-dialog" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 2001; width: 500px; max-width: 90%;">
+        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+            <input type="text" id="searchInput" class="search-input" placeholder="Поиск по всем вопросам..." style="flex: 1; padding: 14px; border: 2px solid #e0e0e0; border-radius: 10px; font-family: 'Montserrat', sans-serif; font-size: 16px;">
+            <button onclick="closeSearchDialog()" style="background: none; border: none; font-size: 24px; cursor: pointer; margin-left: 10px; color: #666;">✕</button>
+        </div>
+        <div style="text-align: right;">
+            <button onclick="performSearch()" style="background: #2196F3; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-family: 'Montserrat', sans-serif; font-weight: 500;">Найти</button>
+        </div>
+    </div>
+    <div id="search-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000;"></div>
+
+    <script>
+        // Глобальные переменные
+        let allQuestions = {};
+        let currentSearchQuery = '';
+        let isPanelOpen = false;
+
+        // Конфигурация блоков
+        const blockConfig = {
+            'block1': { 
+                name: 'Программа А', 
+                description: 'Общие вопросы охраны труда и функционирования СУОТ'
+            },
+            'block2': { 
+                name: 'Программа Б', 
+                description: 'Безопасные методы работы при воздействии вредных факторов'
+            },
+            'block3': { 
+                name: 'Программа В', 
+                description: 'Безопасные методы и приемы выполнения работ повышенной опасности'
+            },
+            'block4': { 
+                name: 'Программа ПП', 
+                description: 'Обучение по оказанию первой помощи пострадавшим'
+            }
+        };
+
+        // Функция для парсинга вариантов ответов из строки
+        function parseAnswers(answersString) {
+            if (!answersString) return [];
+            
+            // Разделяем по новым строкам и фильтруем пустые строки
+            const answers = answersString.split('\n')
+                .map(answer => answer.trim())
+                .filter(answer => answer !== '');
+            
+            return answers;
+        }
+
+        // Функция для определения правильных ответов
+        function findCorrectAnswers(answers, correctAnswerText) {
+            if (!correctAnswerText || !Array.isArray(answers)) return [];
+            
+            const correctAnswersIndices = [];
+            const correctOptions = correctAnswerText.split('\n')
+                .map(option => option.trim())
+                .filter(option => option !== '');
+            
+            // Для каждого правильного варианта ищем его индекс в массиве ответов
+            answers.forEach((answer, index) => {
+                // Ищем начало правильного ответа в тексте варианта
+                correctOptions.forEach(correctOption => {
+                    if (answer.startsWith(correctOption.substring(0, 20)) || 
+                        correctOption.includes(answer.substring(0, 10))) {
+                        correctAnswersIndices.push(index);
+                    }
+                });
+            });
+            
+            // Если не нашли точных совпадений, пытаемся найти по буквам А), Б), В) и т.д.
+            if (correctAnswersIndices.length === 0) {
+                const letterPattern = /[А-Я]\)/g;
+                const letters = correctAnswerText.match(letterPattern);
+                
+                if (letters) {
+                    letters.forEach(letter => {
+                        const letterIndex = letter.charCodeAt(0) - 'А'.charCodeAt(0);
+                        if (letterIndex >= 0 && letterIndex < answers.length) {
+                            correctAnswersIndices.push(letterIndex);
+                        }
+                    });
+                }
+            }
+            
+            return correctAnswersIndices;
+        }
+
+        // Основная функция загрузки вопросов
+        async function loadAllQuestions() {
+            const container = document.getElementById('blocksContainer');
+            
+            try {
+                allQuestions = {};
+                
+                // Создаем контейнер для блоков
+                container.innerHTML = '';
+                
+                // Создаем блоки заглушки
+                for (let i = 1; i <= 4; i++) {
+                    const blockKey = `block${i}`;
+                    const config = blockConfig[blockKey];
+                    
+                    const blockElement = document.createElement('div');
+                    blockElement.className = 'block-item';
+                    blockElement.innerHTML = `
+                        <div class="block-header" onclick="toggleBlock('${blockKey}')" id="blockHeader-${blockKey}">
+                            <div class="block-title">
+                                <div class="block-number">${i}</div>
+                                <div class="block-info">
+                                    <h3>${config.name}</h3>
+                                    <p>${config.description}</p>
+                                </div>
+                            </div>
+                            <div class="block-count" id="blockCount-${blockKey}">
+                                Загрузка...
+                            </div>
+                            <button class="block-toggle" id="blockToggle-${blockKey}">
+                                
+                            </button>
+                        </div>
+                        <div class="block-content" id="blockContent-${blockKey}">
+                            <div class="loading">
+                                <div class="loading-spinner"></div>
+                                <p>Загрузка вопросов...</p>
+                            </div>
+                        </div>
+                    `;
+                    
+                    container.appendChild(blockElement);
+                }
+                
+                // Загружаем вопросы для каждого блока
+                await Promise.all([
+                    loadBlockQuestions(1),
+                    loadBlockQuestions(2),
+                    loadBlockQuestions(3),
+                    loadBlockQuestions(4)
+                ]);
+                
+                console.log('Все вопросы загружены, распределение:');
+                Object.keys(allQuestions).forEach(block => {
+                    console.log(`${block}: ${allQuestions[block].length} вопросов`);
+                });
+                
+            } catch (error) {
+                console.error('Ошибка загрузки вопросов:', error);
+                container.innerHTML = `
+                    <div class="no-questions">
+                        <div class="no-questions-icon"></div>
+                        <h3>Ошибка загрузки</h3>
+                        <p>Произошла ошибка при загрузке вопросов</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Загрузка вопросов для конкретного блока
+        async function loadBlockQuestions(blockNumber) {
+            const blockKey = `block${blockNumber}`;
+            const countElement = document.getElementById(`blockCount-${blockKey}`);
+            const contentElement = document.getElementById(`blockContent-${blockKey}`);
+            
+            try {
+                const response = await fetch(`data/block${blockNumber}.json`);
+                
+                if (!response.ok) {
+                    throw new Error(`Блок ${blockNumber} не найден: ${response.status}`);
+                }
+                
+                const blockData = await response.json();
+                
+                console.log(`Блок ${blockNumber} загружен: ${blockData.length} вопросов`);
+                
+                // Обрабатываем вопросы по вашей структуре
+                const processedQuestions = blockData.map((q, index) => {
+                    // Парсим варианты ответов
+                    const answers = parseAnswers(q["Варианты ответа"]);
+                    
+                    // Определяем правильные ответы
+                    const correctAnswers = findCorrectAnswers(answers, q["Правильный вариант"]);
+                    
+                    // Создаем объект вопроса
+                    const safeQuestion = {
+                        id: `${blockNumber}-${index}`,
+                        block: blockKey,
+                        blockName: blockConfig[blockKey]?.name || `Блок ${blockNumber}`,
+                        numberInBlock: index + 1,
+                        question: q["Вопрос"] || 'Текст вопроса не указан',
+                        answers: answers.length > 0 ? answers : ['Ответы не указаны'],
+                        correctAnswer: correctAnswers.length > 0 ? correctAnswers : [0], // По умолчанию первый ответ
+                        commentary: q["Комментарий"] || '',
+                        image: q["Картинка"]
+                    };
+                    
+                    return safeQuestion;
+                });
+                
+                allQuestions[blockKey] = processedQuestions;
+                
+                // Обновляем счетчик
+                countElement.textContent = `${processedQuestions.length} вопросов`;
+                
+                // Показываем загруженные вопросы (только если блок открыт)
+                if (contentElement.classList.contains('active')) {
+                    displayBlockQuestions(blockKey);
+                }
+                
+                return processedQuestions;
+                
+            } catch (error) {
+                console.error(`Ошибка загрузки блока ${blockNumber}:`, error);
+                countElement.textContent = 'Ошибка загрузки';
+                contentElement.innerHTML = `
+                    <div class="no-questions">
+                        <div class="no-questions-icon"></div>
+                        <h3>Ошибка загрузки</h3>
+                        <p>Не удалось загрузить вопросы для этого блока</p>
+                        <p style="font-size: 14px; margin-top: 10px;">${error.message}</p>
+                    </div>
+                `;
+                allQuestions[blockKey] = [];
+                return [];
+            }
+        }
+
+        // Отображение вопросов для блока
+        function displayBlockQuestions(blockKey) {
+            const contentElement = document.getElementById(`blockContent-${blockKey}`);
+            const questions = allQuestions[blockKey] || [];
+            
+            if (questions.length === 0) {
+                contentElement.innerHTML = `
+                    <div class="no-questions">
+                        <div class="no-questions-icon"></div>
+                        <h3>Вопросы не найдены</h3>
+                        <p>В этом блоке нет вопросов</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Применяем поисковый фильтр если есть
+            let filteredQuestions = questions;
+            if (currentSearchQuery) {
+                const query = currentSearchQuery.toLowerCase();
+                filteredQuestions = questions.filter(question => {
+                    const questionText = (question.question || '').toLowerCase();
+                    const answersText = (question.answers || []).join(' ').toLowerCase();
+                    const commentaryText = (question.commentary || '').toLowerCase();
+                    return questionText.includes(query) || 
+                           answersText.includes(query) || 
+                           commentaryText.includes(query);
+                });
+            }
+            
+            if (filteredQuestions.length === 0) {
+                contentElement.innerHTML = `
+                    <div class="no-questions">
+                        <div class="no-questions-icon"></div>
+                        <h3>Вопросы не найдены</h3>
+                        <p>Попробуйте изменить поисковый запрос</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Создаем HTML для вопросов
+            const questionsHtml = `
+                <div class="questions-container">
+                    ${filteredQuestions.map(question => `
+                        <div class="question-card">
+                            <div class="question-header">
+                                <span class="question-number">Вопрос ${question.numberInBlock}</span>
+                            </div>
+                            
+                            <div class="question-text">
+                                ${question.question}
+                            </div>
+                            
+                            ${question.image && question.image !== 'null' ? 
+                                `<div class="question-image">
+                                    <img src="${question.image}" alt="Иллюстрация" style="max-width: 100%; border-radius: 8px; margin: 10px 0;">
+                                </div>` : ''}
+                            
+                            <ul class="answers-list">
+                                ${(question.answers || []).map((answer, idx) => {
+                                    const isCorrect = Array.isArray(question.correctAnswer) && 
+                                                    question.correctAnswer.includes(idx);
+                                    const showClass = isCorrect ? 'correct' : '';
+                                    return `
+                                        <li class="answer-item ${showClass}">
+                                            ${answer}
+                                        </li>
+                                    `;
+                                }).join('')}
+                            </ul>
+                            
+                            ${question.commentary ? `
+                                <div class="commentary">
+                                    <strong>Комментарий:</strong> ${question.commentary}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            contentElement.innerHTML = questionsHtml;
+        }
+
+        // Переключение блока (раскрытие/скрытие)
+        function toggleBlock(blockKey) {
+            const header = document.getElementById(`blockHeader-${blockKey}`);
+            const content = document.getElementById(`blockContent-${blockKey}`);
+            const toggleBtn = document.getElementById(`blockToggle-${blockKey}`);
+            
+            const isActive = content.classList.contains('active');
+            
+            // Закрываем все блоки
+            document.querySelectorAll('.block-content').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.querySelectorAll('.block-header').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.querySelectorAll('.block-toggle').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            if (!isActive) {
+                // Открываем выбранный блок
+                header.classList.add('active');
+                content.classList.add('active');
+                toggleBtn.classList.add('active');
+                toggleBtn.innerHTML = '';
+                
+                // Если вопросы еще не загружены в контейнер, загружаем их
+                if (!allQuestions[blockKey] || allQuestions[blockKey].length === 0) {
+                    const blockNumber = parseInt(blockKey.replace('block', ''));
+                    loadBlockQuestions(blockNumber);
+                } else {
+                    displayBlockQuestions(blockKey);
+                }
+            }
+        }
+
+        // Применение поиска ко всем открытым блокам
+        function applySearch() {
+            Object.keys(allQuestions).forEach(blockKey => {
+                const content = document.getElementById(`blockContent-${blockKey}`);
+                if (content.classList.contains('active')) {
+                    displayBlockQuestions(blockKey);
+                }
+            });
+        }
+
+        // Функции для панели профиля
+        function initProfilePanel() {
+            document.addEventListener('click', function(event) {
+                const panel = document.getElementById('profile-panel');
+                const profileBtn = document.getElementById('profile-btn');
+                
+                if (isPanelOpen && panel && !panel.contains(event.target) && 
+                    profileBtn && !profileBtn.contains(event.target)) {
+                    closeProfilePanel();
+                }
+            });
+            
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape' && isPanelOpen) {
+                    closeProfilePanel();
+                }
+            });
+        }
+        
+        function toggleProfilePanel(event) {
+            if (event) event.stopPropagation();
+            
+            if (isPanelOpen) {
+                closeProfilePanel();
+            } else {
+                openProfilePanel();
+            }
+        }
+        
+        function openProfilePanel() {
+            const panel = document.getElementById('profile-panel');
+            const overlay = document.getElementById('overlay');
+            
+            if (panel) {
+                panel.classList.add('active');
+                if (overlay) overlay.classList.add('active');
+                isPanelOpen = true;
+            }
+        }
+        
+        function closeProfilePanel() {
+            const panel = document.getElementById('profile-panel');
+            const overlay = document.getElementById('overlay');
+            
+            if (panel) {
+                panel.classList.remove('active');
+                if (overlay) overlay.classList.remove('active');
+                isPanelOpen = false;
+            }
+        }
+        
+        function navigateTo(page) {
+            closeProfilePanel();
+            setTimeout(() => {
+                window.location.href = page;
+            }, 300);
+        }
+        
+        function loginWithYandex() {
+            console.log('🔐 Вход через Яндекс...');
+            closeProfilePanel();
+            
+            const button = document.querySelector('.yandex-login-button');
+            const originalText = button.innerHTML;
+            button.innerHTML = 'Подключение...';
+            button.disabled = true;
+            
+            setTimeout(() => {
+                window.location.href = '/auth/yandex';
+            }, 500);
+        }
+
+        // Функции для диалога поиска
+        function openSearchDialog() {
+            document.getElementById('search-dialog').style.display = 'block';
+            document.getElementById('search-overlay').style.display = 'block';
+            // Фокусируемся на поле ввода при открытии
+            document.getElementById('searchInput').focus();
+        }
+
+        function closeSearchDialog() {
+            document.getElementById('search-dialog').style.display = 'none';
+            document.getElementById('search-overlay').style.display = 'none';
+        }
+
+        function performSearch() {
+            const searchInput = document.getElementById('searchInput');
+            currentSearchQuery = searchInput.value.trim();
+            closeSearchDialog();
+            applySearch();
+        }
+
+        function performSearchFromButton() {
+            openSearchDialog();
+        }
+
+        // Обработчики событий
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('БАЗА ВОПРОСОВ');
+            
+            // Загружаем вопросы
+            loadAllQuestions();
+            
+            // Назначаем обработчик нажатия Enter в диалоге поиска
+            document.getElementById('searchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    performSearch();
+                }
+            });
+            
+            // Инициализация панели профиля
+            initProfilePanel();
+            
+            // Назначаем обработчик на кнопку профиля
+            const profileBtn = document.getElementById('profile-btn');
+            if (profileBtn) {
+                profileBtn.onclick = toggleProfilePanel;
+            }
+            
+            // Закрытие диалога поиска по клику на оверлей
+            document.getElementById('search-overlay').addEventListener('click', closeSearchDialog);
+
+            document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+            performSearch();
+            }
+});
+        });
+    </script>
+</body>
+</html>

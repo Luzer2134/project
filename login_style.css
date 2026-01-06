@@ -3,1003 +3,638 @@
 /* Импорт шрифта Montserrat */
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap');
 
-/* Сброс стилей и базовые настройки */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+       /* Сброс стилей и базовые настройки */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f7f7f9;
-    margin: 0;
-    padding: 0;
-    color: #333;
-    min-height: 100vh;
-    position: relative;
-    overflow-x: hidden;
-}
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f7f9;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
 
-/* Контейнер для всей страницы */
-.page-container {
-    position: relative;
-    width: 1440px;
-    min-height: 1024px; /* Изменил height на min-height */
-    margin: 0 auto;
-    background-color: #DCDCDC;
-}
+        /* Контейнер для всей страницы */
+        .page-container {
+            position: relative;
+            width: 1440px;
+            min-height: 1024px;
+            margin: 0 auto;
+            background-color: #DCDCDC;
+        }
 
-/* Шапка - ФИКСИРОВАННАЯ версия */
-header {
-    position: absolute; /* или fixed если нужно фиксированное */
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 80px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-}
+        header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 80px;
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
 
-/* Контейнер навигации в шапке */
-header nav {
-    display: flex;
-    justify-content: flex-end; /* Кнопки справа */
-    align-items: center;
-    height: 100%;
-    gap: 20px;
-    padding: 0 40px;
-    max-width: 1440px;
-    margin: 0 auto;
-}
+        /* Контейнер навигации в шапке */
+        header nav {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            height: 100%;
+            gap: 20px;
+            padding: 0 40px;
+            max-width: 1440px;
+            margin: 0 auto;
+        }
 
-/* Общие стили для кнопок в шапке */
-.button_documentation,
-.button_simulation,
-.button_trainer {
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 500;
-    font-size: 16px;
-    padding: 12px 24px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    background-color: white;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 44px;
-    white-space: nowrap;
-}
+        /* Общие стили для кнопок в шапке */
+        .button_documentation,
+        .button_simulation,
+        .button_trainer {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            font-size: 16px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: white;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
+            white-space: nowrap;
+        }
 
-/* Кнопка "Документация" */
-.button_documentation {
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 500;
-    font-size: 16px;
-    
-    /* Размеры и отступы как в макете */
-    width: fit-content;
-    height: 56px;
-    padding: 12px 8px;
-    
-    /* Расположение элементов */
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    
-    /* Внешний вид - как текст */
-    background: none;
-    border: none;
-    color: #262626;
-    cursor: pointer;
-    text-decoration: none;
-    
-    /* Для правильного отображения */
-    box-sizing: border-box;
-    white-space: nowrap;
-    
-    /* Позиционирование слева */
-    position: absolute;
-    left: 40px;
-    top: 50%;
-    transform: translateY(-50%);
-}
+        /* Кнопка "Документация" */
+        .button_documentation {
+            width: fit-content;
+            height: 56px;
+            padding: 12px 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: none;
+            border: none;
+            color: #262626;
+            cursor: pointer;
+            text-decoration: none;
+            box-sizing: border-box;
+            white-space: nowrap;
+            position: absolute;
+            left: 40px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
 
-/* Кнопка "Экзамен" - чистый текст слева */
-.button_simulation {
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 500;
-    font-size: 16px;
-    
-    /* Размеры и отступы как в макете */
-    width: fit-content;
-    height: 56px;
-    padding: 12px 8px;
-    
-    /* Расположение элементов */
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    
-    /* Внешний вид - как текст (без границы) */
-    background: none;
-    border: none;
-    color: #262626;
-    cursor: pointer;
-    text-decoration: none;
-    
-    /* Для правильного отображения */
-    box-sizing: border-box;
-    white-space: nowrap;
-    
-    /* Позиционирование слева после документации */
-    position: absolute;
-    left: 200px; /* Увеличил отступ, было 160px */
-    top: 50%;
-    transform: translateY(-50%);
-}
+        /* Кнопка "Экзамен" */
+        .button_simulation {
+            width: fit-content;
+            height: 56px;
+            padding: 12px 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: none;
+            border: none;
+            color: #262626;
+            cursor: pointer;
+            text-decoration: none;
+            box-sizing: border-box;
+            white-space: nowrap;
+            position: absolute;
+            left: 200px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
 
-.button_simulation:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
+        .button_simulation:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
 
-/* Кнопка "Тренажёр" - чистый текст слева */
-.button_trainer {
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 500;
-    font-size: 16px;
-    
-    /* Размеры и отступы как в макете */
-    width: fit-content;
-    height: 56px;
-    padding: 12px 8px;
-    
-    /* Расположение элементов */
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    
-    /* Внешний вид - как текст */
-    background: none;
-    border: none;
-    color: #262626;
-    cursor: pointer;
-    text-decoration: none;
-    
-    /* Для правильного отображения */
-    box-sizing: border-box;
-    white-space: nowrap;
-    
-    /* Позиционирование слева после экзамена */
-    position: absolute;
-    left: 320px; /* 40px (документация) + 120px (документация) + 160px (экзамен) */
-    top: 50%;
-    transform: translateY(-50%);
-}
+        /* Кнопка "Тренажёр" */
+        .button_trainer {
+            width: fit-content;
+            height: 56px;
+            padding: 12px 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: none;
+            border: none;
+            color: #262626;
+            cursor: pointer;
+            text-decoration: none;
+            box-sizing: border-box;
+            white-space: nowrap;
+            position: absolute;
+            left: 320px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
 
-.skill-button {
-    /* Размеры и отступы */
-    width: 56px;
-    height: 56px;
-    
-    /* Внешний вид */
-    background: none;
-    border: none;
-    cursor: pointer;
-    
-    /* Для фонового изображения из папки images */
-    background-image: url('images/skill-button.png');
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-    
-    /* Для правильного отображения */
-    box-sizing: border-box;
-    
-    /* Отступ между кнопками */
-    margin-left: 20px;
-}
+        .skill-button {
+            width: 56px;
+            height: 56px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            background-image: url('images/skill-button.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            box-sizing: border-box;
+            margin-left: 20px;
+        }
 
-/* Кнопка profile-button */
-.profile-button {
-    /* Размеры и отступы */
-    width: 56px;
-    height: 56px;
-    
-    /* Внешний вид */
-    background: none;
-    border: none;
-    cursor: pointer;
-    
-    /* Для фонового изображения из папки images */
-    background-image: url('images/profile-button.png');
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-    
-    /* Для правильного отображения */
-    box-sizing: border-box;
-    
-    /* Отступ между кнопками */
-    margin-left: 20px;
-}
+        .profile-button {
+            width: 56px;
+            height: 56px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            background-image: url('images/profile-button.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            box-sizing: border-box;
+            margin-left: 20px;
+        }
 
-.yandex-auth-section {
-    padding: 20px 24px;
-    text-align: center;
-    margin-top: 170px; /* Отступ от меню */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
+        /* Основной контент */
+        main {
+            position: relative;
+            width: 1440px;
+            min-height: 1024px;
+            margin: 0 auto;
+            background-color: white;
+            padding-top: 80px;
+        }
 
-.yandex-login-button {
-    width: 244px;          
-    height: 80px;      
-    border-radius: 77px;    
+        /* Стили для страницы входа */
+        .login-title {
+            position: absolute;
+            width: 685px;
+            height: 64px;
+            top: 387px;
+            left: 377px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            font-style: normal;
+            font-size: 64px;
+            line-height: 100%;
+            letter-spacing: 0%;
+            color: #3F8FD2;
+            text-align: left;
+            white-space: nowrap;
+            margin: 0;
+            padding: 0;
+        }
 
-    padding: 31px 87px;    
-    
-    /* Фон и границы */
-    background-color: #3F8FD2; 
-    border: none;
-    
-    /* Текст */
-    color: white;
-    font-family: 'Montserrat', sans-serif;
-    font-size: 24px;
-    font-weight: 600;
-    line-height: 100%;
-    letter-spacing: 0%;
-    
-    /* Выравнивание по центру */
-    text-align: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    
-    /* Позиционирование */
-    margin: 0 auto; /* Центрирование по горизонтали */
-    
-    /* Эффекты */
-    cursor: pointer;
-    transition: all 0.3s ease;
-    
-    /* Тень */
-    box-shadow: 0 4px 15px rgba(63, 143, 210, 0.2);
-    
-    /* Запрет выделения текста */
-    user-select: none;
-    
-    /* Для правильного отображения */
-    box-sizing: border-box;
-}
+        .login-subtitle {
+            position: absolute;
+            width: 890px;
+            height: 200px;
+            top: 476px;
+            left: 275px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 400;
+            font-style: normal;
+            font-size: 32px;
+            line-height: 100%;
+            letter-spacing: 0%;
+            color: #262626;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
 
-.yandex-login-button:hover {
-    background-color: #3579B0;
-    transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(63, 143, 210, 0.3);
-}
+        .auth-buttons {
+            position: absolute;
+            top: 726px;
+            left: 552px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 336px;
+        }
 
-.yandex-login-button:active {
-    background-color: #2D6BA3;
-    transform: translateY(0);
-    box-shadow: 0 2px 10px rgba(63, 143, 210, 0.2);
-}
-
-.yandex-login-button:focus {
-    outline: 2px solid #3F8FD2;
-    outline-offset: 2px;
-}
-
-/* Состояние загрузки кнопки */
-.yandex-login-button.loading {
-    background-color: #2D6BA3;
-    cursor: wait;
-    opacity: 0.8;
-}
-
-/* Отключенное состояние кнопки */
-.yandex-login-button:disabled {
-    background-color: #B0B0B0;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-}
-
-.login-hint {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 14px;
-    color: #666;
-    margin-top: auto; /* Отступ от кнопки */
-    text-align: center;
-    max-width: 244px; /* Такая же ширина как у кнопки */
-}
-
-/* Активное состояние кнопок */
-.button_documentation:active,
-.button_simulation:active,
-.button_trainer:active {
-    transform: translateY(0);
-}
-
-/* Боковая панель профиля */
-.profile-panel {
-    position: fixed;
-    top: 0;
-    right: -364px; /* Скрыта за правым краем */
-    width: 364px;
-    height: 100vh;
-    background-color: #FFFFFF;
-    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
-    z-index: 2000;
-    transition: right 0.3s ease;
-    overflow-y: auto;
-    /* Убрали pointer-events когда скрыта */
-    pointer-events: none;
-}
-
-/* Когда панель открыта */
-.profile-panel.active {
-    right: 0;
-    pointer-events: auto; /* Включаем события мыши только когда открыта */
-}
-
-/* Кнопка закрытия */
-.close-panel {
-    background: none;
-    border: none;
-    font-size: 28px;
-    color: #666;
-    cursor: pointer;
-    padding: 0;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 4px;
-    /* Гарантируем, что кнопка закрытия всегда кликабельна */
-    pointer-events: auto;
-}
-
-.close-panel:hover {
-    background-color: #f5f5f5;
-}
-
-/* Информация о пользователе */
-.profile-info {
-    display: flex;
-    align-items: center;
-    padding: 24px;
-    gap: 16px;
-}
-
-.user-avatar {
-            /* Размеры как в макете */
-            width: 194px;
-            height: 194px;
-            border-radius: 100px; /* Радиус 100px как в макете */
-            
-            /* Фоновое изображение из папки images */
-            background-image: url('images/icon.png');
-            background-size: cover; /* Изображение заполняет весь элемент */
-            background-position: center; /* Центрируем изображение */
-            background-repeat: no-repeat; /* Не повторяем изображение */
-            
-            /* Выравнивание */
+        .guest-button {
+            width: 336px;
+            height: 110px;
+            border-radius: 77px;
+            padding: 31px 87px;
+            background-color: #3F8FD2;
+            border: none;
+            color: white;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 24px;
+            font-weight: 600;
+            line-height: 100%;
+            letter-spacing: 0%;
+            text-align: center;
             display: flex;
             align-items: center;
             justify-content: center;
-            
-            /* Отступы и позиционирование */
-            margin: 30px auto 20px auto; /* Верхний отступ 30px для приближения к 130px от верха панели */
-            
-            /* Тень для объема */
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(63, 143, 210, 0.2);
+            user-select: none;
+            box-sizing: border-box;
+        }
+
+        .guest-button:hover {
+            background-color: #3579B0;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(63, 143, 210, 0.3);
+        }
+
+        .guest-button:active {
+            background-color: #2D6BA3;
+            transform: translateY(0);
+            box-shadow: 0 2px 10px rgba(63, 143, 210, 0.2);
+        }
+
+        .guest-button:focus {
+            outline: 2px solid #3F8FD2;
+            outline-offset: 2px;
+        }
+
+        .info-section {
+            position: absolute;
+            width: 950px;
+            height: 48px;
+            top: 925px;
+            left: 183px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 400;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 100%;
+            letter-spacing: 0%;
+            color: #262626;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .info-section strong {
+            font-weight: 500;
+        }
+
+        .error-message {
+            position: absolute;
+            top: 280px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 500px;
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 16px;
+            text-align: center;
+            z-index: 100;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        /* ===== ПАНЕЛЬ ПРОФИЛЯ КАК В INDEX.HTML ===== */
+        .profile-panel {
+            position: fixed;
+            top: 0;
+            right: -364px;
+            width: 364px;
+            height: 100vh;
+            background-color: #FFFFFF;
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+            z-index: 2000;
+            transition: right 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .profile-panel.active {
+            right: 0;
+        }
+
+        /* Кнопка закрытия */
+        .close-panel {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #666;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            position: absolute;
+            right: 20px;
+            top: 20px;
+        }
+
+        .close-panel:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* Информация о пользователе */
+        .profile-info {
+            display: flex;
+            align-items: center;
+            padding: 24px;
+            gap: 16px;
+        }
+
+        /* Аватар */
+        .user-avatar {
+            width: 194px;
+            height: 194px;
+            border-radius: 100px;
+            background-image: url('images/icon.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            margin: 30px auto 20px auto;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            
-            /* Граница */
             border: 3px solid white;
         }
 
-/* Текст "Гость" в панели профиля */
-.user-details h4 {
-    /* Размеры как в макете */
-    width: 89px;
-    height: 32px;
-    
-    /* Типографика */
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 500; /* Medium */
-    font-style: normal;
-    font-size: 32px;
-    line-height: 100%;
-    letter-spacing: 0%;
-    
-    /* Цвет */
-    color: #262626;
-    
-    /* Выравнивание */
-    text-align: center;
-    
-    /* Отступы и позиционирование */
-    margin: 0 auto 8px auto; /* Центрируем и добавляем отступ снизу */
-    padding: 0;
-    
-    /* Для правильного отображения */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+        /* Текст "Гость" в панели профиля */
+        .user-details h4 {
+            width: 89px;
+            height: 32px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            font-style: normal;
+            font-size: 32px;
+            line-height: 100%;
+            letter-spacing: 0%;
+            color: #262626;
+            text-align: center;
+            margin: 0 auto 8px auto;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-.user-details p {
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 400;
-    font-size: 14px;
-    color: #666;
-    margin: 0;
-}
+        .user-details p {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 400;
+            font-size: 14px;
+            color: #666;
+            margin: 0;
+        }
 
-/* Статистика */
-.profile-stats {
-    padding: 0 24px 24px 24px;
-    border-bottom: 1px solid #eee;
-}
+        /* Меню профиля */
+        .profile-menu {
+            padding: 24px;
+        }
 
-.stat-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 0;
-}
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 16px;
+            background: none;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            margin-bottom: 8px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 16px;
+            color: #262626;
+        }
 
-.stat-label {
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 400;
-    font-size: 14px;
-    color: #666;
-}
+        .menu-item:hover {
+            background-color: #f8f9fa;
+        }
 
-.stat-value {
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 600;
-    font-size: 16px;
-    color: #3F8FD2;
-}
+        .menu-item:active {
+            background-color: #e9ecef;
+        }
 
-/* Меню профиля */
-.profile-menu {
-    padding: 24px;
-}
+        .menu-icon {
+            font-size: 18px;
+            width: 24px;
+            text-align: center;
+        }
 
-.menu-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    width: 100%;
-    padding: 16px;
-    background: none;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-align: left;
-    margin-bottom: 8px;
-    font-family: 'Montserrat', sans-serif;
-    font-size: 16px;
-    color: #262626;
-}
+        .yandex-auth-section {
+            padding: 20px 24px;
+            text-align: center;
+            margin-top: 170px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
 
-.menu-item:hover {
-    background-color: #f8f9fa;
-}
+        .yandex-login-button {
+            width: 244px;
+            height: 80px;
+            border-radius: 77px;
+            padding: 31px 87px;
+            background-color: #3F8FD2;
+            border: none;
+            color: white;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 24px;
+            font-weight: 600;
+            line-height: 100%;
+            letter-spacing: 0%;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(63, 143, 210, 0.2);
+            user-select: none;
+            box-sizing: border-box;
+        }
 
-.menu-item:active {
-    background-color: #e9ecef;
-}
+        .yandex-login-button:hover {
+            background-color: #3579B0;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(63, 143, 210, 0.3);
+        }
 
-.menu-icon {
-    font-size: 18px;
-    width: 24px;
-    text-align: center;
-}
+        .yandex-login-button:active {
+            background-color: #2D6BA3;
+            transform: translateY(0);
+            box-shadow: 0 2px 10px rgba(63, 143, 210, 0.2);
+        }
 
-/* Кнопка выхода */
-.logout-btn {
-    color: #f44336;
-    margin-top: 8px;
-}
+        .yandex-login-button:focus {
+            outline: 2px solid #3F8FD2;
+            outline-offset: 2px;
+        }
 
-.logout-btn:hover {
-    background-color: #ffebee;
-}
+        /* Состояние загрузки кнопки */
+        .yandex-login-button.loading {
+            background-color: #2D6BA3;
+            cursor: wait;
+            opacity: 0.8;
+        }
 
-/* Боковая панель профиля */
-.profile-panel {
-    position: fixed;
-    top: 0;
-    right: -364px;
-    width: 364px;
-    height: 100vh;
-    background-color: #FFFFFF;
-    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
-    z-index: 2000;
-    transition: right 0.3s ease;
-    overflow-y: auto;
-}
+        /* Отключенное состояние кнопки */
+        .yandex-login-button:disabled {
+            background-color: #B0B0B0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
 
-.profile-panel.active {
-    right: 0;
-}
+        .login-hint {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            color: #666;
+            margin-top: 15px;
+            text-align: center;
+            max-width: 244px;
+        }
 
-/* Основной контент */
-main {
-    position: relative;
-    width: 1440px;
-    min-height: 1024px;
-    margin: 0 auto;
-    background-color: white;
-    padding-top: 80px; 
-}
+        /* ОВЕРЛЕЙ - ТЕПЕРЬ ТАКОЙ ЖЕ КАК В INDEX.HTML */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1999;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            cursor: pointer;
+        }
 
-/* Логотип или заголовок в шапке */
-.header-logo {
-    position: absolute;
-    top: 50px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-family: 'Montserrat', sans-serif;
-    font-size: 36px;
-    font-weight: 600;
-    color: #3F8FD2;
-}
+        .overlay.active {
+            display: block;
+            opacity: 1;
+        }
 
-.login-title {
-    position: absolute;
-    width: 685px;
-    height: 64px;
-    top: 387px; /* Было 307px, +80px для шапки */
-    left: 377px;
-    
-    /* Текст */
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 500;
-    font-style: normal;
-    font-size: 64px;
-    line-height: 100%;
-    letter-spacing: 0%;
-    
-    /* Цвет */
-    color: #3F8FD2;
-    
-    /* Выравнивание */
-    text-align: left;
-    white-space: nowrap;
-    
-    /* Отступы и границы */
-    margin: 0;
-    padding: 0;
-    
-    /* Эффекты */
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .page-container {
+                width: 100%;
+                min-height: auto;
+            }
+            
+            main {
+                width: 100%;
+                padding-top: 60px;
+            }
+            
+            .login-title {
+                position: relative;
+                width: 90%;
+                top: auto;
+                left: auto;
+                margin: 40px auto 20px;
+                text-align: center;
+                font-size: 48px;
+            }
+            
+            .login-subtitle {
+                position: relative;
+                width: 90%;
+                top: auto;
+                left: auto;
+                margin: 0 auto 30px;
+                font-size: 24px;
+            }
+            
+            .auth-buttons {
+                position: relative;
+                top: auto;
+                left: auto;
+                margin: 30px auto;
+            }
+            
+            .info-section {
+                position: relative;
+                width: 90%;
+                top: auto;
+                left: auto;
+                margin: 30px auto;
+                font-size: 18px;
+            }
+            
+            .error-message {
+                width: 90%;
+                position: relative;
+                top: auto;
+                left: auto;
+                transform: none;
+                margin: 20px auto;
+            }
+            
+            .yandex-login-button {
+                width: 200px;
+                height: 70px;
+                padding: 20px 40px;
+                font-size: 20px;
+            }
+            
+            .guest-button {
+                width: 280px;
+                height: 90px;
+                padding: 25px 50px;
+                font-size: 22px;
+            }
+        }
 
-.login-subtitle {
-    position: absolute;
-    width: 890px;
-    height: 200px;
-    top: 476px; /* Было 396px, +80px для шапки */
-    left: 275px;
-    
-    /* Текст */
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 400;
-    font-style: normal;
-    font-size: 32px;
-    line-height: 100%;
-    letter-spacing: 0%;
-    
-    /* Цвет */
-    color: #262626;
-    
-    /* Выравнивание */
-    text-align: center;
-    
-    /* Отступы */
-    margin: 0;
-    padding: 0;
-    
-    /* Перенос текста */
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-}
-
-.auth-buttons {
-    position: absolute;
-    top: 726px; 
-    left: 552px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    width: 336px;
-}
-
-/* Кнопка Яндекс */
-.yandex-button {
-    background: #FFCC00;
-    color: #000;
-    border: none;
-    border-radius: 8px;
-    padding: 18px 30px;
-    font-size: 18px;
-    cursor: pointer;
-    transition: all 0.3s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 15px;
-    font-weight: 600;
-    font-family: 'Montserrat', sans-serif;
-    width: 100%;
-}
-
-.yandex-button:hover {
-    background: #E6B800;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(255, 204, 0, 0.3);
-}
-
-.yandex-button:active {
-    transform: translateY(0);
-}
-
-.yandex-button img {
-    width: 32px;
-    height: 32px;
-}
-
-/* Кнопка "НАЧАТЬ" */
-.guest-button {
-    /* Размеры и форма */
-    width: 336px;
-    height: 110px;
-    border-radius: 77px;
-    
-    /* Отступы */
-    padding: 31px 87px;
-    
-    /* Фон и границы */
-    background-color: #3F8FD2;
-    border: none;
-    
-    /* Текст */
-    color: white;
-    font-family: 'Montserrat', sans-serif;
-    font-size: 24px;
-    font-weight: 600;
-    line-height: 100%;
-    letter-spacing: 0%;
-    
-    /* Выравнивание */
-    text-align: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    
-    /* Эффекты */
-    cursor: pointer;
-    transition: all 0.3s ease;
-    
-    /* Тень и граница */
-    box-shadow: 0 4px 15px rgba(63, 143, 210, 0.2);
-    
-    /* Запрет выделения текста */
-    user-select: none;
-    
-    /* Для правильного отображения */
-    box-sizing: border-box;
-}
-
-.guest-button:hover {
-    background-color: #3579B0;
-    transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(63, 143, 210, 0.3);
-}
-
-.guest-button:active {
-    background-color: #2D6BA3;
-    transform: translateY(0);
-    box-shadow: 0 2px 10px rgba(63, 143, 210, 0.2);
-}
-
-.guest-button:focus {
-    outline: 2px solid #3F8FD2;
-    outline-offset: 2px;
-}
-
-/* Состояние загрузки кнопки */
-.guest-button.loading {
-    background-color: #2D6BA3;
-    cursor: wait;
-    opacity: 0.8;
-}
-
-/* Отключенное состояние кнопки */
-.guest-button:disabled {
-    background-color: #B0B0B0;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-}
-
-.info-section {
-    position: absolute;
-    width: 950px;
-    height: 48px;
-    top: 925px; /* Было 845px, +80px для шапки */
-    left: 183px;
-    
-    /* Текст */
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 400;
-    font-style: normal;
-    font-size: 24px;
-    line-height: 100%;
-    letter-spacing: 0%;
-    
-    /* Цвет */
-    color: #262626;
-    
-    /* Выравнивание */
-    text-align: center;
-    
-    /* Отступы */
-    margin: 0;
-    padding: 0;
-    
-    /* Перенос текста */
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    
-    /* Эффекты */
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
-
-/* Жирный текст в информационной секции */
-.info-section strong {
-    font-weight: 500;
-}
-
-/* Сообщение об ошибке */
-.error-message {
-    position: absolute;
-    top: 280px; 
-    left: 50%;
-    transform: translateX(-50%);
-    width: 500px;
-    background-color: #ffebee;
-    color: #c62828;
-    padding: 12px;
-    border-radius: 6px;
-    margin-bottom: 20px;
-    display: none;
-    font-family: 'Montserrat', sans-serif;
-    font-size: 16px;
-    text-align: center;
-    z-index: 100;
-}
-
-.error-message.show {
-    display: block;
-}
-
-/* Класс для состояния загрузки */
-.loading {
-    opacity: 0.7;
-    cursor: not-allowed;
-}
-
-/* Логотип Яндекс */
-.yandex-logo {
-    font-weight: bold;
-    color: #FF0000;
-}
-
-/* Адаптивность */
-@media (max-width: 768px) {
-    .profile-panel {
-        width: 300px;
-        right: -300px;
-    }
-}
-
-@media (max-width: 480px) {
-    .profile-panel {
-        width: 280px;
-        right: -280px;
-    }
-    
-    .profile-info {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 40px 24px 20px 24px;
-    gap: 10px; /* Расстояние между аватаром и текстом */
-}
-
-    /* Оверлей для панели профиля */
-    .overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        z-index: 1999;
-        display: none;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-
-    .overlay.active {
-        display: block;
-        opacity: 1;
-    }
-
-    /* Когда панель профиля активна, делаем кнопки в шапке неактивными */
-    .profile-panel.active ~ .page-container header nav button {
-        pointer-events: none;
-        opacity: 0.7;
-    }
-
-    /* Меню панели профиля */
-.profile-menu {
-    display: flex;
-    flex-direction: column;
-    padding: 0 24px 24px 24px;
-    gap: 10px;
-}
-
-/* Кнопки меню */
-.menu-item {
-    /* Размеры и позиционирование */
-    width: 100%;
-    height: 56px;
-    position: relative;
-    
-    /* Фон и границы */
-    background: none;
-    border: none;
-    border-radius: 8px;
-    
-    /* Выравнивание содержимого */
-    display: flex;
-    align-items: center;
-    padding: 0 16px;
-    
-    /* Текст */
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 500;
-    font-size: 24px;
-    line-height: 100%;
-    color: #282828;
-    text-align: left;
-    
-    /* Курсор */
-    cursor: pointer;
-    
-    /* Анимация */
-    transition: all 0.3s ease;
-    
-    /* Отступы и тень */
-    margin: 0;
-}
-
-/* Иконка в меню */
-.menu-icon {
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 16px;
-    font-size: 24px;
-}
-
-/* Текст в меню */
-.menu-text {
-    /* Точные размеры как в макете */
-    height: 24px;
-    display: flex;
-    align-items: center;
-    
-    /* Убираем стандартные стили кнопки */
-    background: none;
-    border: none;
-    padding: 0;
-}
-
-/* Яндекс Алиса - точные размеры */
-.menu-item:nth-child(1) .menu-text {
-    width: 178px;
-}
-
-/* Прогресс - точные размеры */
-.menu-item:nth-child(2) .menu-text {
-    width: 123px;
-}
-
-/* История попыток - точные размеры */
-.menu-item:nth-child(3) .menu-text {
-    width: 223px;
-}
-
-/* База вопросов - точные размеры */
-.menu-item:nth-child(4) .menu-text {
-    width: 188px;
-}
-
-/* Эффекты при наведении */
-.menu-item:hover {
-    background-color: #f8f9fa;
-    transform: translateX(5px);
-}
-
-/* Эффекты при нажатии */
-.menu-item:active {
-    background-color: #e9ecef;
-    transform: translateX(2px);
-}
-
-/* Контейнер для абсолютного позиционирования (если нужно) */
-.menu-absolute-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-}
-
-/* Яндекс Алиса - абсолютное позиционирование */
-.yandex-alice-btn {
-    position: absolute;
-    top: 407px;
-    left: 1146px;
-    width: 178px;
-    height: 24px;
-}
-
-/* Прогресс - абсолютное позиционирование */
-.progress-btn {
-    position: absolute;
-    top: 447px;
-    left: 1146px;
-    width: 123px;
-    height: 24px;
-}
-
-/* История попыток - абсолютное позиционирование */
-.history-btn {
-    position: absolute;
-    top: 487px;
-    left: 1146px;
-    width: 223px;
-    height: 24px;
-}
-
-/* База вопросов - абсолютное позиционирование */
-.base-btn {
-    position: absolute;
-    top: 527px;
-    left: 1146px;
-    width: 188px;
-    height: 24px;
-}
-}
+        @media (max-width: 480px) {
+            .login-title {
+                font-size: 36px;
+            }
+            
+            .login-subtitle {
+                font-size: 18px;
+            }
+            
+            .guest-button {
+                width: 250px;
+                height: 80px;
+                padding: 20px 40px;
+                font-size: 20px;
+            }
+            
+            .info-section {
+                font-size: 16px;
+            }
+            
+            .yandex-login-button {
+                width: 180px;
+                height: 60px;
+                padding: 15px 30px;
+                font-size: 18px;
+                border-radius: 60px;
+            }
+        }
