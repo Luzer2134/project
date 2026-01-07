@@ -270,7 +270,6 @@ def get_progress_text(session_id):
 #  Основной обработчик
 
 @app.route("/", methods=["POST"])
-@app.route("/", methods=["POST"])
 def main():
     try:
         req = request.json
@@ -291,8 +290,61 @@ def main():
         }
 
         logger.info(f"Запрос: команда='{command}', session_id={session_id}")
+        # КОМАНДА "ЧТО ТЫ УМЕЕШЬ" (Добавлено для модерации)
+        if any(help_cmd in command for help_cmd in ["что ты умеешь", "что ты можешь", "как пользоваться"]):
+            help_text = (
+                "Я - тренажер для подготовки к тестам. Вот что я умею:\n\n"
+                "**Основные команды:**\n"
+                "• Выберите тему из списка для начала тестирования\n"
+                "• Отвечайте на вопросы, называя номер или букву ответа\n"
+                "• Можно давать несколько ответов через пробел\n"
+                "• 'Пропустить' - перейти к следующему вопросу\n"
+                "• 'Прогресс' - посмотреть свою статистику\n"
+                "• 'Назад в меню' - вернуться к выбору темы\n"
+                "• 'Завершить тренировку' - закончить сессию\n\n"
+                "**Советы:**\n"
+                "• Используйте цифры (1-6) или буквы (А-Е) для ответов\n"
+                "• После ответа я покажу пояснение\n"
+                "• Визуальные вопросы отображаются с картинками\n"
+                "• Статистика сохраняется во время сессии"
+            )
+            response["response"]["text"] = help_text
+            response["response"]["buttons"] = [
+                {"title": "Начать тест"},
+                {"title": "Прогресс"},
+                {"title": "Помощь"}
+            ]
+            return jsonify(response)
 
-        # ---------------------- Завершить тренировку ----------------------
+        # ПРИВЕТСТВЕННОЕ СООБЩЕНИЕ (Исправлено для модерации)
+        if session.get("new", False):
+            user_sessions[session_id] = {}
+            init_user_stats(session_id)
+            buttons = [{"title": name} for name in sheet_names] + [
+                {"title": "Что ты умеешь"},
+                {"title": "Прогресс"}
+            ]
+
+            welcome_text = (
+                "Привет! Я помогу вам подготовиться к тестам и экзаменам.\n\n"
+                "**Как это работает:**\n"
+                "1. Выберите тему из доступных разделов\n"
+                "2. Отвечайте на вопросы теста\n"
+                "3. Получайте обратную связь с пояснениями\n"
+                "4. Следите за своим прогрессом\n\n"
+                "**Основные команды:**\n"
+                "• 'Что ты умеешь' - инструкция по использованию\n"
+                "• 'Прогресс' - ваша статистика\n"
+                "• 'Пропустить' - следующий вопрос\n"
+                "• 'Назад в меню' - выбор темы\n"
+                "• 'Завершить тренировку' - выход\n\n"
+                "Выберите тему для начала или скажите 'Что ты умеешь' для подробной инструкции."
+            )
+            response["response"]["text"] = welcome_text
+            response["response"]["buttons"] = buttons
+            return jsonify(response)
+
+        # Завершить тренировку
         if any(end_cmd in command for end_cmd in ["завершить тренировку", "завершить", "finish"]):
             user_sessions[session_id] = {}
             buttons = [{"title": name} for name in sheet_names] + [{"title": "Прогресс"}]
@@ -301,7 +353,7 @@ def main():
             response["response"]["buttons"] = buttons
             return jsonify(response)
 
-        # ---------------------- Просмотр прогресса ----------------------
+        #  Просмотр прогресса
         if any(progress_cmd in command for progress_cmd in
                ["прогресс", "статистика", "стата", "результаты", "сколько"]):
             progress_text = get_progress_text(session_id)
@@ -343,7 +395,7 @@ def main():
                 response["response"]["buttons"] = buttons
                 return jsonify(response)
 
-        # ---------------------- Новая сессия ----------------------
+        #  Новая сессия
         if session.get("new", False):
             user_sessions[session_id] = {}
             init_user_stats(session_id)
@@ -352,7 +404,7 @@ def main():
             response["response"]["buttons"] = buttons
             return jsonify(response)
 
-        # ---------------------- Навигация в меню ----------------------
+        #  Навигация в меню
         if any(nav_cmd in command for nav_cmd in ["назад", "меню", "главная", "выход"]):
             user_sessions[session_id] = {}
             buttons = [{"title": name} for name in sheet_names] + [{"title": "Прогресс"}]
@@ -360,7 +412,7 @@ def main():
             response["response"]["buttons"] = buttons
             return jsonify(response)
 
-        # ---------------------- Пропустить вопрос ----------------------
+        # Пропустить вопрос
         if any(skip_cmd in command for skip_cmd in ["пропустить", "следующий", "дальше", "skip", "next"]):
             if user_state.get("mode") == "question" and user_state.get("topic"):
                 update_user_stats(session_id, "skipped")
@@ -397,7 +449,7 @@ def main():
                 ]
                 return jsonify(response)
 
-        # ---------------------- Помощь ----------------------
+        #  Помощь
         if command in ["помощь", "help", "что делать", "правила"]:
             if user_state.get("mode") == "question":
                 response["response"][
@@ -412,7 +464,7 @@ def main():
             ]
             return jsonify(response)
 
-        # ---------------------- Выбор темы ----------------------
+        #  Выбор темы
         for sheet_name in sheet_names:
             if command == sheet_name.lower():
                 topic = sheet_name
@@ -451,7 +503,7 @@ def main():
                 user_statistics["current_topic"] = topic
                 return jsonify(response)
 
-        # ---------------------- Ответ на вопрос ----------------------
+        # Ответ на вопрос
         if user_state.get("mode") == "question" and user_state.get("question"):
             topic = user_state["topic"]
             current_question = user_state["question"]
@@ -509,7 +561,7 @@ def main():
             ]
             return jsonify(response)
 
-        # ---------------------- Следующий вопрос после ответа ----------------------
+        #  Следующий вопрос после ответа
         if command in ["дальше", "следующий", "следующий вопрос"] and user_state.get("mode") == "answer_result":
             next_question = user_state.get("next_question")
             topic = user_state.get("topic")
@@ -550,7 +602,7 @@ def main():
             }
             return jsonify(response)
 
-        # ---------------------- Команда не распознана ----------------------
+        #  Команда не распознана
         buttons = [{"title": name} for name in sheet_names] + [{"title": "Прогресс"}, {"title": "Завершить тренировку"}]
         response["response"]["text"] = "Пожалуйста, выберите тему или скажите 'прогресс'."
         response["response"]["buttons"] = buttons
