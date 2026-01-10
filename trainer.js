@@ -359,16 +359,16 @@ function displayQuestion() {
             // После проверки подсвечиваем варианты
             if (isSelected && isCorrectOption) {
                 // Правильно выбранный вариант
-                style += 'background: #e8f5e8; border-color: #4CAF50; color: #2e7d32;';
+                style += 'background: #e8f5e8; border-color: #4FA532; color: #64D23F;';
             } else if (isSelected && !isCorrectOption) {
                 // Неправильно выбранный вариант
-                style += 'background: #ffebee; border-color: #f44336; color: #c62828;';
+                style += 'background: #ffebee; border-color: #9C2C2C; color: #D23F3F;';
             } else if (!isSelected && isCorrectOption) {
                 // Правильный вариант, но не выбранный
-                style += 'background: #fff8e1; border-color: #ffc107; color: #ff8f00;';
+                style += 'background: #fff8e1; border-color: #ff8f00; color: #ffc107;';
             } else {
                 // Нейтральный вариант
-                style += 'background: #f5f5f5; border-color: #ddd; color: #666; cursor: default;';
+                style += 'background: #f5f5f5; border-color: #666; color:#ddd ; cursor: default;';
             }
         } else {
             // До проверки - обычные стили
@@ -520,16 +520,16 @@ function showResultModal(question, userAnswer, isCorrect) {
     const modalContent = document.getElementById('modal-content');
     
     modalTitle.textContent = isCorrect ? 'ВЕРНО!' : 'НЕВЕРНО';
-    modalTitle.style.color = isCorrect ? '#4CAF50' : '#f44336';
+    modalTitle.style.color = isCorrect ? '#64D23F' : '#D23F3F';
     modalTitle.style.fontSize = '24px';
     
     let content = `
         <div class="result-summary" style="margin-bottom: 20px; padding: 15px; border-radius: 10px; background: ${isCorrect ? '#e8f5e8' : '#ffebee'};">
             <div style="font-size: 16px; margin-bottom: 8px;">
-                <strong>Ваш ответ:</strong> <span style="color: ${isCorrect ? '#2e7d32' : '#c62828'}">${userAnswer.join(', ')}</span>
+                <strong>Ваш ответ:</strong> <span style="color: ${isCorrect ? '#64D23F' : '#D23F3F'}">${userAnswer.join(', ')}</span>
             </div>
             <div style="font-size: 16px;">
-                <strong>Правильный ответ:</strong> <span style="color: #4CAF50">${question.correctAnswers.join(', ')}</span>
+                <strong>Правильный ответ:</strong> <span style="color: #64D23F">${question.correctAnswers.join(', ')}</span>
             </div>
         </div>
     `;
@@ -578,7 +578,7 @@ function showResultModal(question, userAnswer, isCorrect) {
                 <span style="font-weight: bold; color: #2196F3;">${answeredCount}/${totalCount} (${percentage}%)</span>
             </div>
             <div style="height: 10px; background: #e0e0e0; border-radius: 5px; overflow: hidden; margin-top: 8px;">
-                <div style="height: 100%; width: ${percentage}%; background: ${percentage >= 70 ? '#4CAF50' : percentage >= 40 ? '#FF9800' : '#F44336'}; transition: width 0.5s;"></div>
+                <div style="height: 100%; width: ${percentage}%; background: ${percentage >= 70 ? '#64D23F' : percentage >= 40 ? '#FF9800' : '#D23F3F'}; transition: width 0.5s;"></div>
             </div>
             <div style="margin-top: 10px; font-size: 14px; color: #666;">
                 Прогресс: ${answeredCount} из ${totalCount} вопросов пройдено
@@ -714,11 +714,11 @@ function updateProgress() {
         
         // Динамическое изменение цвета
         if (percentage >= 80) {
-            progressFill.style.background = 'linear-gradient(90deg, #4CAF50, #2E7D32)';
+            progressFill.style.background = 'linear-gradient(90deg, #3F8FD2, #3F8FD2)';
         } else if (percentage >= 50) {
-            progressFill.style.background = 'linear-gradient(90deg, #FF9800, #F57C00)';
+            progressFill.style.background = 'linear-gradient(90deg, #3F8FD2, #3F8FD2)';
         } else {
-            progressFill.style.background = 'linear-gradient(90deg, #F44336, #C62828)';
+            progressFill.style.background = 'linear-gradient(90deg, #3F8FD2, #3F8FD2)';
         }
         
         progressFill.style.transition = 'width 0.5s ease-in-out, background 0.5s ease-in-out';

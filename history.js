@@ -10,14 +10,14 @@ async function checkAndMigrateData() {
         const oldLocalData = JSON.parse(localStorage.getItem('examAttempts') || '[]');
         
         if (oldLocalData.length > 0) {
-            console.log(`🔄 Обнаружено ${oldLocalData.length} неперенесенных попыток`);
+            console.log(`Обнаружено ${oldLocalData.length} неперенесенных попыток`);
             
             // Автоматически переносим
             try {
                 const result = await examAPI.migrateLocalAttemptsToServer();
                 if (result.migratedCount > 0) {
-                    console.log(`✅ Автоматически перенесено ${result.migratedCount} попыток`);
-                    return true; // Нужно перезагрузить
+                    console.log(`Автоматически перенесено ${result.migratedCount} попыток`);
+                    return true; 
                 }
             } catch (error) {
                 console.error('Ошибка автоматического переноса:', error);
@@ -34,24 +34,21 @@ async function loadHistory() {
     // Сначала проверяем и переносим данные если нужно
     const shouldReload = await checkAndMigrateData();
     if (shouldReload) {
-        console.log('🔄 Данные перенесены, перезагружаю страницу...');
+        console.log('Данные перенесены, перезагружаю страницу...');
         location.reload();
         return;
     }
     
-    // ... остальной код загрузки истории
     const user = examAPI.getUserFromStorage();
     console.log('Текущий пользователь:', user);
-    
-    // ... и так далее
 }
 async function loadHistory() {
-    console.log('📜 ЗАГРУЗКА ИСТОРИИ ПОПЫТОК');
+    console.log('ЗАГРУЗКА ИСТОРИИ ПОПЫТОК');
     
     const user = examAPI.getUserFromStorage();
     
     if (!user) {
-        console.log('❌ Пользователь не найден!');
+        console.log('Пользователь не найден!');
         alert('Пожалуйста, войдите в систему!');
         window.location.href = 'login.html';
         return;
@@ -59,36 +56,36 @@ async function loadHistory() {
     
     document.getElementById('user-name').textContent = user.name;
     
-    console.log('👤 Пользователь:', user.name, 'Тип:', user.userType);
+    console.log('Пользователь:', user.name, 'Тип:', user.userType);
     
     try {
         const result = await examAPI.getExamAttempts();
         
         if (!result.success) {
-            console.log('❌ Ошибка загрузки:', result.error);
+            console.log('Ошибка загрузки:', result.error);
             showEmptyHistory();
             return;
         }
         
         const attempts = result.attempts || [];
-        console.log(`📊 Загружено попыток: ${attempts.length}`);
+        console.log(`Загружено попыток: ${attempts.length}`);
         
         if (result.local) {
-            console.log('📌 Данные загружены из localStorage');
+            console.log('Данные загружены из localStorage');
         } else {
-            console.log('🌐 Данные загружены с сервера');
+            console.log('Данные загружены с сервера');
         }
         
         displayHistory(attempts);
         
     } catch (error) {
-        console.error('❌ Критическая ошибка при загрузке истории:', error);
+        console.error('Критическая ошибка при загрузке истории:', error);
         showEmptyHistory();
     }
 }
 
 function displayHistory(attempts) {
-    console.log('🔄 Отображение истории...');
+    console.log('Отображение истории...');
     
     document.getElementById('total-attempts').textContent = attempts.length;
     
@@ -102,12 +99,12 @@ function displayHistory(attempts) {
     if (attempts.length === 0) {
         document.getElementById('attempts-container').style.display = 'none';
         document.getElementById('no-attempts').style.display = 'block';
-        console.log('📭 Нет попыток для отображения');
+        console.log('Нет попыток для отображения');
     } else {
         document.getElementById('attempts-container').style.display = 'block';
         document.getElementById('no-attempts').style.display = 'none';
         displayAttempts(attempts);
-        console.log('✅ Попытки отображены');
+        console.log('Попытки отображены');
     }
 }
 
@@ -141,7 +138,6 @@ function createAttemptElement(attempt, index) {
         margin: 15px 0;
         border-radius: 10px;
         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        border-left: 5px solid ${attempt.isPassed ? '#4CAF50' : '#f44336'};
     `;
     
     const date = new Date(attempt.date);
@@ -156,36 +152,43 @@ function createAttemptElement(attempt, index) {
     const timeSpentMinutes = Math.floor(attempt.timeSpent / 60);
     const timeSpentSeconds = attempt.timeSpent % 60;
     
+    // Вычисляем процент, если он не указан
+    const percentage = attempt.percentage !== null && attempt.percentage !== undefined 
+        ? attempt.percentage 
+        : (attempt.totalQuestions > 0 
+            ? ((attempt.correctAnswers / attempt.totalQuestions) * 100).toFixed(1)
+            : 0);
+    
     element.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <h4 style="margin: 0;">Попытка #${index + 1} - ${attempt.block}</h4>
+            <h4 style="margin: 0;">Попытка № ${index + 1} - ${attempt.block}</h4>
             <span style="font-size: 14px; color: #666;">${formattedDate}</span>
         </div>
         
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 15px 0;">
             <div>
                 <strong>Результат:</strong>
-                <div style="font-size: 24px; font-weight: bold; color: ${attempt.isPassed ? '#4CAF50' : '#f44336'}">
-                    ${attempt.grade}
+                <div style="font-size: 24px; font-weight: bold; color: ${attempt.isPassed ? '#64D23F' : '#D23F3F'}">
+                    ${attempt.grade || (attempt.isPassed ? 'ЗАЧЕТ' : 'НЕЗАЧЕТ')}
                 </div>
             </div>
             
             <div>
                 <strong>Правильных ответов:</strong>
                 <div style="font-size: 24px; font-weight: bold;">
-                    ${attempt.correctAnswers}/${attempt.totalQuestions}
+                    ${attempt.correctAnswers || 0}/${attempt.totalQuestions || 0}
                 </div>
             </div>
             
             <div>
                 <strong>Процент:</strong>
                 <div style="font-size: 24px; font-weight: bold;">
-                    ${attempt.percentage.toFixed(1)}%
+                    ${percentage}%
                 </div>
             </div>
             
             <div>
-                <strong>Затраченное время:</strong>
+                <strong>Время:</strong>
                 <div style="font-size: 20px;">
                     ${timeSpentMinutes.toString().padStart(2, '0')}:${timeSpentSeconds.toString().padStart(2, '0')}
                 </div>
@@ -196,9 +199,6 @@ function createAttemptElement(attempt, index) {
             <button class="button" onclick="viewAttemptDetails(${index})" style="background-color: #2196F3; padding: 8px 16px; font-size: 14px;">
                 Показать детали
             </button>
-            <button class="button" onclick="deleteAttempt('${attempt.id}')" style="background-color: #ff9800; padding: 8px 16px; font-size: 14px;">
-                Удалить
-            </button>
         </div>
     `;
     
@@ -206,7 +206,7 @@ function createAttemptElement(attempt, index) {
 }
 
 function viewAttemptDetails(attemptIndex) {
-    console.log('🔍 Просмотр деталей попытки #', attemptIndex);
+    console.log('Просмотр деталей попытки #', attemptIndex);
     
     examAPI.getExamAttempts().then(result => {
         if (result.success && result.attempts) {
@@ -226,7 +226,7 @@ function viewAttemptDetails(attemptIndex) {
 }
 
 async function deleteAttempt(attemptId) {
-    console.log('🗑️ Удаление попытки:', attemptId);
+    console.log('Удаление попытки:', attemptId);
     
     if (!confirm('Вы уверены, что хотите удалить эту попытку?')) {
         return;
@@ -242,7 +242,7 @@ async function deleteAttempt(attemptId) {
             alert('Ошибка при удалении: ' + (result.error || 'Неизвестная ошибка'));
         }
     } catch (error) {
-        console.error('❌ Ошибка удаления:', error);
+        console.error('Ошибка удаления:', error);
         alert('Ошибка при удалении попытки');
     }
 }

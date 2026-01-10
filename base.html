@@ -167,83 +167,83 @@
         }
 
         .page-header {
-    text-align: left;
-    margin-bottom: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
+            text-align: left;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
 
-.page-title {
-    font-size: 36px;
-    font-weight: 600;
-    color: #262626;
-    margin-bottom: 0;
-    flex: 1;
-}
+        .page-title {
+            font-size: 36px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 0;
+            flex: 1;
+        }
 
-.search-section {
-    background: white;
-    border-radius: 15px;
-    padding: 20px;
-    margin-bottom: 30px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    border: 2px solid #eef5ff;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    width: auto;
-    padding: 0;
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    margin-bottom: 0;
-    margin-left: 20px;
-}
+        .search-section {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            border: 2px solid #eef5ff;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            width: auto;
+            padding: 0;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            margin-bottom: 0;
+            margin-left: 20px;
+        }
 
-.search-box {
-    position: relative;
-    width: 370px;
-    height: 62px;
-}
+        .search-box {
+            position: relative;
+            width: 370px;
+            height: 62px;
+        }
 
-.search-button {
-    width: 370px;
-    height: 62px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    background-image: url('images/search-button.png');
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-    box-sizing: border-box;
-    border-radius: 77px;
-    position: relative;
-    transition: all 0.3s ease;
-}
+        .search-button {
+            width: 370px;
+            height: 62px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            background-image: url('images/search-button.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            box-sizing: border-box;
+            border-radius: 77px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
 
-.search-button:hover {
-    opacity: 0.9;
-    transform: translateY(-2px);
-}
+        .search-button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
 
-.search-button:active {
-    opacity: 0.8;
-    transform: translateY(0);
-}
+        .search-button:active {
+            opacity: 0.8;
+            transform: translateY(0);
+        }
 
-.search-button::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border: 4px solid #CFEAFF;
-    border-radius: 77px;
-    pointer-events: none;
-}
+        .search-button::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 4px solid #CFEAFF;
+            border-radius: 77px;
+            pointer-events: none;
+        }
 
         /* Блоки вопросов */
         .blocks-container {
@@ -281,6 +281,7 @@
             display: flex;
             align-items: center;
             gap: 15px;
+            flex: 1;
         }
 
         .block-number {
@@ -309,41 +310,46 @@
             color: #666;
         }
 
-        /* .block-count {
+        .block-count {
             font-size: 16px;
             color: #666;
-            background: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            border: 1px solid #cfeaff;
-        } */
+            margin-right: 15px;
+        }
 
+        /* КРУЖОК ДЛЯ РАСКРЫТИЯ/СКРЫТИЯ БЛОКА */
         .block-toggle {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: white;
+            width: 34px;
+            height: 34px;
+            background: none;
             border: none;
+            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-            font-size: 20px;
-            color: #2196F3;
-            transition: all 0.3s;
-            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
+            transition: transform 0.3s ease;
+            padding: 0;
+            position: relative;
+            overflow: hidden;
         }
 
-        .block-toggle:hover {
-            background: #2196F3;
-            color: white;
-            transform: rotate(90deg);
+        .block-toggle::before {
+            content: '';
+            width: 34px;
+            height: 34px;
+            background-image: url('images/список.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            display: block;
+            transition: transform 0.3s ease;
         }
 
-        .block-toggle.active {
+        .block-toggle.active::before {
             transform: rotate(180deg);
-            background: #2196F3;
-            color: white;
+        }
+
+        .block-toggle:hover::before {
+            opacity: 0.8;
         }
 
         .block-content {
@@ -442,8 +448,8 @@
 
         .answer-item.correct {
             background-color: #e8f5e9;
-            border-color: #4caf50;
-            color: #2e7d32;
+            border-color: #4FA532;
+            color: #64D23F;
         }
 
         .answer-item.correct::before {
@@ -713,7 +719,6 @@
                 font-size: 15px;
             }
 
-            @media (max-width: 768px) {
             .page-header {
                 flex-direction: column;
                 align-items: flex-start;
@@ -735,7 +740,6 @@
                 width: 100%;
                 height: 52px;
             }
-        }
         }
     </style>
 </head>
@@ -760,23 +764,23 @@
         
         <main>
             <div class="main-content">
-    <div class="page-header">
-        <h1 class="page-title">База вопросов</h1>
-        <div class="search-section">
-            <div class="search-box">
-                <button class="search-button" onclick="performSearchFromButton()"></button>
+                <div class="page-header">
+                    <h1 class="page-title">База вопросов</h1>
+                    <div class="search-section">
+                        <div class="search-box">
+                            <button class="search-button" onclick="performSearchFromButton()"></button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Контейнер для блоков -->
+                <div class="blocks-container" id="blocksContainer">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <p>Загрузка вопросов...</p>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
-    
-    <!-- Контейнер для блоков -->
-    <div class="blocks-container" id="blocksContainer">
-        <div class="loading">
-            <div class="loading-spinner"></div>
-            <p>Загрузка вопросов...</p>
-        </div>
-    </div>
-</div>
         </main>
     </div>
 
@@ -938,7 +942,7 @@
                                 Загрузка...
                             </div>
                             <button class="block-toggle" id="blockToggle-${blockKey}">
-                                
+                                <!-- Кружок с картинкой image.png -->
                             </button>
                         </div>
                         <div class="block-content" id="blockContent-${blockKey}">
@@ -1155,7 +1159,6 @@
                 header.classList.add('active');
                 content.classList.add('active');
                 toggleBtn.classList.add('active');
-                toggleBtn.innerHTML = '';
                 
                 // Если вопросы еще не загружены в контейнер, загружаем их
                 if (!allQuestions[blockKey] || allQuestions[blockKey].length === 0) {
@@ -1298,12 +1301,6 @@
             
             // Закрытие диалога поиска по клику на оверлей
             document.getElementById('search-overlay').addEventListener('click', closeSearchDialog);
-
-            document.getElementById('searchInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-            performSearch();
-            }
-});
         });
     </script>
 </body>
