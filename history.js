@@ -205,24 +205,36 @@ function createAttemptElement(attempt, index) {
     return element;
 }
 
-function viewAttemptDetails(attemptIndex) {
+async function viewAttemptDetails(attemptIndex) {
     console.log('Просмотр деталей попытки #', attemptIndex);
     
-    examAPI.getExamAttempts().then(result => {
+    try {
+        const result = await examAPI.getExamAttempts();
+        
         if (result.success && result.attempts) {
             const attempts = result.attempts;
             if (attemptIndex >= 0 && attemptIndex < attempts.length) {
                 const attempt = attempts[attemptIndex];
                 
+                // Сохраняем полные данные попытки в localStorage
                 localStorage.setItem('viewingAttempt', JSON.stringify({
                     index: attemptIndex,
+                    id: attempt.id,
                     ...attempt
                 }));
                 
+                console.log('✅ Данные попытки сохранены для просмотра:', attempt.id);
                 window.location.href = 'attempt-details.html';
+            } else {
+                alert('Попытка не найдена!');
             }
+        } else {
+            alert('Не удалось загрузить данные попытки');
         }
-    });
+    } catch (error) {
+        console.error('Ошибка при просмотре деталей:', error);
+        alert('Ошибка при загрузке данных');
+    }
 }
 
 async function deleteAttempt(attemptId) {

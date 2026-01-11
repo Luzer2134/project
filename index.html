@@ -311,26 +311,6 @@
             right: 0;
         }
 
-        /* Кнопка закрытия */
-        .close-panel {
-            background: none;
-            border: none;
-            font-size: 28px;
-            color: #666;
-            cursor: pointer;
-            padding: 0;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 4px;
-        }
-
-        .close-panel:hover {
-            background-color: #f5f5f5;
-        }
-
         /* Информация о пользователе */
         .profile-info {
             display: flex;
@@ -511,6 +491,108 @@
             opacity: 1;
         }
 
+        /* Модальное окно для Яндекс Алисы */
+        .alice-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 3000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .alice-modal.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .alice-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+
+        .alice-modal.active .alice-content {
+            transform: translateY(0);
+        }
+
+        .alice-content h3 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 24px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 20px;
+        }
+
+        .alice-message {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 18px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #3F8FD2;
+        }
+
+        .alice-command {
+            font-weight: 600;
+            color: #3F8FD2;
+            font-size: 20px;
+            margin: 15px 0;
+        }
+
+        .alice-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .alice-button {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 16px;
+            font-weight: 500;
+            padding: 12px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+            min-width: 150px;
+        }
+
+        .alice-button.primary {
+            background-color: #3F8FD2;
+            color: white;
+        }
+
+        .alice-button.primary:hover {
+            background-color: #3579B0;
+            transform: translateY(-2px);
+        }
+
+        .alice-button.secondary {
+            background-color: #f0f0f0;
+            color: #262626;
+        }
+
+        .alice-button.secondary:hover {
+            background-color: #e0e0e0;
+        }
+
         /* Адаптивность */
         @media (max-width: 768px) {
             .page-container {
@@ -563,6 +645,20 @@
                 padding: 20px 40px;
                 font-size: 20px;
             }
+            
+            .alice-content {
+                padding: 20px;
+                width: 95%;
+            }
+            
+            .alice-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .alice-button {
+                width: 100%;
+            }
         }
 
         @media (max-width: 480px) {
@@ -602,7 +698,7 @@
                 <button class="button_trainer" onclick="navigateTo('trainer.html')">
                     Тренажёр
                 </button>
-                <button class="skill-button" onclick="navigateTo('skills.html')"></button>
+                <button class="skill-button" onclick="openYandexAlice()" title="Открыть Яндекс Алису"></button>
                 <button class="profile-button" id="profile-btn"></button>
             </nav>
         </header>
@@ -654,7 +750,7 @@
         <!-- Меню панели профиля -->
         <div class="profile-menu">
             <!-- Кнопка Яндекс Алиса -->
-            <button class="menu-item" onclick="navigateTo('yandex-alice.html')">
+            <button class="menu-item" onclick="openYandexAlice()">
                 <span class="menu-icon"></span>
                 <span class="menu-text">Яндекс Алиса</span>
             </button>
@@ -686,11 +782,82 @@
         </div>
     </div>
 
+    <!-- МОДАЛЬНОЕ ОКНО ДЛЯ ЯНДЕКС АЛИСЫ -->
+    <div class="alice-modal" id="alice-modal">
+        <div class="alice-content">
+            <h3>Запусти навык "Тренировка охраны труда"</h3>
+            
+            <div class="alice-message">
+                <p>Чтобы начать работать с голосовым ассистентом:</p>
+                <div class="alice-command">"Алиса, запусти навык Тренировка охраны труда"</div>
+                <p>Или используй кнопку ниже для быстрого перехода</p>
+            </div>
+            
+            <div class="alice-buttons">
+                <button class="alice-button primary" onclick="openAliceDirectly()">
+                    Перейти к Яндекс Алисе
+                </button>
+                <button class="alice-button secondary" onclick="closeAliceModal()">
+                    Отмена
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- ОВЕРЛЕЙ -->
     <div class="overlay" id="overlay" onclick="closeProfilePanel()"></div>
 
-    <script src="api.js"></script>
     <script>
+        // URL для Яндекс Алисы
+        const YANDEX_ALICE_URL = 'https://alice.yandex.ru/?ysclid=mk9kxjoadx551239628';
+        // ID вашего приложения Яндекс ID (нужно получить в Яндекс ID)
+        const YANDEX_CLIENT_ID = 'ваш_client_id_здесь';
+        // Callback URL должен совпадать с тем, что указан в настройках приложения
+        const REDIRECT_URI = 'http://localhost:3000/auth/yandex/callback';
+        
+        // Функция для открытия Яндекс Алисы с подсказкой
+        function openYandexAlice() {
+            console.log('Открываем Яндекс Алису с подсказкой...');
+            
+            // Закрываем панель профиля если открыта
+            closeProfilePanel();
+            
+            // Показываем модальное окно с инструкцией
+            showAliceModal();
+        }
+        
+        // Показать модальное окно с инструкцией
+        function showAliceModal() {
+            const modal = document.getElementById('alice-modal');
+            if (modal) {
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden'; // Блокируем прокрутку страницы
+            }
+        }
+        
+        // Закрыть модальное окно
+        function closeAliceModal() {
+            const modal = document.getElementById('alice-modal');
+            if (modal) {
+                modal.classList.remove('active');
+                document.body.style.overflow = ''; // Восстанавливаем прокрутку
+            }
+        }
+        
+        // Прямой переход к Яндекс Алисе
+        function openAliceDirectly() {
+            console.log('Переходим к Яндекс Алисе...');
+            closeAliceModal();
+            
+            // Открываем Яндекс Алису в новой вкладке
+            window.open(YANDEX_ALICE_URL, '_blank');
+            
+            // Показываем дополнительную подсказку
+            setTimeout(() => {
+                alert('После открытия Яндекс Алисы скажите:\n\n"Алиса, запусти навык Тренировка охраны труда"\n\nИли найдите наш навык в каталоге навыков Алисы');
+            }, 500);
+        }
+        
         // Функция выбора блока
         function selectBlock(element, blockName) {
             console.log('Выбран блок:', blockName);
@@ -711,26 +878,90 @@
             const simulationBtn = document.getElementById('simulation-btn');
             if (simulationBtn) {
                 simulationBtn.disabled = false;
-                console.log('✅ Кнопка "Экзамен" активирована');
+                console.log('Кнопка "Экзамен" активирована');
             }
+        }
+        
+        // Вход через Яндекс
+        function loginWithYandex() {
+            console.log('🔐 Вход через Яндекс...');
+            closeProfilePanel();
+            closeAliceModal();
+            
+            const button = document.querySelector('.yandex-login-button');
+            const originalText = button.innerHTML;
+            button.innerHTML = 'Подключение...';
+            button.disabled = true;
+            button.classList.add('loading');
+            
+            // Генерируем случайную строку для защиты от CSRF
+            const state = Math.random().toString(36).substring(2);
+            localStorage.setItem('yandex_auth_state', state);
+            
+            // Формируем URL для авторизации через Яндекс ID
+            const authUrl = new URL('https://oauth.yandex.ru/authorize');
+            authUrl.searchParams.append('response_type', 'code');
+            authUrl.searchParams.append('client_id', YANDEX_CLIENT_ID);
+            authUrl.searchParams.append('redirect_uri', REDIRECT_URI);
+            authUrl.searchParams.append('state', state);
+            authUrl.searchParams.append('scope', 'login:info login:email');
+            
+            console.log('Переходим по URL:', authUrl.toString());
+            
+            // Перенаправляем на страницу авторизации Яндекс
+            setTimeout(() => {
+                window.location.href = authUrl.toString();
+            }, 500);
         }
                 
         // Проверяем авторизацию при загрузке
         document.addEventListener('DOMContentLoaded', function() {
             console.log('=== ПРОВЕРКА АВТОРИЗАЦИИ ===');
             
-            // Проверяем пользователя
-            const user = window.examAPI ? window.examAPI.getUserFromStorage() : null;
+            // Проверяем, есть ли код авторизации в URL (возврат от Яндекс)
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            const state = urlParams.get('state');
             
-            if (!user) {
-                console.log('❌ Пользователь не найден, перенаправляем на логин');
-                setTimeout(() => {
-                    window.location.href = 'login.html';
-                }, 1000);
+            if (code && state) {
+                // Это возврат от Яндекс OAuth
+                handleYandexCallback(code, state);
                 return;
             }
             
-            console.log('✅ Пользователь авторизован:', user.name, `(${user.userType})`);
+            // Проверяем пользователя
+            const userJson = localStorage.getItem('currentUser');
+            let user = null;
+            
+            if (userJson) {
+                try {
+                    user = JSON.parse(userJson);
+                    console.log('✅ Пользователь найден в localStorage:', user.name, `(${user.userType})`);
+                } catch (e) {
+                    console.error('❌ Ошибка парсинга пользователя:', e);
+                    user = null;
+                }
+            }
+            
+            if (!user) {
+                console.log('📭 Пользователь не найден, используем гостевой режим');
+                // Создаем гостевого пользователя
+                user = {
+                    id: 'guest_' + Date.now(),
+                    name: 'Гость',
+                    userType: 'guest',
+                    email: '',
+                    avatar: ''
+                };
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                
+                // Обновляем информацию в панели профиля
+                updateProfilePanel(user);
+            } else {
+                console.log('✅ Пользователь авторизован:', user.name, `(${user.userType})`);
+                // Обновляем информацию в панели профиля
+                updateProfilePanel(user);
+            }
             
             // Проверяем, выбран ли уже блок
             const selectedBlock = localStorage.getItem('selectedBlock');
@@ -754,8 +985,9 @@
                 console.log('📭 Блок еще не выбран');
             }
             
-            // Инициализация панели профиля
+            // Инициализация панели профиля и модального окна
             initProfilePanel();
+            initAliceModal();
             
             // Назначаем обработчик на кнопку профиля
             const profileBtn = document.getElementById('profile-btn');
@@ -764,8 +996,103 @@
             }
         });
         
+        // Обработка возврата от Яндекс OAuth
+        function handleYandexCallback(code, receivedState) {
+            console.log('🔐 Обработка callback от Яндекс...');
+            
+            // Проверяем state для защиты от CSRF
+            const savedState = localStorage.getItem('yandex_auth_state');
+            if (receivedState !== savedState) {
+                console.error('❌ Ошибка проверки state');
+                alert('Ошибка безопасности при авторизации');
+                localStorage.removeItem('yandex_auth_state');
+                return;
+            }
+            
+            localStorage.removeItem('yandex_auth_state');
+            
+            // Отправляем код на сервер для получения токена
+            exchangeCodeForToken(code);
+        }
+        
+        // Обмен кода на токен
+        function exchangeCodeForToken(code) {
+            // В реальном приложении здесь должен быть запрос к вашему серверу
+            // Сервер должен обменять код на токен через Яндекс API
+            
+            console.log('Получен код авторизации:', code);
+            
+            // Для демонстрации создаем фиктивного пользователя
+            // В реальном приложении нужно сделать запрос к вашему серверу
+            
+            const mockUser = {
+                id: 'yandex_user_' + Date.now(),
+                name: 'Пользователь Яндекс',
+                userType: 'yandex',
+                email: 'user@yandex.ru',
+                avatar: '',
+                accessToken: 'dummy_token_' + code,
+                isAuthorized: true
+            };
+            
+            // Сохраняем пользователя
+            localStorage.setItem('currentUser', JSON.stringify(mockUser));
+            
+            // Убираем параметры из URL
+            const cleanUrl = window.location.href.split('?')[0];
+            window.history.replaceState({}, document.title, cleanUrl);
+            
+            // Обновляем страницу
+            alert('✅ Вы успешно вошли через Яндекс!');
+            location.reload();
+        }
+        
+        // Инициализация модального окна Яндекс Алисы
+        function initAliceModal() {
+            const modal = document.getElementById('alice-modal');
+            if (modal) {
+                // Закрытие по клику вне окна
+                modal.addEventListener('click', function(event) {
+                    if (event.target === modal) {
+                        closeAliceModal();
+                    }
+                });
+                
+                // Закрытие по ESC
+                document.addEventListener('keydown', function(event) {
+                    if (event.key === 'Escape' && modal.classList.contains('active')) {
+                        closeAliceModal();
+                    }
+                });
+            }
+        }
+        
+        // Обновление информации в панели профиля
+        function updateProfilePanel(user) {
+            const userNameElement = document.querySelector('.user-details h4');
+            if (userNameElement && user.name) {
+                userNameElement.textContent = user.name;
+            }
+            
+            // Обновляем аватар если есть
+            if (user.avatar) {
+                const avatarElement = document.querySelector('.user-avatar');
+                if (avatarElement) {
+                    avatarElement.style.backgroundImage = `url('${user.avatar}')`;
+                }
+            }
+            
+            // Обновляем текст кнопки в зависимости от статуса
+            const loginButton = document.querySelector('.yandex-login-button');
+            if (loginButton && user.userType === 'yandex') {
+                loginButton.textContent = 'ВЫЙТИ';
+                loginButton.onclick = logout;
+            }
+        }
+        
         function navigateTo(page) {
             closeProfilePanel();
+            closeAliceModal();
             setTimeout(() => {
                 window.location.href = page;
             }, 300);
@@ -813,6 +1140,17 @@
                 panel.classList.add('active');
                 if (overlay) overlay.classList.add('active');
                 isPanelOpen = true;
+                
+                // Обновляем информацию о пользователе при открытии панели
+                const userJson = localStorage.getItem('currentUser');
+                if (userJson) {
+                    try {
+                        const user = JSON.parse(userJson);
+                        updateProfilePanel(user);
+                    } catch (e) {
+                        console.error('Ошибка парсинга пользователя:', e);
+                    }
+                }
             }
         }
         
@@ -830,23 +1168,8 @@
         function logout() {
             if (confirm('Вы уверены, что хотите выйти?')) {
                 localStorage.clear();
-                window.location.href = 'login.html';
+                window.location.href = 'index.html';
             }
-        }
-        
-        function loginWithYandex() {
-            console.log('🔐 Вход через Яндекс...');
-            closeProfilePanel();
-            
-            const button = document.querySelector('.yandex-login-button');
-            const originalText = button.innerHTML;
-            button.innerHTML = 'Подключение...';
-            button.disabled = true;
-            button.classList.add('loading');
-            
-            setTimeout(() => {
-                window.location.href = '/auth/yandex';
-            }, 500);
         }
     </script>
 </body>
