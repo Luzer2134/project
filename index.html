@@ -1,256 +1,1176 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Веб‑платформа подготовки</title>
-  <link rel="stylesheet" href="style.css">
-  <style>
-    .user-info-panel {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: rgba(255, 255, 255, 0.9);
-      padding: 10px 15px;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    
-    .user-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid #ddd;
-    }
-    
-    .user-avatar-placeholder {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: #2196F3;
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      font-size: 18px;
-    }
-    
-    .user-details {
-      display: flex;
-      flex-direction: column;
-    }
-    
-    .user-name {
-      font-weight: bold;
-      font-size: 16px;
-    }
-    
-    .user-type {
-      font-size: 12px;
-      color: #666;
-    }
-    
-    .yandex-badge {
-      background: #FFCC00;
-      color: #000;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 10px;
-      font-weight: bold;
-      margin-left: 5px;
-    }
-    
-    .guest-badge {
-      background: #6c757d;
-      color: white;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 10px;
-      font-weight: bold;
-      margin-left: 5px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Веб‑платформа подготовки</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Импорт шрифта Montserrat -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /* Сброс стилей и базовые настройки */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f7f9;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Контейнер для всей страницы */
+        .page-container {
+            position: relative;
+            width: 1440px;
+            min-height: 1024px;
+            margin: 0 auto;
+            background-color: #DCDCDC;
+        }
+
+        header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 80px;
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        /* Контейнер навигации в шапке */
+        header nav {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            height: 100%;
+            gap: 20px;
+            padding: 0 40px;
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+
+        /* Общие стили для кнопок в шапке */
+        .button_documentation,
+        .button_simulation,
+        .button_trainer {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            font-size: 16px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: white;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
+            white-space: nowrap;
+        }
+
+        /* Кнопка "Документация" */
+        .button_documentation {
+            width: fit-content;
+            height: 56px;
+            padding: 12px 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: none;
+            border: none;
+            color: #262626;
+            cursor: pointer;
+            text-decoration: none;
+            box-sizing: border-box;
+            white-space: nowrap;
+            position: absolute;
+            left: 40px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        /* Кнопка "Экзамен" */
+        .button_simulation {
+            width: fit-content;
+            height: 56px;
+            padding: 12px 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: none;
+            border: none;
+            color: #262626;
+            cursor: pointer;
+            text-decoration: none;
+            box-sizing: border-box;
+            white-space: nowrap;
+            position: absolute;
+            left: 200px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .button_simulation:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Кнопка "Тренажёр" */
+        .button_trainer {
+            width: fit-content;
+            height: 56px;
+            padding: 12px 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: none;
+            border: none;
+            color: #262626;
+            cursor: pointer;
+            text-decoration: none;
+            box-sizing: border-box;
+            white-space: nowrap;
+            position: absolute;
+            left: 320px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .skill-button {
+            width: 56px;
+            height: 56px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            background-image: url('images/skill-button.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            box-sizing: border-box;
+            margin-left: 20px;
+        }
+
+        .profile-button {
+            width: 56px;
+            height: 56px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            background-image: url('images/profile-button.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            box-sizing: border-box;
+            margin-left: 20px;
+        }
+
+        /* Основной контент */
+        main {
+            position: relative;
+            width: 1440px;
+            min-height: 1024px;
+            margin: 0 auto;
+            background-color: white;
+            padding-top: 80px;
+        }
+
+        /* Стили для главной страницы */
+        .main-content {
+            position: relative;
+            width: 1440px;
+            min-height: 1024px;
+            margin: 0 auto;
+            background-color: white;
+            padding-top: 80px;
+        }
+        
+        .custom-heading {
+            width: 980px;
+            height: 48px;
+            margin-top: 50px;
+            margin-left: 229.02px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            font-size: 48px;
+            line-height: 48px;
+            color: #262626;
+            box-sizing: border-box;
+            display: block;
+        }
+        
+        .blocks {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            margin-top: 100px;
+        }
+
+        .image-block {
+            width: 1094.02px;
+            height: 111px;
+            margin-top: 20px;
+            margin-left: auto;
+            margin-right: auto;
+            border-radius: 30px;
+            background-color: #FFFFFF;
+            border: 5px solid #CFEAFF;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            box-sizing: border-box;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .image-block:first-child {
+            margin-top: 0;
+        }
+        
+        /* Эффект при наведении на блок */
+        .image-block:hover {
+            background-color: #f0f8ff;
+            border-color: #2196F3;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.1);
+        }
+        
+        /* Эффект при клике */
+        .image-block:active {
+            transform: translateY(-1px);
+            background-color: #e3f2fd;
+        }
+
+        .image-block.selected {
+            background-color: #e3f2fd;
+            border-color: #2196F3;
+            box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+        }
+
+        .image-block h4 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 32px;
+            font-weight: 600;
+            color: #262626;
+            margin: 0;
+            min-width: 80px;
+        }
+        
+        .image-block p {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 18px;
+            color: #262626;
+            margin: 0;
+            flex-grow: 1;
+            padding: 0 30px;
+        }
+        
+        .image-block .button {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 18px;
+            font-weight: 500;
+            color: #262626;
+            background-color: #FFFFFF;
+            border: 2px solid #CFEAFF;
+            border-radius: 15px;
+            padding: 12px 30px;
+            min-width: 180px;
+            pointer-events: none;
+        }
+        
+        /* Стиль для текста "Выбрать блок" при наведении на весь блок */
+        .image-block:hover .button {
+            background-color: #CFEAFF;
+        }
+
+        .profile-panel {
+            position: fixed;
+            top: 0;
+            right: -364px;
+            width: 364px;
+            height: 100vh;
+            background-color: #FFFFFF;
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+            z-index: 2000;
+            transition: right 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .profile-panel.active {
+            right: 0;
+        }
+
+        /* Информация о пользователе */
+        .profile-info {
+            display: flex;
+            align-items: center;
+            padding: 24px;
+            gap: 16px;
+        }
+
+        /* Аватар */
+        .user-avatar {
+            width: 194px;
+            height: 194px;
+            border-radius: 100px;
+            background-image: url('images/icon.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            margin: 30px auto 20px auto;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 3px solid white;
+        }
+
+        /* Текст "Гость" в панели профиля */
+        .user-details h4 {
+            width: 89px;
+            height: 32px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            font-style: normal;
+            font-size: 32px;
+            line-height: 100%;
+            letter-spacing: 0%;
+            color: #262626;
+            text-align: center;
+            margin: 0 auto 8px auto;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-details p {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 400;
+            font-size: 14px;
+            color: #666;
+            margin: 0;
+        }
+
+        /* Меню профиля */
+        .profile-menu {
+            padding: 24px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 16px;
+            background: none;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            margin-bottom: 8px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 16px;
+            color: #262626;
+        }
+
+        .menu-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .menu-item:active {
+            background-color: #e9ecef;
+        }
+
+        .menu-icon {
+            font-size: 18px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .yandex-auth-section {
+            padding: 20px 24px;
+            text-align: center;
+            margin-top: 170px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .yandex-login-button {
+            width: 244px;          
+            height: 80px;      
+            border-radius: 77px;    
+            padding: 31px 87px;    
+            background-color: #3F8FD2; 
+            border: none;
+            color: white;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 24px;
+            font-weight: 600;
+            line-height: 100%;
+            letter-spacing: 0%;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(63, 143, 210, 0.2);
+            user-select: none;
+            box-sizing: border-box;
+        }
+
+        .yandex-login-button:hover {
+            background-color: #3579B0;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(63, 143, 210, 0.3);
+        }
+
+        .yandex-login-button:active {
+            background-color: #2D6BA3;
+            transform: translateY(0);
+            box-shadow: 0 2px 10px rgba(63, 143, 210, 0.2);
+        }
+
+        .yandex-login-button:focus {
+            outline: 2px solid #3F8FD2;
+            outline-offset: 2px;
+        }
+
+        /* Состояние загрузки кнопки */
+        .yandex-login-button.loading {
+            background-color: #2D6BA3;
+            cursor: wait;
+            opacity: 0.8;
+        }
+
+        /* Отключенное состояние кнопки */
+        .yandex-login-button:disabled {
+            background-color: #B0B0B0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .login-hint {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            color: #666;
+            margin-top: 15px;
+            text-align: center;
+            max-width: 244px;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1999;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Модальное окно для Яндекс Алисы */
+        .alice-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 3000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .alice-modal.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .alice-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+
+        .alice-modal.active .alice-content {
+            transform: translateY(0);
+        }
+
+        .alice-content h3 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 24px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 20px;
+        }
+
+        .alice-message {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 18px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #3F8FD2;
+        }
+
+        .alice-command {
+            font-weight: 600;
+            color: #3F8FD2;
+            font-size: 20px;
+            margin: 15px 0;
+        }
+
+        .alice-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .alice-button {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 16px;
+            font-weight: 500;
+            padding: 12px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+            min-width: 150px;
+        }
+
+        .alice-button.primary {
+            background-color: #3F8FD2;
+            color: white;
+        }
+
+        .alice-button.primary:hover {
+            background-color: #3579B0;
+            transform: translateY(-2px);
+        }
+
+        .alice-button.secondary {
+            background-color: #f0f0f0;
+            color: #262626;
+        }
+
+        .alice-button.secondary:hover {
+            background-color: #e0e0e0;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .page-container {
+                width: 100%;
+                min-height: auto;
+            }
+            
+            main {
+                width: 100%;
+                padding-top: 60px;
+            }
+            
+            .main-content {
+                width: 100%;
+                padding-top: 60px;
+            }
+            
+            .custom-heading {
+                width: 90%;
+                margin-left: 5%;
+                font-size: 32px;
+                text-align: center;
+            }
+            
+            .image-block {
+                width: 95%;
+                height: auto;
+                min-height: 100px;
+                padding: 20px;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .image-block h4 {
+                margin-bottom: 10px;
+            }
+            
+            .image-block p {
+                padding: 0;
+                margin-bottom: 10px;
+            }
+            
+            .blocks {
+                margin-top: 50px;
+            }
+            
+            .yandex-login-button {
+                width: 200px;
+                height: 70px;
+                padding: 20px 40px;
+                font-size: 20px;
+            }
+            
+            .alice-content {
+                padding: 20px;
+                width: 95%;
+            }
+            
+            .alice-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .alice-button {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .custom-heading {
+                font-size: 24px;
+            }
+            
+            .image-block h4 {
+                font-size: 24px;
+            }
+            
+            .image-block p {
+                font-size: 16px;
+            }
+            
+            .yandex-login-button {
+                width: 180px;
+                height: 60px;
+                padding: 15px 30px;
+                font-size: 18px;
+                border-radius: 60px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <header>
-    Платформа для подготовки специалистов
-  </header>
-
-  <div id="user-panel" class="user-info-panel" style="display: none;">
-    <!-- Заполнится JavaScript -->
-  </div>
-
-  <nav>
-    <!-- Ваша навигация без изменений -->
-    <button class="button_simulation" id="simulation-btn" onclick="navigateTo('simulation.html')" disabled>
-        Симуляция экзамена
-    </button>
-    <button class="button_trainer" onclick="navigateTo('trainer.html')">Тренажёр</button>
-    <button class="button_progress" onclick="navigateTo('progress.html')">Прогресс</button>
-    <button class="button_history" onclick="navigateTo('history.html')">История попыток</button>
-    <button class="button_base" onclick="navigateTo('base.html')">База вопросов</button>
-    <button class="button_quit" onclick="logout()">Выйти</button>
-  </nav>
-
-  <main>
-    <!-- Ваш контент без изменений -->
-    <h3 style="margin-top:40px;">Выберите блок для обучения:</h3>
-    
-    <div id="selected-block-info" style="display:none; background:#e8f4fd; padding:15px; margin:20px 0; border-radius:8px; border-left:4px solid #2196F3;">
-      <strong>Выбран блок: <span id="current-selected-block">-</span></strong>
-      <p style="margin:5px 0 0 0; font-size:14px; color:#666;">Теперь вы можете запустить симуляцию экзамена</p>
+    <div class="page-container">
+        <!-- Шапка -->
+        <header>
+            <nav>
+                <button class="button_documentation" onclick="navigateTo('documentation.html')">
+                    Документация
+                </button>
+                <button class="button_simulation" id="simulation-btn" onclick="navigateTo('simulation.html')" disabled>
+                    Экзамен
+                </button>
+                <button class="button_trainer" onclick="navigateTo('trainer.html')">
+                    Тренажёр
+                </button>
+                <button class="skill-button" onclick="openYandexAlice()" title="Открыть Яндекс Алису"></button>
+                <button class="profile-button" id="profile-btn"></button>
+            </nav>
+        </header>
+        
+        <main class="main-content">
+            <h3 class="custom-heading">Выберите программу для тренировки</h3>
+            
+            <div class="blocks">
+                <!-- Каждый блок является кликабельным элементом -->
+                <div class="image-block" data-block="Блок 1" onclick="selectBlock(this, 'Блок 1')">
+                    <h4>Программа А</h4>
+                    <p>общие вопросы охраны труда и функционирования СУОТ</p>
+                </div>
+                <div class="image-block" data-block="Блок 2" onclick="selectBlock(this, 'Блок 2')">
+                    <h4>Программа Б</h4>
+                    <p>безопасные методы работы при воздействии вредных факторов</p>
+                </div>
+                <div class="image-block" data-block="Блок 3" onclick="selectBlock(this, 'Блок 3')">
+                    <h4>Программа В</h4>
+                    <p>безопасные методы и приемы выполнения работ повышенной опасности</p>
+                </div>
+                <div class="image-block" data-block="Блок 4" onclick="selectBlock(this, 'Блок 4')">
+                    <h4>Программа ПП</h4>
+                    <p>обучение по оказанию первой помощи пострадавшим</p>
+                </div>
+                <div class="image-block" data-block="Блок 5" onclick="selectBlock(this, 'Блок 5')">
+                    <h4>Программа СЗ</h4>
+                    <p>использование средств индивидуальной защиты(СИЗ)</p>
+                </div>
+            </div>
+        </main>
     </div>
-    
-    <div class="blocks">
-      <div class="block">
-        <h4>СИЗ</h4>
-        <p>Основные темы и задачи. Вопросы по нормативной документации.</p>
-        <button class="button select-block-btn" data-block="Блок 1" onclick="selectBlock('Блок 1')">Выбрать блок</button>
-      </div>
-      <div class="block">
-        <h4>А</h4>
-        <p>Практические навыки и тесты. Применение СИЗ на практике.</p>
-        <button class="button select-block-btn" data-block="Блок 2" onclick="selectBlock('Блок 2')">Выбрать блок</button>
-      </div>
-      <div class="block">
-        <h4>ОПП</h4>
-        <p>Теоретические основы. Классификация и требования к СИЗ.</p>
-        <button class="button select-block-btn" data-block="Блок 3" onclick="selectBlock('Блок 3')">Выбрать блок</button>
-      </div>
-      <div class="block">
-        <h4>Б</h4>
-        <p>Продвинутая практика. Сложные случаи и исключения.</p>
-        <button class="button select-block-btn" data-block="Блок 4" onclick="selectBlock('Блок 4')">Выбрать блок</button>
-      </div>
-      <div class="block">
-        <h4>В</h4>
-        <p>Блок 5.</p>
-        <button class="button select-block-btn" data-block="Блок 5" onclick="selectBlock('Блок 5')">Выбрать блок</button>
-      </div>
-    </div>
-  </main>
 
-  <script src="api.js"></script>
-  <script>
-    // Функция отображения информации о пользователе
-    function displayUserInfo(user) {
-      const panel = document.getElementById('user-panel');
-      
-      if (!user) return;
-      
-      let avatarHtml = '';
-      if (user.avatar) {
-        avatarHtml = `<img src="${user.avatar}" alt="Аватар" class="user-avatar">`;
-      } else {
-        const initials = user.name.charAt(0).toUpperCase();
-        avatarHtml = `<div class="user-avatar-placeholder">${initials}</div>`;
-      }
-      
-      const badge = user.userType === 'yandex' 
-        ? '<span class="yandex-badge">Яндекс</span>' 
-        : '<span class="guest-badge">Гость</span>';
-      
-      panel.innerHTML = `
-        ${avatarHtml}
-        <div class="user-details">
-          <div class="user-name">${user.name} ${badge}</div>
-          <div class="user-type">${user.email}</div>
+    <!-- ПАНЕЛЬ ПРОФИЛЯ -->
+    <div class="profile-panel" id="profile-panel">
+        <div class="profile-header">
         </div>
-      `;
-      panel.style.display = 'flex';
-    }
-    
-    // Функция проверки пользователя из URL (для Яндекс OAuth)
-    function checkUserFromURL() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const userParam = urlParams.get('user');
-      
-      if (userParam) {
-        try {
-          const user = JSON.parse(decodeURIComponent(userParam));
-          console.log('👤 Яндекс пользователь из URL:', user);
-          
-          // Сохраняем пользователя
-          window.examAPI.saveUserToStorage(user);
-          
-          // Пробуем перенести гостевые данные
-          setTimeout(async () => {
-            try {
-              const result = await examAPI.migrateGuestData(user.id);
-              if (result.success && result.migratedAttempts > 0) {
-                console.log(`✅ Перенесено ${result.migratedAttempts} попыток и ${result.migratedBlocks} блоков`);
-              }
-            } catch (migrateError) {
-              console.error('Ошибка переноса данных:', migrateError);
-            }
-          }, 1000);
-          
-          // Убираем параметр из URL
-          window.history.replaceState({}, document.title, window.location.pathname);
-          
-          return user;
-        } catch (error) {
-          console.error('Ошибка парсинга пользователя из URL:', error);
+        
+        <div class="profile-info">
+            <!-- Аватар -->
+            <div class="user-avatar"></div>
+            
+            <!-- Детали пользователя -->
+            <div class="user-details">
+                <h4>Гость</h4>
+            </div>
+        </div>
+        
+        <!-- Меню панели профиля -->
+        <div class="profile-menu">
+            <!-- Кнопка Яндекс Алиса -->
+            <button class="menu-item" onclick="openYandexAlice()">
+                <span class="menu-icon"></span>
+                <span class="menu-text">Яндекс Алиса</span>
+            </button>
+            
+            <!-- Кнопка Прогресс -->
+            <button class="menu-item" onclick="navigateTo('progress.html')">
+                <span class="menu-icon"></span>
+                <span class="menu-text">Прогресс</span>
+            </button>
+            
+            <!-- Кнопка История попыток -->
+            <button class="menu-item" onclick="navigateTo('history.html')">
+                <span class="menu-icon"></span>
+                <span class="menu-text">История попыток</span>
+            </button>
+            
+            <!-- Кнопка База вопросов -->
+            <button class="menu-item" onclick="navigateTo('base.html')">
+                <span class="menu-icon"></span>
+                <span class="menu-text">База вопросов</span>
+            </button>
+            
+            <!-- Кнопка ВОЙТИ -->
+            <div class="yandex-auth-section">
+                <button class="yandex-login-button" onclick="loginWithYandex()">
+                    ВОЙТИ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО ДЛЯ ЯНДЕКС АЛИСЫ -->
+    <div class="alice-modal" id="alice-modal">
+        <div class="alice-content">
+            <h3>Запусти навык "Тренировка охраны труда"</h3>
+            
+            <div class="alice-message">
+                <p>Чтобы начать работать с голосовым ассистентом:</p>
+                <div class="alice-command">"Алиса, запусти навык Тренировка охраны труда"</div>
+                <p>Или используй кнопку ниже для быстрого перехода</p>
+            </div>
+            
+            <div class="alice-buttons">
+                <button class="alice-button primary" onclick="openAliceDirectly()">
+                    Перейти к Яндекс Алисе
+                </button>
+                <button class="alice-button secondary" onclick="closeAliceModal()">
+                    Отмена
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ОВЕРЛЕЙ -->
+    <div class="overlay" id="overlay" onclick="closeProfilePanel()"></div>
+
+    <script>
+        // URL для Яндекс Алисы
+        const YANDEX_ALICE_URL = 'https://alice.yandex.ru/?ysclid=mk9kxjoadx551239628';
+        // ID вашего приложения Яндекс ID (нужно получить в Яндекс ID)
+        const YANDEX_CLIENT_ID = 'ваш_client_id_здесь';
+        // Callback URL должен совпадать с тем, что указан в настройках приложения
+        const REDIRECT_URI = 'http://localhost:3000/auth/yandex/callback';
+        
+        // Функция для открытия Яндекс Алисы с подсказкой
+        function openYandexAlice() {
+            console.log('Открываем Яндекс Алису с подсказкой...');
+            
+            // Закрываем панель профиля если открыта
+            closeProfilePanel();
+            
+            // Показываем модальное окно с инструкцией
+            showAliceModal();
         }
-      }
-      return null;
-    }
-    
-    // Проверяем авторизацию при загрузке
-    document.addEventListener('DOMContentLoaded', function() {
-      console.log('=== ПРОВЕРКА АВТОРИЗАЦИИ ===');
-      
-      // 1. Проверяем пользователя из URL (для Яндекс OAuth)
-      const userFromURL = checkUserFromURL();
-      if (userFromURL) {
-        console.log('✅ Яндекс пользователь загружен из URL');
-      }
-      
-      // 2. Проверяем пользователя из localStorage
-      const user = window.examAPI ? window.examAPI.getUserFromStorage() : null;
-      
-      if (!user) {
-        console.log('❌ Пользователь не найден, перенаправляем на логин');
-        setTimeout(() => {
-          window.location.href = 'login.html';
-        }, 1000);
-        return;
-      }
-      
-      console.log('✅ Пользователь авторизован:', user.name, `(${user.userType})`);
-      
-      // Отображаем информацию о пользователе
-      displayUserInfo(user);
-      
-      // Проверяем выбранный блок
-      const selectedBlock = localStorage.getItem('selectedBlock');
-      if (selectedBlock) {
-        document.getElementById('current-selected-block').textContent = selectedBlock;
-        document.getElementById('selected-block-info').style.display = 'block';
-        document.getElementById('simulation-btn').disabled = false;
-      }
-    });
-    
-    // Остальные ваши функции без изменений
-    function selectBlock(blockName) {
-      localStorage.setItem('selectedBlock', blockName);
-      document.getElementById('current-selected-block').textContent = blockName;
-      document.getElementById('selected-block-info').style.display = 'block';
-      document.getElementById('simulation-btn').disabled = false;
-    }
-    
-    function navigateTo(page) {
-      window.location.href = page;
-    }
-    
-    function logout() {
-      window.examAPI.logout();
-    }
-  </script>
+        
+        // Показать модальное окно с инструкцией
+        function showAliceModal() {
+            const modal = document.getElementById('alice-modal');
+            if (modal) {
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden'; // Блокируем прокрутку страницы
+            }
+        }
+        
+        // Закрыть модальное окно
+        function closeAliceModal() {
+            const modal = document.getElementById('alice-modal');
+            if (modal) {
+                modal.classList.remove('active');
+                document.body.style.overflow = ''; // Восстанавливаем прокрутку
+            }
+        }
+        
+        // Прямой переход к Яндекс Алисе
+        function openAliceDirectly() {
+            console.log('Переходим к Яндекс Алисе...');
+            closeAliceModal();
+            
+            // Открываем Яндекс Алису в новой вкладке
+            window.open(YANDEX_ALICE_URL, '_blank');
+            
+            // Показываем дополнительную подсказку
+            setTimeout(() => {
+                alert('После открытия Яндекс Алисы скажите:\n\n"Алиса, запусти навык Тренировка охраны труда"\n\nИли найдите наш навык в каталоге навыков Алисы');
+            }, 500);
+        }
+        
+        // Функция выбора блока
+        function selectBlock(element, blockName) {
+            console.log('Выбран блок:', blockName);
+            
+            // Убираем выделение со всех блоков
+            const allBlocks = document.querySelectorAll('.image-block');
+            allBlocks.forEach(block => {
+                block.classList.remove('selected');
+            });
+            
+            // Добавляем выделение к выбранному блоку
+            element.classList.add('selected');
+            
+            // Сохраняем выбранный блок
+            localStorage.setItem('selectedBlock', blockName);
+            
+            // Включаем кнопку "Экзамен"
+            const simulationBtn = document.getElementById('simulation-btn');
+            if (simulationBtn) {
+                simulationBtn.disabled = false;
+                console.log('Кнопка "Экзамен" активирована');
+            }
+        }
+        
+        // Вход через Яндекс
+        function loginWithYandex() {
+            console.log('🔐 Вход через Яндекс...');
+            closeProfilePanel();
+            closeAliceModal();
+            
+            const button = document.querySelector('.yandex-login-button');
+            const originalText = button.innerHTML;
+            button.innerHTML = 'Подключение...';
+            button.disabled = true;
+            button.classList.add('loading');
+            
+            // Генерируем случайную строку для защиты от CSRF
+            const state = Math.random().toString(36).substring(2);
+            localStorage.setItem('yandex_auth_state', state);
+            
+            // Формируем URL для авторизации через Яндекс ID
+            const authUrl = new URL('https://oauth.yandex.ru/authorize');
+            authUrl.searchParams.append('response_type', 'code');
+            authUrl.searchParams.append('client_id', YANDEX_CLIENT_ID);
+            authUrl.searchParams.append('redirect_uri', REDIRECT_URI);
+            authUrl.searchParams.append('state', state);
+            authUrl.searchParams.append('scope', 'login:info login:email');
+            
+            console.log('Переходим по URL:', authUrl.toString());
+            
+            // Перенаправляем на страницу авторизации Яндекс
+            setTimeout(() => {
+                window.location.href = authUrl.toString();
+            }, 500);
+        }
+                
+        // Проверяем авторизацию при загрузке
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('=== ПРОВЕРКА АВТОРИЗАЦИИ ===');
+            
+            // Проверяем, есть ли код авторизации в URL (возврат от Яндекс)
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            const state = urlParams.get('state');
+            
+            if (code && state) {
+                // Это возврат от Яндекс OAuth
+                handleYandexCallback(code, state);
+                return;
+            }
+            
+            // Проверяем пользователя
+            const userJson = localStorage.getItem('currentUser');
+            let user = null;
+            
+            if (userJson) {
+                try {
+                    user = JSON.parse(userJson);
+                    console.log('✅ Пользователь найден в localStorage:', user.name, `(${user.userType})`);
+                } catch (e) {
+                    console.error('❌ Ошибка парсинга пользователя:', e);
+                    user = null;
+                }
+            }
+            
+            if (!user) {
+                console.log('📭 Пользователь не найден, используем гостевой режим');
+                // Создаем гостевого пользователя
+                user = {
+                    id: 'guest_' + Date.now(),
+                    name: 'Гость',
+                    userType: 'guest',
+                    email: '',
+                    avatar: ''
+                };
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                
+                // Обновляем информацию в панели профиля
+                updateProfilePanel(user);
+            } else {
+                console.log('✅ Пользователь авторизован:', user.name, `(${user.userType})`);
+                // Обновляем информацию в панели профиля
+                updateProfilePanel(user);
+            }
+            
+            // Проверяем, выбран ли уже блок
+            const selectedBlock = localStorage.getItem('selectedBlock');
+            if (selectedBlock) {
+                console.log('📝 Ранее выбран блок:', selectedBlock);
+                
+                // Находим и выделяем соответствующий блок
+                const blockElement = document.querySelector(`[data-block="${selectedBlock}"]`);
+                if (blockElement) {
+                    blockElement.classList.add('selected');
+                    console.log(`✅ Блок "${selectedBlock}" выделен`);
+                }
+                
+                // Активируем кнопку "Экзамен"
+                const simulationBtn = document.getElementById('simulation-btn');
+                if (simulationBtn) {
+                    simulationBtn.disabled = false;
+                    console.log('✅ Кнопка "Экзамен" активирована (ранее выбранный блок)');
+                }
+            } else {
+                console.log('📭 Блок еще не выбран');
+            }
+            
+            // Инициализация панели профиля и модального окна
+            initProfilePanel();
+            initAliceModal();
+            
+            // Назначаем обработчик на кнопку профиля
+            const profileBtn = document.getElementById('profile-btn');
+            if (profileBtn) {
+                profileBtn.onclick = toggleProfilePanel;
+            }
+        });
+        
+        // Обработка возврата от Яндекс OAuth
+        function handleYandexCallback(code, receivedState) {
+            console.log('🔐 Обработка callback от Яндекс...');
+            
+            // Проверяем state для защиты от CSRF
+            const savedState = localStorage.getItem('yandex_auth_state');
+            if (receivedState !== savedState) {
+                console.error('❌ Ошибка проверки state');
+                alert('Ошибка безопасности при авторизации');
+                localStorage.removeItem('yandex_auth_state');
+                return;
+            }
+            
+            localStorage.removeItem('yandex_auth_state');
+            
+            // Отправляем код на сервер для получения токена
+            exchangeCodeForToken(code);
+        }
+        
+        // Обмен кода на токен
+        function exchangeCodeForToken(code) {
+            // В реальном приложении здесь должен быть запрос к вашему серверу
+            // Сервер должен обменять код на токен через Яндекс API
+            
+            console.log('Получен код авторизации:', code);
+            
+            // Для демонстрации создаем фиктивного пользователя
+            // В реальном приложении нужно сделать запрос к вашему серверу
+            
+            const mockUser = {
+                id: 'yandex_user_' + Date.now(),
+                name: 'Пользователь Яндекс',
+                userType: 'yandex',
+                email: 'user@yandex.ru',
+                avatar: '',
+                accessToken: 'dummy_token_' + code,
+                isAuthorized: true
+            };
+            
+            // Сохраняем пользователя
+            localStorage.setItem('currentUser', JSON.stringify(mockUser));
+            
+            // Убираем параметры из URL
+            const cleanUrl = window.location.href.split('?')[0];
+            window.history.replaceState({}, document.title, cleanUrl);
+            
+            // Обновляем страницу
+            alert('✅ Вы успешно вошли через Яндекс!');
+            location.reload();
+        }
+        
+        // Инициализация модального окна Яндекс Алисы
+        function initAliceModal() {
+            const modal = document.getElementById('alice-modal');
+            if (modal) {
+                // Закрытие по клику вне окна
+                modal.addEventListener('click', function(event) {
+                    if (event.target === modal) {
+                        closeAliceModal();
+                    }
+                });
+                
+                // Закрытие по ESC
+                document.addEventListener('keydown', function(event) {
+                    if (event.key === 'Escape' && modal.classList.contains('active')) {
+                        closeAliceModal();
+                    }
+                });
+            }
+        }
+        
+        // Обновление информации в панели профиля
+        function updateProfilePanel(user) {
+            const userNameElement = document.querySelector('.user-details h4');
+            if (userNameElement && user.name) {
+                userNameElement.textContent = user.name;
+            }
+            
+            // Обновляем аватар если есть
+            if (user.avatar) {
+                const avatarElement = document.querySelector('.user-avatar');
+                if (avatarElement) {
+                    avatarElement.style.backgroundImage = `url('${user.avatar}')`;
+                }
+            }
+            
+            // Обновляем текст кнопки в зависимости от статуса
+            const loginButton = document.querySelector('.yandex-login-button');
+            if (loginButton && user.userType === 'yandex') {
+                loginButton.textContent = 'ВЫЙТИ';
+                loginButton.onclick = logout;
+            }
+        }
+        
+        function navigateTo(page) {
+            closeProfilePanel();
+            closeAliceModal();
+            setTimeout(() => {
+                window.location.href = page;
+            }, 300);
+        }
+
+        let isPanelOpen = false;
+        
+        function initProfilePanel() {
+            // Закрытие по клику вне панели
+            document.addEventListener('click', function(event) {
+                const panel = document.getElementById('profile-panel');
+                const profileBtn = document.getElementById('profile-btn');
+                
+                if (isPanelOpen && panel && !panel.contains(event.target) && 
+                    profileBtn && !profileBtn.contains(event.target)) {
+                    closeProfilePanel();
+                }
+            });
+            
+            // Закрытие при нажатии ESC
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape' && isPanelOpen) {
+                    closeProfilePanel();
+                }
+            });
+        }
+        
+        function toggleProfilePanel(event) {
+            if (event) {
+                event.stopPropagation();
+            }
+            
+            if (isPanelOpen) {
+                closeProfilePanel();
+            } else {
+                openProfilePanel();
+            }
+        }
+        
+        function openProfilePanel() {
+            const panel = document.getElementById('profile-panel');
+            const overlay = document.getElementById('overlay');
+            
+            if (panel) {
+                panel.classList.add('active');
+                if (overlay) overlay.classList.add('active');
+                isPanelOpen = true;
+                
+                // Обновляем информацию о пользователе при открытии панели
+                const userJson = localStorage.getItem('currentUser');
+                if (userJson) {
+                    try {
+                        const user = JSON.parse(userJson);
+                        updateProfilePanel(user);
+                    } catch (e) {
+                        console.error('Ошибка парсинга пользователя:', e);
+                    }
+                }
+            }
+        }
+        
+        function closeProfilePanel() {
+            const panel = document.getElementById('profile-panel');
+            const overlay = document.getElementById('overlay');
+            
+            if (panel) {
+                panel.classList.remove('active');
+                if (overlay) overlay.classList.remove('active');
+                isPanelOpen = false;
+            }
+        }
+        
+        function logout() {
+            if (confirm('Вы уверены, что хотите выйти?')) {
+                localStorage.clear();
+                window.location.href = 'index.html';
+            }
+        }
+    </script>
 </body>
 </html>

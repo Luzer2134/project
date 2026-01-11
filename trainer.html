@@ -5,46 +5,263 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Тренажёр</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="trainer_style.css">
+  <link rel="stylesheet" href="login_style.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap');
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+  </style>
 </head>
 <body>
-  <header>
-    Тренажёр: <span id="current-block-name">Загрузка...</span>
-    <div style="float: right; font-size: 16px;">
-      Прогресс: <span id="progress">0</span>/<span id="total-questions">0</span>
-    </div>
-  </header>
+  <div class="page-container">
+    <header>
+      <nav>
+        <button class="button_documentation" onclick="navigateTo('documentation.html')">
+          Документация
+        </button>
+        <button class="button_simulation" onclick="navigateTo('simulation.html')">
+          Экзамен
+        </button>
+        <button class="button_trainer" onclick="navigateTo('trainer.html')">
+          Тренажёр
+        </button>
+        <button class="skill-button" onclick="navigateTo('skills.html')"></button>
+        <button class="profile-button" id="profile-btn"></button>
+      </nav>
+    </header>
 
-  <nav>
-    <button class="button_quit" onclick="goToMain()">На главную</button>
-    <button class="button" onclick="resetProgress()" style="background-color: #ff9800;">Начать заново</button>
-  </nav>
+    <main class="main-content">
+      <!-- Панель с информацией о тренажёре -->
+      <div class="trainer-header-panel">
+        <div class="trainer-block-info">
+          <h3>Тренажёр</h3>
+          <div class="block-name-display">
+            Текущий блок: <span id="current-block-name">Загрузка...</span>
+          </div>
+        </div>
+        
+        <div class="trainer-progress-info">
+          <div class="progress-stats">
+            <div class="stat-item">
+              <span class="stat-label">Прогресс:</span>
+              <span class="stat-value"><span id="progress">0</span>/<span id="total-questions">0</span></span>
+            </div>
+            <div class="progress-bar-container">
+              <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+              </div>
+              <div class="progress-percentage" id="progress-percentage">0%</div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-  <main>
-    <div id="trainer-container">
-      <div id="question-number" style="font-size: 18px; margin-bottom: 20px;">Вопрос 1 из 0</div>
-      <div id="question-text" style="font-size: 20px; margin-bottom: 20px; line-height: 1.5;"></div>
-      <div id="question-image" style="margin-bottom: 20px;"></div>
-      <div id="options-container" style="text-align: left; max-width: 600px; margin: 0 auto;"></div>
+      <!-- Панель управления -->
+      <div class="trainer-controls">
+        <button class="button_main" onclick="goToMain()">На главную</button>
+        <button class="button_reset" onclick="resetProgress()">Начать заново</button>
+      </div>
+
+      <!-- Контейнер вопроса -->
+      <div class="trainer-container" id="trainer-container">
+        <div class="question-header">
+          <div class="question-number" id="question-number">Вопрос 1 из 0</div>
+        </div>
+        
+        <div class="question-card">
+          <div class="question-text" id="question-text"></div>
+          
+          <div class="question-image" id="question-image"></div>
+          
+          <div class="options-container" id="options-container">
+            <!-- Варианты ответа загружаются здесь -->
+          </div>
+        </div>
+        
+        <div class="navigation-buttons">
+          <button id="prev-btn" class="nav-button prev-button" onclick="prevQuestion()">
+            НАЗАД
+          </button>
+          <div class="nav-center-buttons">
+            <button id="check-btn" class="nav-button check-button" onclick="checkAnswer()">
+              ПРОВЕРИТЬ
+            </button>
+            <button id="next-btn" class="nav-button next-button" onclick="nextQuestion()">
+              СЛЕДУЮЩИЙ ВОПРОС
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Модальное окно результата -->
+  <div id="result-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h2 id="modal-title">Результат</h2>
+        <button class="modal-close" onclick="closeModal()"></button>
+      </div>
       
-      <div style="margin-top: 30px;">
-        <button id="prev-btn" class="button" onclick="prevQuestion()" style="background-color: #6c757d;">Назад</button>
-        <button id="next-btn" class="button" onclick="nextQuestion()" style="background-color: #2196F3;">Следующий вопрос</button>
-        <button id="check-btn" class="button" onclick="checkAnswer()" style="background-color: #4CAF50; display: none;">Проверить ответ</button>
+      <div class="modal-content" id="modal-content">
+        <!-- Контент модального окна загружается здесь -->
+      </div>
+      
+      <div class="modal-footer">
+        <button class="modal-button continue-button" onclick="closeModal()">
+          Продолжить
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ПАНЕЛЬ ПРОФИЛЯ -->
+  <div class="profile-panel" id="profile-panel">
+    <div class="profile-header">
+      <button class="close-panel" onclick="closeProfilePanel()"></button>
+    </div>
+    
+    <div class="profile-info">
+      <div class="user-avatar"></div>
+      <div class="user-details">
+        <h4>Гость</h4>
       </div>
     </div>
     
-    <div id="result-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
-      <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 10px; max-width: 600px; width: 90%;">
-        <h2 id="modal-title" style="margin-top: 0;">Результат</h2>
-        <div id="modal-content"></div>
-        <div style="margin-top: 20px; text-align: center;">
-          <button class="button" onclick="closeModal()" style="background-color: #2196F3;">Продолжить</button>
-        </div>
+    <div class="profile-menu">
+      <button class="menu-item" onclick="navigateTo('yandex-alice.html')">
+        <span class="menu-icon"></span>
+        <span class="menu-text">Яндекс Алиса</span>
+      </button>
+      
+      <button class="menu-item" onclick="navigateTo('progress.html')">
+        <span class="menu-icon"></span>
+        <span class="menu-text">Прогресс</span>
+      </button>
+      
+      <button class="menu-item" onclick="navigateTo('history.html')">
+        <span class="menu-icon"></span>
+        <span class="menu-text">История попыток</span>
+      </button>
+      
+      <button class="menu-item" onclick="navigateTo('base.html')">
+        <span class="menu-icon"></span>
+        <span class="menu-text">База вопросов</span>
+      </button>
+      
+      <div class="yandex-auth-section">
+        <button class="yandex-login-button" onclick="loginWithYandex()">
+          ВОЙТИ
+        </button>
       </div>
     </div>
-  </main>
+  </div>
+
+  <!-- ОВЕРЛЕЙ -->
+  <div class="overlay" id="overlay" onclick="closeProfilePanel()"></div>
+
   <script src="api.js"></script>
   <script src="data-loader.js"></script>
   <script src="trainer.js"></script>
+  
+  <script>
+    // Общие функции для работы с профилем и навигацией
+    function navigateTo(page) {
+      closeProfilePanel();
+      setTimeout(() => {
+        window.location.href = page;
+      }, 300);
+    }
+
+    let isPanelOpen = false;
+    
+    function initProfilePanel() {
+      const panel = document.getElementById('profile-panel');
+      const profileBtn = document.getElementById('profile-btn');
+      const overlay = document.getElementById('overlay');
+      
+      if (profileBtn) {
+        profileBtn.onclick = toggleProfilePanel;
+      }
+      
+      // Закрытие по клику вне панели
+      document.addEventListener('click', function(event) {
+        if (isPanelOpen && panel && !panel.contains(event.target) && 
+            profileBtn && !profileBtn.contains(event.target)) {
+          closeProfilePanel();
+        }
+      });
+      
+      // Закрытие при нажатии ESC
+      document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape' && isPanelOpen) {
+          closeProfilePanel();
+        }
+      });
+      
+      // Закрытие по клику на оверлей
+      if (overlay) {
+        overlay.onclick = closeProfilePanel;
+      }
+    }
+    
+    function toggleProfilePanel(event) {
+      if (event) {
+        event.stopPropagation();
+      }
+      
+      if (isPanelOpen) {
+        closeProfilePanel();
+      } else {
+        openProfilePanel();
+      }
+    }
+    
+    function openProfilePanel() {
+      const panel = document.getElementById('profile-panel');
+      const overlay = document.getElementById('overlay');
+      
+      if (panel) {
+        panel.classList.add('active');
+        if (overlay) overlay.classList.add('active');
+        isPanelOpen = true;
+      }
+    }
+    
+    function closeProfilePanel() {
+      const panel = document.getElementById('profile-panel');
+      const overlay = document.getElementById('overlay');
+      
+      if (panel) {
+        panel.classList.remove('active');
+        if (overlay) overlay.classList.remove('active');
+        isPanelOpen = false;
+      }
+    }
+    
+    function loginWithYandex() {
+      console.log('🔐 Вход через Яндекс...');
+      closeProfilePanel();
+      
+      const button = document.querySelector('.yandex-login-button');
+      const originalText = button.innerHTML;
+      button.innerHTML = '<span>Подключение к Яндекс...</span>';
+      button.disabled = true;
+      
+      setTimeout(() => {
+        window.location.href = '/auth/yandex';
+      }, 500);
+    }
+    
+    // Инициализация при загрузке
+    document.addEventListener('DOMContentLoaded', function() {
+      initProfilePanel();
+    });
+  </script>
 </body>
 </html>

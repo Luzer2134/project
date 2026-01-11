@@ -76,9 +76,11 @@ async function initExam() {
         // Выбираем 30 случайных вопросов
         const questionsCount = Math.min(30, blockQuestions.length);
         currentQuestions = getRandomQuestions(blockQuestions, questionsCount);
+        // Инициализируем userAnswers как массив null значений
         userAnswers = new Array(currentQuestions.length).fill(null);
         currentQuestionIndex = 0;
         console.log(`Создана новая симуляция: ${currentQuestions.length} вопросов`);
+        console.log('Инициализирован userAnswers:', userAnswers);
     }
     
     startTime = new Date();
@@ -126,10 +128,15 @@ async function loadSavedProgress() {
             if (userAnswers.length > currentQuestions.length) {
                 userAnswers = userAnswers.slice(0, currentQuestions.length);
             } else if (userAnswers.length < currentQuestions.length) {
+                // Заполняем недостающие значения null
                 userAnswers = userAnswers.concat(new Array(currentQuestions.length - userAnswers.length).fill(null));
             }
             
+            // Преобразуем null в пустые массивы
+            userAnswers = userAnswers.map(answer => answer === null ? [] : answer);
+            
             console.log(`✅ Прогресс восстановлен: вопрос ${currentQuestionIndex + 1} из ${currentQuestions.length}`);
+            console.log('Восстановленные ответы:', userAnswers);
             return true;
         } else {
             console.log('📭 Сохраненного прогресса нет');
@@ -178,13 +185,6 @@ function updateTimerDisplay() {
     const seconds = timeLeft % 60;
     document.getElementById('timer').textContent = 
         `Осталось времени: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    
-    // Меняем цвет при малом остатке времени
-    if (timeLeft < 300) {
-        document.getElementById('timer').style.color = '#ff0000';
-    } else if (timeLeft < 600) {
-        document.getElementById('timer').style.color = '#ff6b00';
-    }
 }
 
 // Автосохранение
@@ -237,6 +237,10 @@ function displayQuestion() {
         return;
     }
     
+    // Получаем сохраненный ответ для текущего вопроса
+    const savedAnswer = userAnswers[currentQuestionIndex];
+    console.log(`Вопрос ${questionNumber}: сохраненный ответ:`, savedAnswer);
+    
     question.options.forEach((option, index) => {
         const optionElement = document.createElement('div');
         optionElement.className = 'option';
@@ -251,11 +255,11 @@ function displayQuestion() {
         input.name = 'answer';
         
         const cyrillicLetters = ['А', 'Б', 'В', 'Г', 'Д', 'Е'];
-        input.value = cyrillicLetters[index];
+        const letter = cyrillicLetters[index];
+        input.value = letter;
         
         // Проверяем, выбран ли этот вариант в сохраненном ответе
-        const userAnswer = userAnswers[currentQuestionIndex];
-        const isChecked = userAnswer ? userAnswer.includes(input.value) : false;
+        const isChecked = savedAnswer ? savedAnswer.includes(letter) : false;
         input.checked = isChecked;
         
         input.style.cssText = `
@@ -275,7 +279,15 @@ function displayQuestion() {
         // Клик по всему блоку опции
         optionElement.addEventListener('click', function(e) {
             if (e.target !== input) {
-                input.checked = !input.checked;
+                // Для радио-кнопок нужно снять выделение с других
+                if (input.type === 'radio') {
+                    document.querySelectorAll('input[name="answer"]').forEach(otherInput => {
+                        otherInput.checked = false;
+                    });
+                    input.checked = true;
+                } else {
+                    input.checked = !input.checked;
+                }
                 input.dispatchEvent(new Event('change'));
             }
         });
@@ -389,10 +401,31 @@ function calculateResults() {
         const userAnswer = userAnswers[index] || [];
         const correctAnswer = question.correctAnswers || [];
         
+        console.log(`Вопрос ${index + 1}:`);
+        console.log('  - Ответ пользователя:', userAnswer);
+        console.log('  - Правильный ответ:', correctAnswer);
+        console.log('  - Длина пользовательского ответа:', userAnswer.length);
+        console.log('  - Длина правильного ответа:', correctAnswer.length);
+        
+        let isCorrect = false;
+        
+        // Если ответы пустые, считаем неправильным
+        if (userAnswer.length === 0) {
+            isCorrect = false;
+            console.log('  - Результат: НЕВЕРНО (пустой ответ)');
+        } 
+        // Если длины ответов разные, точно неправильно
+        else if (userAnswer.length !== correctAnswer.length) {
+            isCorrect = false;
+            console.log('  - Результат: НЕВЕРНО (разная длина ответов)');
+        }
         // Сравниваем массивы
-        const userSorted = [...userAnswer].sort().join('');
-        const correctSorted = [...correctAnswer].sort().join('');
-        const isCorrect = userSorted === correctSorted;
+        else {
+            const userSorted = [...userAnswer].sort().join('');
+            const correctSorted = [...correctAnswer].sort().join('');
+            isCorrect = userSorted === correctSorted;
+            console.log('  - Результат:', isCorrect ? 'ВЕРНО' : 'НЕВЕРНО');
+        }
         
         if (isCorrect) {
             correctCount++;
@@ -406,19 +439,24 @@ function calculateResults() {
             isCorrect: isCorrect,
             questionNumber: index + 1
         });
-        
-        console.log(`Вопрос ${index + 1}: ${isCorrect ? 'ВЕРНЫЙ' : 'НЕВЕРНЫЙ'}`);
     });
     
-    const percentage = (correctCount / currentQuestions.length) * 100;
+    const total = currentQuestions.length;
+    const percentage = total > 0 ? (correctCount / total) * 100 : 0;
     
     // Система зачет/незачет (от 80%)
     const isPassed = percentage >= 80;
     const grade = isPassed ? 'ЗАЧЕТ' : 'НЕЗАЧЕТ';
     
+    console.log(`📊 Итоговые результаты:`);
+    console.log(`  - Правильных: ${correctCount}/${total}`);
+    console.log(`  - Процент: ${percentage.toFixed(1)}%`);
+    console.log(`  - Оценка: ${grade}`);
+    console.log(`  - Сдал: ${isPassed ? 'Да' : 'Нет'}`);
+    
     return {
         correct: correctCount,
-        total: currentQuestions.length,
+        total: total,
         percentage: percentage,
         grade: grade,
         isPassed: isPassed,
@@ -432,9 +470,9 @@ function showResults(results) {
     document.getElementById('results-container').style.display = 'block';
     
     // Основная статистика
-    document.getElementById('correct-answers').textContent = results.correct;
-    document.getElementById('total-questions').textContent = results.total;
-    document.getElementById('grade').textContent = results.grade;
+    document.getElementById('correct-answers').textContent = results.correct || 0;
+    document.getElementById('total-questions').textContent = results.total || 0;
+    document.getElementById('grade').textContent = results.grade || 'НЕЗАЧЕТ';
     
     // Время
     const timeSpent = 45 * 60 - timeLeft;
@@ -445,12 +483,13 @@ function showResults(results) {
     
     // Процент правильных ответов
     const percentageElement = document.createElement('p');
-    percentageElement.innerHTML = `<strong>Процент правильных ответов:</strong> ${results.percentage.toFixed(1)}%`;
+    const percentageValue = results.percentage !== undefined ? results.percentage.toFixed(1) : '0.0';
+    percentageElement.innerHTML = `<strong>Процент правильных ответов:</strong> ${percentageValue}%`;
     document.querySelector('#results-container .block').appendChild(percentageElement);
     
     // Статус сдачи
     const statusElement = document.createElement('p');
-    statusElement.innerHTML = `<strong>Статус:</strong> <span style="color: ${results.isPassed ? '#4CAF50' : '#f44336'}; font-weight: bold;">${results.isPassed ? 'СДАЛ' : 'НЕ СДАЛ'}</span>`;
+    statusElement.innerHTML = `<strong>Статус:</strong> <span style="color: ${results.isPassed ? '#64D23F' : '#D23F3F'}; font-weight: bold;">${results.isPassed ? 'СДАЛ' : 'НЕ СДАЛ'}</span>`;
     document.querySelector('#results-container .block').appendChild(statusElement);
     
     // Показываем детальные результаты
@@ -466,22 +505,35 @@ async function saveAttemptToStorage(results) {
         return;
     }
     
+    // Генерируем уникальный ID для попытки
+    const attemptId = `attempt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Убеждаемся что все необходимые поля есть
     const attempt = {
-        block: currentBlock,
+        id: attemptId,
+        block: currentBlock || 'Неизвестный блок',
         date: new Date().toISOString(),
-        correctAnswers: results.correct,
-        totalQuestions: results.total,
-        grade: results.grade,
-        percentage: results.percentage,
-        isPassed: results.isPassed,
-        timeSpent: (45 * 60 - timeLeft),
-        userAnswers: userAnswers,
+        correctAnswers: results.correct || 0,
+        totalQuestions: results.total || currentQuestions.length || 0,
+        grade: results.grade || (results.isPassed ? 'ЗАЧЕТ' : 'НЕЗАЧЕТ'),
+        percentage: results.percentage || (results.total > 0 ? (results.correct / results.total * 100) : 0),
+        isPassed: results.isPassed || false,
+        timeSpent: (45 * 60 - timeLeft) || 0,
+        userAnswers: userAnswers || [],
         questions: currentQuestions.map(q => ({ 
-            id: q.id, 
-            question: q.question,
-            correctAnswers: q.correctAnswers
-        }))
+            id: q.id || 'unknown', 
+            question: q.question || 'Без вопроса',
+            correctAnswers: q.correctAnswers || []
+        })) || [],
+        userId: user.id || 'guest',
+        userType: user.userType || 'guest'
     };
+    
+    // Проверяем все поля
+    console.log('💾 Сохраняемая попытка:', {
+        ...attempt,
+        questionsCount: attempt.questions.length
+    });
     
     // Используем API для сохранения
     const saveResult = await window.examAPI.saveExamAttempt(attempt);
@@ -536,7 +588,7 @@ function createQuestionReviewElement(result) {
         margin: 20px 0;
         padding: 15px;
         border-radius: 8px;
-        border-left: 5px solid ${result.isCorrect ? '#4CAF50' : '#f44336'};
+        border-left: 5px solid ${result.isCorrect ? '#4FA532' : '#9C2C2C'};
         background: #f9f9f9;
     `;
     
@@ -549,7 +601,7 @@ function createQuestionReviewElement(result) {
             <span style="font-size: 18px; font-weight: bold; margin-right: 10px;">
                 Вопрос ${result.questionNumber}
             </span>
-            <span style="color: ${result.isCorrect ? '#4CAF50' : '#f44336'}; font-weight: bold;">
+            <span style="color: ${result.isCorrect ? '#64D23F' : '#D23F3F'}; font-weight: bold;">
                 ${result.isCorrect ? 'ВЕРНО' : 'НЕВЕРНО'}
             </span>
         </div>
@@ -560,14 +612,14 @@ function createQuestionReviewElement(result) {
         
         <div style="margin-bottom: 10px;">
             <strong>Ваш ответ:</strong> 
-            <span style="color: ${result.isCorrect ? '#4CAF50' : '#f44336'}">
+            <span style="color: ${result.isCorrect ? '#64D23F' : '#D23F3F'}">
                 ${userAnswer}
             </span>
         </div>
         
         <div style="margin-bottom: 10px;">
             <strong>Правильный ответ:</strong> 
-            <span style="color: #4CAF50">${correctAnswer}</span>
+            <span style="color: #64D23F">${correctAnswer}</span>
         </div>
         
         ${question.comment ? `
@@ -586,9 +638,9 @@ function createQuestionReviewElement(result) {
                     
                     let style = 'padding: 2px 5px; margin: 2px 0;';
                     if (isUserSelected && isCorrectOption) {
-                        style += 'background: #c8e6c9; color: #2e7d32;';
+                        style += 'background: #c8e6c9; color: #64D23F;';
                     } else if (isUserSelected && !isCorrectOption) {
-                        style += 'background: #ffcdd2; color: #c62828;';
+                        style += 'background: #ffcdd2; color: #D23F3F;';
                     } else if (!isUserSelected && isCorrectOption) {
                         style += 'background: #fff9c4; color: #f57f17;';
                     }
@@ -609,9 +661,15 @@ function confirmExit() {
     }
 }
 
-// Обработка сохранения и выхода
+// Обработка сохранения и выхода - теперь идет на историю
 function saveAttempt() {
+    // Уже сохранено в saveAttemptToStorage, просто переходим на историю
     window.location.href = 'history.html';
+}
+
+// Функция для возврата на главную страницу
+function goToMain() {
+    window.location.href = 'index.html';
 }
 
 // Обработка закрытия страницы

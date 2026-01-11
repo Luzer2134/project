@@ -5,192 +5,366 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Прогресс обучения</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Импорт шрифта Montserrat -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-        body {
+        /* Сброс стилей и базовые настройки */
+        * {
             margin: 0;
-            padding: 20px;
-            background: #f5f5f5;
-            font-family: Arial, sans-serif;
+            padding: 0;
+            box-sizing: border-box;
         }
-        
-        .container {
-            max-width: 1200px;
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f7f9;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Контейнер для всей страницы */
+        .page-container {
+            position: relative;
+            width: 1440px;
+            min-height: 1024px;
             margin: 0 auto;
-            padding: 20px;
+            background-color: #DCDCDC;
+        }
+
+        /* Шапка - ФИКСИРОВАННАЯ версия */
+        header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 80px;
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        /* Контейнер навигации в шапке */
+        header nav {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            height: 100%;
+            gap: 20px;
+            padding: 0 40px;
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+
+        /* Общие стили для кнопок в шапке */
+        .button_documentation,
+        .button_simulation,
+        .button_trainer {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            font-size: 16px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: white;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
+            white-space: nowrap;
+        }
+
+        /* Кнопка "Документация" */
+        .button_documentation {
+            width: fit-content;
+            height: 56px;
+            padding: 12px 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: none;
+            border: none;
+            color: #262626;
+            cursor: pointer;
+            text-decoration: none;
+            box-sizing: border-box;
+            white-space: nowrap;
+            position: absolute;
+            left: 40px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        /* Кнопка "Экзамен" */
+        .button_simulation {
+            width: fit-content;
+            height: 56px;
+            padding: 12px 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: none;
+            border: none;
+            color: #262626;
+            cursor: pointer;
+            text-decoration: none;
+            box-sizing: border-box;
+            white-space: nowrap;
+            position: absolute;
+            left: 200px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .button_simulation:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Кнопка "Тренажёр" */
+        .button_trainer {
+            width: fit-content;
+            height: 56px;
+            padding: 12px 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: none;
+            border: none;
+            color: #262626;
+            cursor: pointer;
+            text-decoration: none;
+            box-sizing border-box;
+            white-space: nowrap;
+            position: absolute;
+            left: 320px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .skill-button {
+            width: 56px;
+            height: 56px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            background-image: url('images/skill-button.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            box-sizing: border-box;
+            margin-left: 20px;
+        }
+
+        .profile-button {
+            width: 56px;
+            height: 56px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            background-image: url('images/profile-button.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            box-sizing: border-box;
+            margin-left: 20px;
+        }
+
+        /* Основной контент */
+        main {
+            position: relative;
+            width: 1440px;
+            min-height: 1024px;
+            margin: 0 auto;
+            background-color: white;
+            padding-top: 80px;
+        }
+
+        /* Стили для страницы прогресса */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
         }
         
         .page-title {
             text-align: center;
-            margin-bottom: 40px;
-            color: #333;
-            font-size: 32px;
-            padding: 20px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 60px;
+            color: #262626;
+            font-size: 36px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
         }
         
-        .blocks-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 25px;
+        /* Чистый список программ */
+        .programs-list {
+            display: flex;
+            flex-direction: column;
+            gap: 50px;
             margin-bottom: 50px;
         }
         
-        @media (max-width: 1200px) {
-            .blocks-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .blocks-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-        
-        .block-card {
+        .program-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 25px 30px;
             background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            text-align: center;
-            transition: transform 0.3s ease;
-            border-top: 5px solid;
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
         }
         
-        .block-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        .program-name {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 20px;
+            font-weight: 500;
+            color: #262626;
+            flex: 1;
+            min-width: 200px;
         }
         
-        .block-title {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 25px;
-            color: #333;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #f0f0f0;
+        /* Большой прогресс бар с текстом внутри */
+        .progress-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            width: 60%;
+            justify-content: flex-end;
         }
         
-        .progress-bar-container {
-            height: 30px;
-            background: #f0f0f0;
-            border-radius: 15px;
-            margin: 25px 0;
+        .progress-container {
+            flex: 1;
+            max-width: 450px;
+            position: relative;
+        }
+        
+        .progress-bar-large {
+            width: 100%;
+            height: 35px;
+            background: #f5f5f5;
+            border-radius: 18px;
             overflow: hidden;
             position: relative;
-            border: 2px solid #ddd;
+            border: 1px solid #ddd;
         }
         
-        .progress-bar-fill {
+        .progress-fill-large {
             height: 100%;
-            border-radius: 15px;
+            border-radius: 17px;
             transition: width 0.8s ease;
-            position: relative;
-        }
-        
-        .progress-percentage {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-weight: bold;
-            color: white;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
+            top: 0;
+            left: 0;
+            min-width: 35px;
+        }
+        
+        /* Цвета для разных программ */
+        .program-a .progress-fill-large { 
+            background: linear-gradient(90deg, #3F8FD2, #3F8FD2);
+        }
+        .program-b .progress-fill-large { 
+            background: linear-gradient(90deg, #3F8FD2, #3F8FD2);
+        }
+        .program-c .progress-fill-large { 
+            background: linear-gradient(90deg, #3F8FD2, #3F8FD2);
+        }
+        .program-d .progress-fill-large { 
+            background: linear-gradient(90deg, #3F8FD2, #3F8FD2);
+        }
+        
+        /* Текст внутри прогресс-бара */
+        .progress-text {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
             font-size: 16px;
+            color: #666;
             z-index: 2;
+            pointer-events: none;
+            transition: all 0.3s ease;
         }
         
-        .progress-info {
-            margin: 20px 0;
-            font-size: 16px;
-            color: #555;
-            line-height: 1.6;
+        /* Процент справа от прогресс-бара */
+        .progress-percent-large {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+            color: #262626;
+            min-width: 60px;
+            text-align: right;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
         
-        .progress-info span {
-            font-weight: bold;
-            font-size: 18px;
-            color: #333;
+        .progress-percent-large.show {
+            opacity: 1;
         }
         
-        .total-questions {
-            display: block;
-            margin-top: 10px;
-            font-size: 14px;
-            color: #777;
-        }
-        
+        /* Кнопка очистки прогресса - справа вверху */
         .controls {
-            text-align: center;
-            margin-top: 50px;
-            padding: 30px;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            position: absolute;
+            bottom: 190px;
+            right: 280px;
+            text-align: right;
+            padding: 0;
+            z-index: 10;
         }
         
         .clear-button {
-            padding: 15px 40px;
-            background: linear-gradient(135deg, #f44336, #d32f2f);
-            color: white;
+            width: 55px;
+            height: 55px;
+            padding: 0;
+            background: url('images/корзина.png') no-repeat center center;
+            background-size: contain;
+            color: transparent;
             border: none;
-            border-radius: 10px;
-            font-size: 18px;
+            border-radius: 12px;
             cursor: pointer;
             transition: all 0.3s ease;
-            font-weight: bold;
-            box-shadow: 0 4px 10px rgba(244, 67, 54, 0.3);
+            display: block;
+            margin: 0 0 0 auto;
+            opacity: 0.7;
         }
         
-        .clear-button:hover {
-            background: linear-gradient(135deg, #d32f2f, #c62828);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(244, 67, 54, 0.4);
-        }
-        
-        .back-button {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            padding: 12px 25px;
-            background: linear-gradient(135deg, #666, #555);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            font-weight: bold;
-            z-index: 100;
-            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
-        }
-        
-        .back-button:hover {
-            background: linear-gradient(135deg, #555, #444);
-            transform: translateY(-2px);
-        }
-        
-        @keyframes shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
-        }
-        
-        .loading {
-            grid-column: 1 / -1;
+        .clear-button-label {
+            display: block;
+            margin-top: 8px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            color: #666;
+            font-weight: 500;
             text-align: center;
-            padding: 60px;
+        }
+        
+        /* Стили для состояния загрузки */
+        .loading {
+            text-align: center;
+            padding: 50px;
             color: #666;
             font-size: 18px;
+            font-family: 'Montserrat', sans-serif;
         }
         
         .loading:after {
             content: '';
             display: inline-block;
-            width: 20px;
-            height: 20px;
-            margin-left: 10px;
+            width: 24px;
+            height: 24px;
+            margin-left: 12px;
             border: 3px solid #f3f3f3;
             border-top: 3px solid #3498db;
             border-radius: 50%;
@@ -201,28 +375,761 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* Панель профиля */
+        .profile-panel {
+            position: fixed;
+            top: 0;
+            right: -364px;
+            width: 364px;
+            height: 100vh;
+            background-color: #FFFFFF;
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+            z-index: 2000;
+            transition: right 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .profile-panel.active {
+            right: 0;
+        }
+
+
+        .close-panel:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* Информация о пользователе */
+        .profile-info {
+            display: flex;
+            align-items: center;
+            padding: 24px;
+            gap: 16px;
+        }
+
+        .user-avatar {
+            width: 194px;
+            height: 194px;
+            border-radius: 100px;
+            background-image: url('images/icon.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 30px auto 20px auto;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 3px solid white;
+        }
+
+        .user-details h4 {
+            width: 89px;
+            height: 32px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            font-style: normal;
+            font-size: 32px;
+            line-height: 100%;
+            letter-spacing: 0%;
+            color: #262626;
+            text-align: center;
+            margin: 0 auto 8px auto;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-details p {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 400;
+            font-size: 14px;
+            color: #666;
+            margin: 0;
+        }
+
+        /* Статистика */
+        .profile-stats {
+            padding: 0 24px 24px 24px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+        }
+
+        .stat-label {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 400;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .stat-value {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            font-size: 16px;
+            color: #3F8FD2;
+        }
+
+        /* Меню профиля */
+        .profile-menu {
+            padding: 24px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 16px;
+            background: none;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            margin-bottom: 8px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 16px;
+            color: #262626;
+        }
+
+        .menu-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .menu-item:active {
+            background-color: #e9ecef;
+        }
+
+        .menu-icon {
+            font-size: 18px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .logout-btn:hover {
+            background-color: #ffebee;
+        }
+
+        .yandex-auth-section {
+            padding: 20px 24px;
+            text-align: center;
+            margin-top: 170px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .yandex-login-button {
+            width: 244px;
+            height: 80px;
+            border-radius: 77px;
+            padding: 31px 87px;
+            background-color: #3F8FD2;
+            border: none;
+            color: white;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 24px;
+            font-weight: 600;
+            line-height: 100%;
+            letter-spacing: 0%;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(63, 143, 210, 0.2);
+            user-select: none;
+            box-sizing: border-box;
+        }
+
+        .yandex-login-button:hover {
+            background-color: #3579B0;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(63, 143, 210, 0.3);
+        }
+
+        .yandex-login-button:active {
+            background-color: #2D6BA3;
+            transform: translateY(0);
+            box-shadow: 0 2px 10px rgba(63, 143, 210, 0.2);
+        }
+
+        .yandex-login-button:focus {
+            outline: 2px solid #3F8FD2;
+            outline-offset: 2px;
+        }
+
+        .yandex-login-button.loading {
+            background-color: #2D6BA3;
+            cursor: wait;
+            opacity: 0.8;
+        }
+
+        .yandex-login-button:disabled {
+            background-color: #B0B0B0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .login-hint {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            color: #666;
+            margin-top: auto;
+            text-align: center;
+            max-width: 244px;
+        }
+
+        /* Оверлей */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1999;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 1440px) {
+            .page-container,
+            main {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            main {
+                padding-top: 60px;
+            }
+            
+            .container {
+                padding: 20px 15px;
+                max-width: 100%;
+                position: relative;
+            }
+            
+            .page-title {
+                font-size: 28px;
+                margin-bottom: 40px;
+                margin-right: 80px;
+            }
+            
+            .programs-list {
+                gap: 15px;
+            }
+            
+            .program-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+                padding: 20px;
+            }
+            
+            .program-name {
+                min-width: 100%;
+                font-size: 18px;
+            }
+            
+            .progress-wrapper {
+                width: 100%;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .progress-container {
+                max-width: 100%;
+                width: 100%;
+            }
+            
+            .progress-percent-large {
+                align-self: flex-end;
+                margin-top: 5px;
+                font-size: 18px;
+            }
+            
+            .controls {
+                position: absolute;
+                top: 40px;
+                right: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .page-title {
+                font-size: 24px;
+                margin-right: 70px;
+            }
+            
+            .program-name {
+                font-size: 16px;
+            }
+            
+            .progress-bar-large {
+                height: 30px;
+            }
+            
+            .progress-text {
+                font-size: 14px;
+            }
+            
+            .progress-percent-large {
+                font-size: 16px;
+            }
+            
+            .clear-button {
+                width: 45px;
+                height: 45px;
+            }
+            
+            .clear-button-label {
+                font-size: 12px;
+            }
+        }
     </style>
 </head>
 <body>
-    <button class="back-button" onclick="goToMain()">← На главную</button>
-    
-    <div class="container">
-        <h1 class="page-title">Прогресс обучения</h1>
+    <div class="page-container">
+        <header>
+            <nav>
+                <button class="button_documentation" onclick="navigateTo('documentation.html')">
+                    Документация
+                </button>
+                <button class="button_simulation" id="simulation-btn" onclick="navigateTo('simulation.html')" disabled>
+                    Экзамен
+                </button>
+                <button class="button_trainer" onclick="navigateTo('trainer.html')">
+                    Тренажёр
+                </button>
+                <button class="skill-button" onclick="navigateTo('skills.html')"></button>
+                <button class="profile-button" id="profile-btn"></button>
+            </nav>
+        </header>
         
-        <!-- 4 колонки с блоками -->
-        <div class="blocks-grid" id="blocks-container">
-            <div class="loading">Загрузка прогресса...</div>
+        <main>
+            <div class="container">
+                <h1 class="page-title">Прогресс</h1>
+                
+                <!-- Кнопка удаления прогресса -->
+                <div class="controls">
+                    <button class="clear-button" onclick="clearAllProgress()" title="Удалить весь прогресс"></button>
+                    <span class="clear-button-label"></span>
+                </div>
+                
+                <!-- Список программ -->
+                <div class="programs-list" id="programs-list">
+                    <div class="loading">Загрузка прогресса...</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Боковая панель профиля -->
+    <div class="profile-panel" id="profile-panel">
+        <div class="profile-info">
+            <div class="user-avatar"></div>
+            <div class="user-details">
+                <h4>Гость</h4>
+            </div>
         </div>
         
-        <!-- Кнопка удаления прогресса -->
-        <div class="controls">
-            <button class="clear-button" onclick="clearAllProgress()">
-                Удалить весь прогресс
+        <!-- Меню панели профиля -->
+        <div class="profile-menu">
+            <button class="menu-item" onclick="navigateTo('yandex-alice.html')">
+                <span class="menu-icon"></span>
+                <span class="menu-text">Яндекс Алиса</span>
             </button>
+            
+            <button class="menu-item" onclick="navigateTo('progress.html')">
+                <span class="menu-icon"></span>
+                <span class="menu-text">Прогресс</span>
+            </button>
+            
+            <button class="menu-item" onclick="navigateTo('history.html')">
+                <span class="menu-icon"></span>
+                <span class="menu-text">История попыток</span>
+            </button>
+            
+            <button class="menu-item" onclick="navigateTo('base.html')">
+                <span class="menu-icon"></span>
+                <span class="menu-text">База вопросов</span>
+            </button>
+            
+            <div class="yandex-auth-section">
+                <button class="yandex-login-button" onclick="loginWithYandex()">
+                    ВОЙТИ
+                </button>
+            </div>
         </div>
     </div>
-    
-    <script src="api.js"></script>
-    <script src="progress.js"></script>
+
+    <!-- Оверлей -->
+    <div class="overlay" id="overlay" onclick="closeProfilePanel()"></div>
+
+    <script>
+        // Количество вопросов в каждом блоке
+        const BLOCK_QUESTIONS = {
+            'Блок 1': 458,
+            'Блок 2': 1192,
+            'Блок 3': 711,
+            'Блок 4': 343
+        };
+
+        // Названия программ
+        const PROGRAM_NAMES = {
+            'Блок 1': 'Программа А',
+            'Блок 2': 'Программа Б', 
+            'Блок 3': 'Программа В',
+            'Блок 4': 'Программа ПП'
+        };
+
+        // Цвета для прогресс-баров
+        const PROGRAM_COLORS = {
+            'Блок 1': 'program-a',
+            'Блок 2': 'program-b',
+            'Блок 3': 'program-c',
+            'Блок 4': 'program-d'
+        };
+
+        // Получаем прогресс для блока
+        function getBlockProgress(block) {
+            let userId = 'guest';
+            
+            try {
+                const user = window.examAPI ? window.examAPI.getUserFromStorage() : null;
+                if (user && user.id) {
+                    userId = user.id;
+                }
+            } catch (e) {
+                console.log('Используем гостевой режим');
+            }
+            
+            let completed = 0;
+            let total = BLOCK_QUESTIONS[block];
+            let percentage = 0;
+            
+            // Пробуем разные ключи для поиска прогресса
+            const keys = [
+                `trainerProgress_${userId}`,
+                `trainer_${userId}_${block}`,
+                `progress_${userId}_${block}`,
+                `simpleProgress_${block}`
+            ];
+            
+            for (const key of keys) {
+                const data = localStorage.getItem(key);
+                if (data) {
+                    try {
+                        const parsed = JSON.parse(data);
+                        
+                        // Формат 1: Объект с блоками
+                        if (parsed[block]) {
+                            const blockData = parsed[block];
+                            completed = blockData.completed || 0;
+                            total = blockData.total || total;
+                            percentage = blockData.percentage || 0;
+                            break;
+                        }
+                        // Формат 2: Массив ответов
+                        else if (Array.isArray(parsed)) {
+                            completed = parsed.filter(answer => 
+                                answer && answer.length > 0
+                            ).length;
+                            total = parsed.length || total;
+                            break;
+                        }
+                        // Формат 3: Объект с userAnswers
+                        else if (parsed.userAnswers && Array.isArray(parsed.userAnswers)) {
+                            completed = parsed.userAnswers.filter(answer => 
+                                answer && answer.length > 0
+                            ).length;
+                            total = BLOCK_QUESTIONS[block] || parsed.userAnswers.length;
+                            break;
+                        }
+                        // Формат 4: Простой объект
+                        else if (parsed.completed !== undefined) {
+                            completed = parsed.completed || 0;
+                            total = parsed.total || total;
+                            percentage = parsed.percentage || 0;
+                            break;
+                        }
+                    } catch (e) {
+                        console.warn(`Ошибка парсинга ${key}:`, e);
+                    }
+                }
+            }
+            
+            // Рассчитываем процент
+            if (percentage === 0 && total > 0) {
+                percentage = Math.round((completed / total) * 100);
+            }
+            
+            return {
+                completed: completed,
+                total: total,
+                percentage: percentage,
+                hasProgress: completed > 0,
+                name: PROGRAM_NAMES[block],
+                colorClass: PROGRAM_COLORS[block]
+            };
+        }
+
+        // Инициализация страницы
+        function initProgressPage() {
+            displayPrograms();
+            setInterval(displayPrograms, 2000);
+        }
+
+        // Отображение списка программ
+        function displayPrograms() {
+            const blocks = ['Блок 1', 'Блок 2', 'Блок 3', 'Блок 4'];
+            const container = document.getElementById('programs-list');
+            
+            if (!container) return;
+            
+            // Если уже есть элементы, обновляем их
+            if (container.querySelector('.program-item')) {
+                updatePrograms(blocks);
+            } else {
+                createProgramsList(blocks, container);
+            }
+        }
+
+        // Создание списка программ
+        function createProgramsList(blocks, container) {
+            container.innerHTML = '';
+            
+            blocks.forEach(block => {
+                const progress = getBlockProgress(block);
+                const programElement = createProgramElement(block, progress);
+                container.appendChild(programElement);
+            });
+        }
+
+        // Обновление существующих программ
+        function updatePrograms(blocks) {
+            blocks.forEach(block => {
+                const progress = getBlockProgress(block);
+                const programElement = document.querySelector(`[data-block="${block}"]`);
+                
+                if (programElement) {
+                    const progressFill = programElement.querySelector('.progress-fill-large');
+                    const progressText = programElement.querySelector('.progress-text');
+                    const progressPercent = programElement.querySelector('.progress-percent-large');
+                    
+                    if (progressFill) {
+                        progressFill.style.width = `${progress.percentage}%`;
+                    }
+                    
+                    // Если есть прогресс
+                    if (progress.hasProgress && progress.percentage > 0) {
+                        // Скрываем текст "Пока не начато"
+                        if (progressText) {
+                            progressText.style.opacity = '0';
+                            progressText.style.visibility = 'hidden';
+                        }
+                        
+                        // Показываем процент справа
+                        if (progressPercent) {
+                            progressPercent.textContent = `${progress.percentage}%`;
+                            progressPercent.classList.add('show');
+                        }
+                    } else {
+                        // Показываем текст "Пока не начато"
+                        if (progressText) {
+                            progressText.style.opacity = '1';
+                            progressText.style.visibility = 'visible';
+                        }
+                        
+                        // Скрываем процент
+                        if (progressPercent) {
+                            progressPercent.classList.remove('show');
+                        }
+                    }
+                }
+            });
+        }
+
+        // Создание элемента программы
+        function createProgramElement(block, progress) {
+            const element = document.createElement('div');
+            element.className = `program-item ${progress.colorClass}`;
+            element.setAttribute('data-block', block);
+            
+            element.innerHTML = `
+                <div class="program-name">${progress.name}</div>
+                <div class="progress-wrapper">
+                    <div class="progress-container">
+                        <div class="progress-bar-large">
+                            <div class="progress-fill-large" style="width: ${progress.percentage}%"></div>
+                            <div class="progress-text" style="${progress.hasProgress ? 'opacity: 0; visibility: hidden;' : ''}">
+                                Пока не начато
+                            </div>
+                        </div>
+                    </div>
+                    <div class="progress-percent-large ${progress.hasProgress ? 'show' : ''}">
+                        ${progress.hasProgress ? `${progress.percentage}%` : ''}
+                    </div>
+                </div>
+            `;
+            
+            return element;
+        }
+
+        // Удалить весь прогресс
+        function clearAllProgress() {
+            if (confirm('ВЫ УВЕРЕНЫ, ЧТО ХОТИТЕ УДАЛИТЬ ВЕСЬ ПРОГРЕСС?\n\nЭто действие нельзя будет отменить!')) {
+                const keysToRemove = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key.includes('trainer') || 
+                        key.includes('progress') || 
+                        key.includes('simpleProgress')) {
+                        keysToRemove.push(key);
+                    }
+                }
+                
+                keysToRemove.forEach(key => {
+                    localStorage.removeItem(key);
+                });
+                
+                alert('Весь прогресс успешно удален!');
+                displayPrograms();
+            }
+        }
+
+        // ===== ФУНКЦИИ ДЛЯ ПАНЕЛИ ПРОФИЛЯ =====
+        let isPanelOpen = false;
+
+        function initProfilePanel() {
+            document.addEventListener('click', function(event) {
+                const panel = document.getElementById('profile-panel');
+                const profileBtn = document.getElementById('profile-btn');
+                
+                if (isPanelOpen && panel && !panel.contains(event.target) && 
+                    profileBtn && !profileBtn.contains(event.target)) {
+                    closeProfilePanel();
+                }
+            });
+            
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape' && isPanelOpen) {
+                    closeProfilePanel();
+                }
+            });
+        }
+
+        function toggleProfilePanel(event) {
+            if (event) event.stopPropagation();
+            
+            if (isPanelOpen) {
+                closeProfilePanel();
+            } else {
+                openProfilePanel();
+            }
+        }
+
+        function openProfilePanel() {
+            const panel = document.getElementById('profile-panel');
+            const overlay = document.getElementById('overlay');
+            
+            if (panel) {
+                panel.classList.add('active');
+                if (overlay) overlay.classList.add('active');
+                isPanelOpen = true;
+            }
+        }
+
+        function closeProfilePanel() {
+            const panel = document.getElementById('profile-panel');
+            const overlay = document.getElementById('overlay');
+            
+            if (panel) {
+                panel.classList.remove('active');
+                if (overlay) overlay.classList.remove('active');
+                isPanelOpen = false;
+            }
+        }
+
+        // ===== ОБЩИЕ ФУНКЦИИ =====
+        function navigateTo(page) {
+            closeProfilePanel();
+            setTimeout(() => {
+                window.location.href = page;
+            }, 300);
+        }
+
+        function checkSimulationAccess() {
+            const hasCompletedTraining = localStorage.getItem('training_completed');
+            const simBtn = document.getElementById('simulation-btn');
+            
+            if (simBtn && hasCompletedTraining === 'true') {
+                simBtn.disabled = false;
+            }
+        }
+
+        function loginWithYandex() {
+            closeProfilePanel();
+            
+            const button = document.querySelector('.yandex-login-button');
+            const originalText = button.innerHTML;
+            button.innerHTML = '<span>Подключение к Яндекс...</span>';
+            button.disabled = true;
+            
+            setTimeout(() => {
+                window.location.href = '/auth/yandex';
+            }, 500);
+        }
+
+        // Загружаем при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            // Назначаем обработчик на кнопку профиля
+            const profileBtn = document.getElementById('profile-btn');
+            if (profileBtn) {
+                profileBtn.onclick = toggleProfilePanel;
+            }
+            
+            // Проверяем доступ к экзамену
+            checkSimulationAccess();
+            
+            // Инициализация панели профиля
+            initProfilePanel();
+            
+            // Инициализация страницы прогресса
+            setTimeout(() => {
+                try {
+                    initProgressPage();
+                } catch (error) {
+                    console.error('Ошибка инициализации:', error);
+                    const container = document.getElementById('programs-list');
+                    if (container) {
+                        container.innerHTML = 
+                            '<div class="loading" style="color: #666;">Ошибка загрузки прогресса</div>';
+                    }
+                }
+            }, 200);
+        });
+    </script>
 </body>
 </html>
