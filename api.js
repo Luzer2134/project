@@ -1,7 +1,7 @@
 // API для работы с бэкендом - версия с SQLite
 class ExamAPI {
     constructor() {
-        this.baseURL = 'http://localhost:3000';
+        this.baseURL = '';
         this.currentUser = null;
         this.init();
     }

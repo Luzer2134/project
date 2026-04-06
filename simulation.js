@@ -17,13 +17,6 @@ async function initExam() {
     // Получаем выбранный блок
     const selectedBlock = localStorage.getItem('selectedBlock');
     
-    if (!selectedBlock) {
-        alert('Блок не выбран! Возвращаем на главную страницу.');
-        setTimeout(() => {
-            window.location.href = 'index.html';
-        }, 2000);
-        return;
-    }
 
     currentBlock = selectedBlock;
     
@@ -39,32 +32,10 @@ async function initExam() {
     console.log(`Выбран блок: ${currentBlock}, Режим: ${isGuestMode ? 'Гость' : 'Зарегистрированный'}`);
     document.getElementById('current-block-name').textContent = currentBlock;
     
-    // Проверяем загружены ли вопросы
-    if (typeof questionsData === 'undefined') {
-        alert('Ошибка: вопросы не загружены! Возвращаем на главную.');
-        setTimeout(() => {
-            window.location.href = 'index.html';
-        }, 2000);
-        return;
-    }
     
-    if (!questionsData[currentBlock]) {
-        alert(`Вопросы для блока "${currentBlock}" не найдены! Возвращаем на главную.`);
-        setTimeout(() => {
-            window.location.href = 'index.html';
-        }, 2000);
-        return;
-    }
     
     const blockQuestions = questionsData[currentBlock];
     
-    if (blockQuestions.length === 0) {
-        alert(`Для блока "${currentBlock}" нет вопросов! Возвращаем на главную.`);
-        setTimeout(() => {
-            window.location.href = 'index.html';
-        }, 2000);
-        return;
-    }
     
     console.log(`Загружено вопросов для "${currentBlock}": ${blockQuestions.length}`);
     
@@ -99,7 +70,10 @@ function getRandomQuestions(questions, count) {
 async function loadSavedProgress() {
     try {
         console.log('🔍 Загружаем сохраненный прогресс...');
-        const result = await window.examAPI.getSimulationProgress(currentBlock);
+        const result = await Promise.race([
+             window.examAPI.getSimulationProgress(currentBlock),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000))
+        ]);
         
         if (result.success && result.progress) {
             console.log('📥 Загружен сохраненный прогресс симуляции:', result.progress);
@@ -219,9 +193,9 @@ function displayQuestion() {
     // Отображение изображения
     const imageContainer = document.getElementById('question-image');
     imageContainer.innerHTML = '';
-    if (question.image) {
+    if (question.картинки || question.image) {
         const img = document.createElement('img');
-        img.src = question.image;
+        img.src = question.картинки || question.image;
         img.alt = 'Иллюстрация к вопросу';
         img.style.maxWidth = '100%';
         img.style.maxHeight = '300px';
@@ -254,7 +228,7 @@ function displayQuestion() {
         input.type = question.correctAnswers.length > 1 ? 'checkbox' : 'radio';
         input.name = 'answer';
         
-        const cyrillicLetters = ['А', 'Б', 'В', 'Г', 'Д', 'Е'];
+        const cyrillicLetters = ['А', 'Б', 'В', 'Г', 'Д', 'Е','Ж'];
         const letter = cyrillicLetters[index];
         input.value = letter;
         
@@ -269,7 +243,8 @@ function displayQuestion() {
         `;
         
         const label = document.createElement('label');
-        label.textContent = option;
+        const cleanOption = option.replace(/^[А-Ж][\)\.]\s*/, '');
+        label.textContent = `${letter}) ${cleanOption}`;
         label.style.cursor = 'pointer';
         label.style.flex = '1';
         
@@ -684,8 +659,4 @@ window.addEventListener('beforeunload', function (e) {
     }
 });
 
-// Запускаем экзамен при загрузке страницы
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Simulation page loaded');
-    setTimeout(initExam, 100);
-});
+

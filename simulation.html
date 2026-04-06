@@ -783,6 +783,7 @@
 
   <script src="api.js"></script>
   <script src="data-loader.js"></script>
+  <script src="shuffler.js"></script>
   <script src="simulation.js"></script>
   
   <script>
@@ -897,7 +898,14 @@
         initProfilePanel();
         
         // Запускаем экзамен
-        setTimeout(initExam, 100);
+        function waitAndInit() {
+            if (typeof questionsData !== 'undefined' && !isLoading) {
+                initExam();
+            } else {
+                setTimeout(waitAndInit, 100);
+            }   
+        }
+        waitAndInit();
     });
     
     // Обработка закрытия страницы

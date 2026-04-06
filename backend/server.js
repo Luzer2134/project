@@ -5,6 +5,38 @@ const fs = require('fs');
 const sqlite3 = require('sqlite3').verbose();
 require('dotenv').config();
 
+// Проверка переменных окружения
+console.log('\n🔍 ====== ПРОВЕРКА ПЕРЕМЕННЫХ ОКРУЖЕНИЯ ======');
+console.log('- YANDEX_CLIENT_ID:', process.env.YANDEX_CLIENT_ID ? '✓ Установлен' : '✗ Отсутствует');
+console.log('- YANDEX_CLIENT_SECRET:', process.env.YANDEX_CLIENT_SECRET ? '✓ Установлен' : '✗ Отсутствует');
+console.log('- YANDEX_REDIRECT_URI:', process.env.YANDEX_REDIRECT_URI || '✗ Отсутствует');
+console.log('- PORT:', process.env.PORT || 3000);
+
+// Проверка наличия необходимых переменных
+const requiredVars = ['YANDEX_CLIENT_ID', 'YANDEX_CLIENT_SECRET', 'YANDEX_REDIRECT_URI'];
+let missingVars = [];
+
+requiredVars.forEach(varName => {
+    if (!process.env[varName]) {
+        missingVars.push(varName);
+    }
+});
+
+if (missingVars.length > 0) {
+    console.error('\n❌ ВНИМАНИЕ: Отсутствуют необходимые переменные окружения:');
+    missingVars.forEach(varName => {
+        console.error(`   - ${varName}`);
+    });
+    console.log('\n📝 Убедитесь, что файл .env содержит:');
+    console.log('YANDEX_CLIENT_ID=ваш_client_id');
+    console.log('YANDEX_CLIENT_SECRET=ваш_client_secret');
+    console.log('YANDEX_REDIRECT_URI=https://project--sashamokoseev80.replit.app/callback');
+    console.log('========================================\n');
+} else {
+    console.log('✅ Все необходимые переменные окружения установлены');
+    console.log('========================================\n');
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -17,6 +49,35 @@ app.use(express.urlencoded({ extended: true }));
 app.use((req, res, next) => {
     console.log(`📨 ${new Date().toISOString()} ${req.method} ${req.originalUrl}`);
     next();
+});
+
+app.get('/api/debug/oauth', (req, res) => {
+    const authUrl = `https://oauth.yandex.ru/authorize?response_type=code&client_id=${process.env.YANDEX_CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.YANDEX_REDIRECT_URI)}&force_confirm=true`;
+
+    res.json({
+        success: true,
+        client_id: process.env.YANDEX_CLIENT_ID,
+        redirect_uri: process.env.YANDEX_REDIRECT_URI,
+        auth_url: authUrl,
+        message: 'Скопируйте auth_url и откройте в браузере для тестирования Яндекс OAuth'
+    });
+});
+
+// Тестовый маршрут для проверки .env
+app.get('/api/debug/env', (req, res) => {
+    // Не показываем секретные ключи полностью
+    const maskedSecret = process.env.YANDEX_CLIENT_SECRET ? 
+        process.env.YANDEX_CLIENT_SECRET.substring(0, 4) + '...' + 
+        process.env.YANDEX_CLIENT_SECRET.substring(process.env.YANDEX_CLIENT_SECRET.length - 4) : 
+        'не установлен';
+
+    res.json({
+        YANDEX_CLIENT_ID: process.env.YANDEX_CLIENT_ID || 'не установлен',
+        YANDEX_CLIENT_SECRET: maskedSecret,
+        YANDEX_REDIRECT_URI: process.env.YANDEX_REDIRECT_URI || 'не установлен',
+        PORT: process.env.PORT || 3000,
+        NODE_ENV: process.env.NODE_ENV || 'development'
+    });
 });
 
 // Раздаем статические файлы
@@ -169,37 +230,39 @@ app.get('/auth/yandex', (req, res) => {
 });
 
 // Callback от Яндекс OAuth
+// Обновленный callback обработчик в server.js
 app.get('/callback', async (req, res) => {
-    console.log('🔄 Яндекс OAuth callback получен');
-    
+    console.log('🔄 Яндекс OAuth callback получен:', req.query);
+
     try {
-        const { code, error, error_description } = req.query;
-        
+        const { code, error, error_description, state } = req.query;
+
         if (error) {
             console.error('❌ Ошибка от Яндекс OAuth:', error, error_description);
-            return res.redirect(`/login.html?error=${encodeURIComponent(error_description || error)}`);
+            return res.redirect(`/index.html?error=${encodeURIComponent(error_description || error)}`);
         }
-        
+
         if (!code) {
             console.error('❌ Код авторизации не получен');
-            return res.redirect('/login.html?error=no_auth_code');
+            return res.redirect('/index.html?error=no_auth_code');
         }
-        
+
         const YANDEX_CLIENT_ID = process.env.YANDEX_CLIENT_ID;
         const YANDEX_CLIENT_SECRET = process.env.YANDEX_CLIENT_SECRET;
-        
+
         if (!YANDEX_CLIENT_ID || !YANDEX_CLIENT_SECRET) {
             console.error('❌ Яндекс OAuth не настроен в .env файле');
-            return res.redirect('/login.html?error=oauth_not_configured');
+            return res.redirect('/index.html?error=oauth_not_configured');
         }
-        
+
         console.log('🔐 Получение токена от Яндекс...');
-        
+
         // Получаем access token
         const tokenResponse = await fetch('https://oauth.yandex.ru/token', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Accept': 'application/json'
             },
             body: new URLSearchParams({
                 grant_type: 'authorization_code',
@@ -209,60 +272,79 @@ app.get('/callback', async (req, res) => {
                 redirect_uri: process.env.YANDEX_REDIRECT_URI
             })
         });
-        
-        const tokenData = await tokenResponse.json();
-        
+
+        const tokenText = await tokenResponse.text();
+        console.log('📨 Ответ от Яндекс:', tokenText);
+
+        let tokenData;
+        try {
+            tokenData = JSON.parse(tokenText);
+        } catch (e) {
+            console.error('❌ Не удалось распарсить ответ:', tokenText);
+            throw new Error('Некорректный ответ от Яндекс');
+        }
+
         if (!tokenData.access_token) {
             console.error('❌ Не удалось получить токен:', tokenData);
             throw new Error(tokenData.error_description || 'Не удалось получить токен от Яндекс');
         }
-        
+
         console.log('✅ Токен получен, получение данных пользователя...');
-        
+
         // Получаем данные пользователя
         const userResponse = await fetch('https://login.yandex.ru/info?format=json', {
             headers: {
-                'Authorization': `OAuth ${tokenData.access_token}`
+                'Authorization': `OAuth ${tokenData.access_token}`,
+                'Accept': 'application/json'
             }
         });
-        
-        if (!userResponse.ok) {
-            throw new Error('Не удалось получить данные пользователя: ' + userResponse.status);
+
+        const userText = await userResponse.text();
+        console.log('📨 Ответ с данными пользователя:', userText);
+
+        let userData;
+        try {
+            userData = JSON.parse(userText);
+        } catch (e) {
+            console.error('❌ Не удалось распарсить данные пользователя:', userText);
+            throw new Error('Некорректные данные пользователя');
         }
-        
-        const userData = await userResponse.json();
+
+        if (!userData.id) {
+            throw new Error('Не удалось получить данные пользователя');
+        }
+
         console.log('👤 Данные пользователя Яндекс:', {
             id: userData.id,
             email: userData.default_email,
-            name: userData.real_name || userData.display_name,
+            name: userData.real_name || userData.display_name || userData.login,
             login: userData.login
         });
-        
+
         // Проверяем существует ли пользователь в базе
         let user = await dbQuery(
             'SELECT * FROM users WHERE yandex_id = ? OR email = ?',
             [userData.id, userData.default_email]
         );
-        
+
         if (user.length === 0) {
             // Создаем нового пользователя
             const result = await dbRun(
                 `INSERT INTO users 
-                (yandex_id, email, name, user_type, avatar, access_token, refresh_token, is_authorized, last_login) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                (yandex_id, email, name, user_type, access_token, refresh_token, is_authorized, last_login) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
                 [
                     userData.id,
                     userData.default_email,
                     userData.real_name || userData.display_name || userData.login || 'Пользователь Яндекс',
                     'yandex',
-                    userData.is_avatar_empty ? null : `https://avatars.yandex.net/get-yapic/${userData.default_avatar_id}/islands-200`,
                     tokenData.access_token,
-                    tokenData.refresh_token,
+                    tokenData.refresh_token || '',
                     1,
                     new Date().toISOString()
                 ]
             );
-            
+
             user = await dbQuery('SELECT * FROM users WHERE id = ?', [result.id]);
             console.log(`✅ Создан новый пользователь: ${userData.default_email}`);
         } else {
@@ -270,7 +352,6 @@ app.get('/callback', async (req, res) => {
             await dbRun(
                 `UPDATE users SET 
                 name = ?, 
-                avatar = ?, 
                 access_token = ?, 
                 refresh_token = ?, 
                 is_authorized = ?, 
@@ -278,19 +359,18 @@ app.get('/callback', async (req, res) => {
                 WHERE id = ?`,
                 [
                     userData.real_name || userData.display_name || userData.login || user[0].name,
-                    userData.is_avatar_empty ? null : `https://avatars.yandex.net/get-yapic/${userData.default_avatar_id}/islands-200`,
                     tokenData.access_token,
-                    tokenData.refresh_token,
+                    tokenData.refresh_token || '',
                     1,
                     new Date().toISOString(),
                     user[0].id
                 ]
             );
-            
+
             user = await dbQuery('SELECT * FROM users WHERE id = ?', [user[0].id]);
             console.log(`✅ Обновлен существующий пользователь: ${userData.default_email}`);
         }
-        
+
         // Подготовка данных для фронтенда
         const userForFrontend = {
             id: user[0].id,
@@ -298,19 +378,60 @@ app.get('/callback', async (req, res) => {
             name: user[0].name,
             userType: user[0].user_type,
             isAuthorized: user[0].is_authorized,
-            avatar: user[0].avatar,
             yandexId: user[0].yandex_id
         };
-        
-        // Генерируем URL для редиректа с данными пользователя
-        const userParam = encodeURIComponent(JSON.stringify(userForFrontend));
-        console.log('🔄 Перенаправление на главную страницу с данными пользователя');
-        res.redirect(`/index.html?user=${userParam}`);
-        
+
+        // Сохраняем в localStorage через JavaScript
+        const html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Авторизация</title>
+            <script>
+                // Сохраняем пользователя в localStorage
+                localStorage.setItem('currentUser', JSON.stringify(${JSON.stringify(userForFrontend)}));
+                localStorage.setItem('isAuthorized', 'true');
+                localStorage.setItem('userType', 'yandex');
+
+                // Перенаправляем на главную
+                setTimeout(() => {
+                    window.location.href = '/index.html';
+                }, 500);
+            </script>
+        </head>
+        <body>
+            <p>Авторизация успешна. Перенаправление...</p>
+        </body>
+        </html>
+        `;
+
+        res.send(html);
+
     } catch (error) {
         console.error('❌ Критическая ошибка Яндекс OAuth:', error);
         console.error(error.stack);
-        res.redirect(`/login.html?error=${encodeURIComponent('Ошибка авторизации через Яндекс: ' + error.message)}`);
+
+        // Отправляем простую HTML страницу с ошибкой
+        const errorHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Ошибка авторизации</title>
+        </head>
+        <body>
+            <h1>Ошибка авторизации</h1>
+            <p>${error.message}</p>
+            <p><a href="/index.html">Вернуться на главную</a></p>
+            <script>
+                setTimeout(() => {
+                    window.location.href = '/index.html?error=${encodeURIComponent(error.message)}';
+                }, 3000);
+            </script>
+        </body>
+        </html>
+        `;
+
+        res.send(errorHtml);
     }
 });
 

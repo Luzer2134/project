@@ -92,7 +92,7 @@ async function loadBlock(filename, blockName) {
                     options: options,
                     correctAnswers: extractLetters(item['Правильный вариант']),
                     comment: item['Комментарий'] ? item['Комментарий'].toString() : '',
-                    image: item['Картинка'] || ''
+                    image: item['Картинка'] || item['картинки'] || ''
                 };
             } catch (error) {
                 console.warn(`Ошибка обработки вопроса ${index + 1} в ${blockName}:`, error);
@@ -164,10 +164,11 @@ function splitOptionsByLetters(text) {
 function extractLetters(text) {
     if (!text) return [];
     try {
-        // ИСПРАВЛЕНИЕ: ищем кириллические буквы А-Е
-        const matches = text.toString().match(/[А-Е]/g);
+        // Ищем только буквы которые стоят в начале варианта: "А)" или "А."
+        const matches = text.toString().match(/(?<![А-Яа-я])[А-Е](?=\)|\.|,|\s)/g);
         console.log(`Извлечение букв из "${text}":`, matches);
-        return matches ? matches : [];
+        // Убираем дубликаты
+        return matches ? [...new Set(matches)] : [];
     } catch (error) {
         console.warn('Ошибка извлечения букв:', error);
         return [];

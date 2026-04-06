@@ -293,11 +293,16 @@ function displayQuestion() {
     document.getElementById('question-text').textContent = question.question;
     
     // Отображение изображения
+        // Отображение изображения (с поддержкой разных форматов)
     const imageContainer = document.getElementById('question-image');
     imageContainer.innerHTML = '';
-    if (question.image) {
+    
+    // Проверяем разные возможные названия поля с картинкой
+    let imageUrl = question.картинки || question.image || question.pictures || question.img;
+    
+    if (imageUrl) {
         const img = document.createElement('img');
-        img.src = question.image;
+        img.src = imageUrl;
         img.alt = 'Иллюстрация к вопросу';
         img.style.cssText = `
             max-width: 100%;
@@ -307,6 +312,13 @@ function displayQuestion() {
             display: block;
             margin: 10px auto;
         `;
+        // Добавляем обработчик ошибки для отладки
+        img.onerror = function() {
+            console.error('❌ Не загрузилась картинка:', imageUrl);
+        };
+        img.onload = function() {
+            console.log('✅ Картинка загружена:', imageUrl);
+        };
         imageContainer.appendChild(img);
     }
     
@@ -333,7 +345,7 @@ function displayQuestion() {
         optionElement.className = 'option';
         
         // Кириллические буквы
-        const cyrillicLetters = ['А', 'Б', 'В', 'Г', 'Д', 'Е'];
+        const cyrillicLetters = ['А', 'Б', 'В', 'Г', 'Д', 'Е','Ж'];
         const letter = cyrillicLetters[index];
         
         // Определяем состояние варианта
@@ -392,7 +404,8 @@ function displayQuestion() {
         
         const label = document.createElement('label');
         // Убрали жирные буквы, оставляем только букву и текст
-        label.textContent = `${letter}. ${option}`;
+        let cleanOption = option.replace(/^[А-Ж][\)\.]\s*/, '');
+        label.textContent = `${letter}) ${cleanOption}`;
         label.style.cssText = `
             cursor: ${hasBeenAnswered ? 'default' : 'pointer'};
             flex: 1;
@@ -551,6 +564,9 @@ function showResultModal(question, userAnswer, isCorrect) {
         const isUserSelected = userAnswer.includes(letter);
         const isCorrectOption = question.correctAnswers.includes(letter);
         
+        // Убираем старую букву из текста варианта
+        const cleanOption = option.replace(/^[А-Е][\)\.]\s*/, '');
+        
         let style = 'padding: 12px 15px; margin: 8px 0; border-radius: 8px; font-size: 15px;';
         
         if (isUserSelected && isCorrectOption) {
@@ -563,8 +579,8 @@ function showResultModal(question, userAnswer, isCorrect) {
             style += 'background: #f5f5f5; color: #666; border-left: 4px solid #ddd;';
         }
         
-        content += `<div style="${style}">${letter}. ${option}</div>`;
-    });
+        content += `<div style="${style}">${letter}. ${cleanOption}</div>`;
+});
     
     // Статистика по текущему блоку - СЧИТАЕМ ВСЕ ОТВЕЧЕННЫЕ ВОПРОСЫ
     const answeredCount = countAnsweredQuestions();
@@ -1071,7 +1087,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setupAutoSave();
     
     // Запускаем тренажёр
-    setTimeout(initTrainer, 100);
+    setTimeout(initTrainer, 600);
     
     // Закрытие модального окна по клику вне его
     const modal = document.getElementById('result-modal');
