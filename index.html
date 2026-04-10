@@ -935,6 +935,11 @@
                 // Сохраняем выбранный блок
                 localStorage.setItem("selectedBlock", blockName);
 
+                 if (blockName === 'Блок 5') {
+                     location.href = 'block5-topics.html';
+                     return;
+                }
+
                 // Включаем кнопку "Экзамен"
                 const simulationBtn = document.getElementById("simulation-btn");
                 if (simulationBtn) {
