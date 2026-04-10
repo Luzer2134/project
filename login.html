@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход в систему</title>
+    <link rel="stylesheet" href="login_style.css">
+</head>
+<body>
+    <div class="page-container">
+        <header>
+            <nav>
+                <button class="button_documentation" onclick="navigateTo('documentation.html')">
+                    Документация
+                </button>
+                <button class="button_simulation" id="simulation-btn" onclick="navigateTo('simulation.html')" disabled>
+                    Экзамен
+                </button>
+                <button class="button_trainer" onclick="navigateTo('trainer.html')">
+                    Тренажёр
+                </button>
+                <button class="skill-button" onclick="navigateTo('skills.html')"></button>
+                <button class="profile-button" id="profile-btn"></button>
+            </nav>
+        </header>
+        
+        <main>
+            <h1 class="login-title">Здравствуйте, Гость!</h1>
+            
+            <p class="login-subtitle">
+                Здесь Вы можете подготовиться к аттестации по охране труда. 
+                Используйте тренажер, чтобы проработать все вопросы базы ЕИСОТ. 
+                Быстро и удобно провести тренировку Вам поможет Яндекс Алиса. 
+                Симулятор экзамена позволит проверить Вашу подготовку в условиях, 
+                максимально приближенных к реальному экзамену.
+            </p>
+            
+            <div id="error-message" class="error-message"></div>
+            
+            <div class="auth-buttons">
+                <button class="guest-button" onclick="loginGuest()" id="guest-button">
+                    НАЧАТЬ
+                </button>
+            </div>
+            
+            <div class="info-section">
+                * В гостевом режиме вам доступны тренировки <strong>без</strong> сохранения прогресса<br>
+                и просмотр вопросов по блокам и разделам.
+            </div>
+        </main>
+    </div>
+
+<!-- ПАНЕЛЬ ПРОФИЛЯ -->
+<div class="profile-panel" id="profile-panel">
+    <div class="profile-header"> 
+    </div>
+    
+    <div class="profile-info">
+        <!-- Аватар -->
+        <div class="user-avatar"></div>
+        
+        <!-- Детали пользователя -->
+        <div class="user-details">
+            <h4>Гость</h4>
+        </div>
+    </div>
+    <!-- Меню панели профиля -->
+    <div class="profile-menu">
+        <!-- Кнопка Яндекс Алиса -->
+        <button class="menu-item" onclick="navigateTo('yandex-alice.html')">
+            <span class="menu-icon"></span>
+            <span class="menu-text">Яндекс Алиса</span>
+        </button>
+        
+        <!-- Кнопка Прогресс -->
+        <button class="menu-item" onclick="navigateTo('progress.html')">
+            <span class="menu-icon"></span>
+            <span class="menu-text">Прогресс</span>
+        </button>
+        
+        <!-- Кнопка История попыток -->
+        <button class="menu-item" onclick="navigateTo('history.html')">
+            <span class="menu-icon"></span>
+            <span class="menu-text">История попыток</span>
+        </button>
+        
+        <!-- Кнопка База вопросов -->
+        <button class="menu-item" onclick="navigateTo('base.html')">
+            <span class="menu-icon"></span>
+            <span class="menu-text">База вопросов</span>
+        </button>
+        
+        <div class="yandex-auth-section">
+        <button class="yandex-login-button" onclick="loginWithYandex()">
+            ВОЙТИ
+        </button>
+        <p class="login-hint"></p>
+    </div>
+    </div>
+</div>
+
+    <!-- ОВЕРЛЕЙ -->
+    <div class="overlay" id="overlay" onclick="closeProfilePanel()"></div>
+
+    <script src="api.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('📄 Страница входа загружена');
+        
+        // Проверяем ошибки из URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const error = urlParams.get('error');
+        
+        if (error) {
+            showError(decodeURIComponent(error));
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+        
+        // Инициализация
+        initProfilePanel();
+        checkSimulationAccess();
+        
+        // Назначаем обработчик на кнопку профиля
+        const profileBtn = document.getElementById('profile-btn');
+        if (profileBtn) {
+            profileBtn.onclick = toggleProfilePanel;
+        }
+    });
+    
+    function showError(message) {
+        const errorEl = document.getElementById('error-message');
+        if (errorEl) {
+            errorEl.textContent = message;
+            errorEl.classList.add('show');
+            
+            setTimeout(() => {
+                errorEl.classList.remove('show');
+            }, 10000);
+        }
+    }
+    
+    async function loginGuest() {
+        const button = document.getElementById('guest-button');
+        
+        button.disabled = true;
+        button.textContent = 'Подключение...';
+        button.classList.add('loading');
+        
+        try {
+            console.log('👤 Гостевой вход...');
+            const result = await window.examAPI.guestLogin();
+            
+            if (result.success) {
+                console.log('✅ Гостевой вход успешен');
+                window.location.href = 'index.html';
+            } else {
+                showError(result.error || 'Ошибка гостевого входа');
+            }
+        } catch (error) {
+            console.error('❌ Ошибка гостевого входа:', error);
+            showError('Ошибка подключения к серверу');
+        } finally {
+            button.disabled = false;
+            button.textContent = 'НАЧАТЬ';
+            button.classList.remove('loading');
+        }
+    }
+
+        function navigateTo(page) {
+        closeProfilePanel();
+        setTimeout(() => {
+            window.location.href = page;
+        }, 300);
+    }
+
+    function checkSimulationAccess() {
+        const hasCompletedTraining = localStorage.getItem('training_completed');
+        const simBtn = document.getElementById('simulation-btn');
+        
+        if (simBtn && hasCompletedTraining === 'true') {
+            simBtn.disabled = false;
+        }
+    }
+
+    // ===== ФУНКЦИИ ДЛЯ ПАНЕЛИ ПРОФИЛЯ =====
+    let isPanelOpen = false;
+
+    function initProfilePanel() {
+        // Закрытие по клику вне панели
+        document.addEventListener('click', function(event) {
+            const panel = document.getElementById('profile-panel');
+            const profileBtn = document.getElementById('profile-btn');
+            
+            if (isPanelOpen && panel && !panel.contains(event.target) && 
+                profileBtn && !profileBtn.contains(event.target)) {
+                closeProfilePanel();
+            }
+        });
+        
+        // Закрытие при нажатии ESC
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && isPanelOpen) {
+                closeProfilePanel();
+            }
+        });
+    }
+
+    function toggleProfilePanel(event) {
+        if (event) {
+            event.stopPropagation(); // Предотвращаем всплытие
+        }
+        
+        if (isPanelOpen) {
+            closeProfilePanel();
+        } else {
+            openProfilePanel();
+        }
+    }
+
+    function openProfilePanel() {
+        const panel = document.getElementById('profile-panel');
+        const overlay = document.getElementById('overlay');
+        
+        if (panel) {
+            panel.classList.add('active');
+            if (overlay) overlay.classList.add('active');
+            isPanelOpen = true;
+        }
+    }
+
+    function closeProfilePanel() {
+        const panel = document.getElementById('profile-panel');
+        const overlay = document.getElementById('overlay');
+        
+        if (panel) {
+            panel.classList.remove('active');
+            if (overlay) overlay.classList.remove('active');
+            isPanelOpen = false;
+        }
+    }
+
+    function logout() {
+        if (confirm('Вы уверены, что хотите выйти?')) {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+    }
+
+    function loginWithYandex() {
+    console.log('🔐 Вход через Яндекс...');
+    closeProfilePanel(); // Закрываем панель при нажатии
+    
+    // Можно показать индикатор загрузки
+    const button = document.querySelector('.yandex-login-button');
+    const originalText = button.innerHTML;
+    button.innerHTML = '<span>Подключение к Яндекс...</span>';
+    button.disabled = true;
+    
+    // Перенаправляем на авторизацию
+    setTimeout(() => {
+        window.location.href = '/auth/yandex';
+    }, 500);
+}
+    </script>
+</body>
+</html>

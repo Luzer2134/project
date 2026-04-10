@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Симуляция экзамена</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Импорт шрифта Montserrat -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* Сброс стилей и базовые настройки */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f7f7f9;
+        margin: 0;
+        padding: 0;
+        color: #333;
+        min-height: 100vh;
+        position: relative;
+        overflow-x: hidden;
+    }
+
+    /* Контейнер для всей страницы */
+    .page-container {
+        position: relative;
+        width: 1440px;
+        min-height: 1024px;
+        margin: 0 auto;
+        background-color: #DCDCDC;
+    }
+
+    header {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 80px;
+        background-color: white;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+    }
+
+    /* Контейнер навигации в шапке */
+    header nav {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        height: 100%;
+        gap: 20px;
+        padding: 0 40px;
+        max-width: 1440px;
+        margin: 0 auto;
+    }
+
+    /* Общие стили для кнопок в шапке */
+    .button_documentation,
+    .button_simulation,
+    .button_trainer {
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 500;
+        font-size: 16px;
+        padding: 12px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background-color: white;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        white-space: nowrap;
+    }
+
+    /* Кнопка "Документация" */
+    .button_documentation {
+        width: fit-content;
+        height: 56px;
+        padding: 12px 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: none;
+        border: none;
+        color: #262626;
+        cursor: pointer;
+        text-decoration: none;
+        box-sizing: border-box;
+        white-space: nowrap;
+        position: absolute;
+        left: 40px;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    /* Кнопка "Экзамен" */
+    .button_simulation {
+        width: fit-content;
+        height: 56px;
+        padding: 12px 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: none;
+        border: none;
+        color: #262626;
+        cursor: pointer;
+        text-decoration: none;
+        box-sizing: border-box;
+        white-space: nowrap;
+        position: absolute;
+        left: 200px;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    .button_simulation:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    /* Кнопка "Тренажёр" */
+    .button_trainer {
+        width: fit-content;
+        height: 56px;
+        padding: 12px 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: none;
+        border: none;
+        color: #262626;
+        cursor: pointer;
+        text-decoration: none;
+        box-sizing: border-box;
+        white-space: nowrap;
+        position: absolute;
+        left: 320px;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    .skill-button {
+        width: 56px;
+        height: 56px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        background-image: url('images/skill-button.png');
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        box-sizing: border-box;
+        margin-left: 20px;
+    }
+
+    .profile-button {
+        width: 56px;
+        height: 56px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        background-image: url('images/profile-button.png');
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        box-sizing: border-box;
+        margin-left: 20px;
+    }
+
+    /* Основной контент */
+    main {
+        position: relative;
+        width: 1440px;
+        min-height: 1024px;
+        margin: 0 auto;
+        background-color: white;
+        padding-top: 80px;
+    }
+
+    /* Контейнер экзамена */
+    #exam-container {
+        width: 1000px;
+        margin: 40px auto;
+        padding: 40px;
+        background-color: white;
+        border-radius: 20px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        min-height: 700px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Заголовок экзамена */
+    .exam-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+    }
+
+    .exam-title {
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 600;
+        font-size: 24px;
+        color: #262626;
+    }
+
+    .exam-title span {
+        color: #2196F3;
+        font-weight: 700;
+    }
+
+    .exam-controls {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    /* Кнопка досрочного завершения */
+    .button_quit {
+        font-family: 'Montserrat', sans-serif;
+        font-weight: bold;
+        font-size: 16px;
+        color: #3F8FD2;
+        background-color: white;
+        padding: 8px 15px;
+        border-radius: 8px;
+        min-width: 180px;
+        text-align: center;
+        border: 1px solid #CFEAFF;
+    }
+
+    .button_quit:hover {
+        background-color: #f0f8ff;
+        border-color: #2196F3;
+    }
+
+    /* Таймер */
+    #timer {
+        font-family: 'Montserrat', sans-serif;
+        font-weight: bold;
+        font-size: 16px;
+        color: #3F8FD2;
+        background-color: white;
+        padding: 8px 15px;
+        border-radius: 8px;
+        min-width: 180px;
+        text-align: center;
+        border: 1px solid #CFEAFF;
+    }
+
+    /* Номер вопроса */
+    #question-number {
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 600;
+        font-size: 18px;
+        color: #2196F3;
+        margin-bottom: 30px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #e3f2fd;
+    }
+
+    /* Текст вопроса */
+    #question-text {
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 500;
+        font-size: 20px;
+        line-height: 1.6;
+        color: #262626;
+        margin-bottom: 30px;
+        min-height: 60px;
+    }
+
+    /* Изображение вопроса */
+    #question-image {
+        margin-bottom: 30px;
+        text-align: center;
+    }
+
+    #question-image img {
+        max-width: 100%;
+        max-height: 300px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Контейнер вариантов ответа */
+    #options-container {
+        text-align: left;
+        max-width: 800px;
+        margin: 0 auto;
+        flex-grow: 1;
+    }
+
+    /* Варианты ответа */
+    .option {
+        padding: 15px 20px;
+        margin: 12px 0;
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        background-color: #fafafa;
+    }
+
+    .option:hover {
+        background-color: #f0f8ff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(33, 150, 243, 0.1);
+    }
+
+    .option input[type="radio"],
+    .option input[type="checkbox"] {
+        margin-right: 15px;
+        transform: scale(1.3);
+        cursor: pointer;
+        accent-color: #2196F3;
+    }
+
+    .option label {
+        cursor: pointer;
+        font-family: 'Montserrat', sans-serif;
+        font-size: 16px;
+        color: #262626;
+        line-height: 1.5;
+        flex-grow: 1;
+    }
+
+    /* Выбранный вариант */
+    .option input:checked + label {
+        font-weight: 600;
+        color: #2196F3;
+    }
+
+    /* Кнопки навигации по вопросам */
+    .navigation-buttons {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 40px;
+        padding-top: 20px;
+    }
+
+    .button {
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 500;
+        font-size: 16px;
+        padding: 14px 32px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+        min-width: 180px;
+    }
+
+    #prev-btn {
+        background-color: #3F8FD2;
+        color: white;
+        border: 2px solid #3F8FD2;
+        font-weight: 600;
+    }
+
+    #prev-btn:hover:not(:disabled) {
+        background-color: #3F8FD2;
+    }
+
+    #next-btn {
+        background-color: #3F8FD2;
+        color: white;
+        font-weight: 600;
+    }
+
+    #finish-btn {
+        background-color: #4CAF50;
+        color: white;
+        font-weight: 600;
+    }
+
+    #finish-btn:hover {
+        background-color: #388E3C;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+    }
+
+    /* Контейнер результатов */
+    #results-container {
+        width: 1000px;
+        margin: 40px auto;
+        padding: 40px;
+        background-color: white;
+        border-radius: 20px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        border: 2px solid #CFEAFF;
+    }
+
+    #results-container h2 {
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 600;
+        font-size: 32px;
+        color: #262626;
+        margin-bottom: 30px;
+    }
+
+    .block {
+        background-color: #f8f9fa;
+        border-radius: 15px;
+        padding: 30px;
+        margin: 20px auto;
+    }
+
+    .block p {
+        font-family: 'Montserrat', sans-serif;
+        font-size: 18px;
+        margin: 15px 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .block strong {
+        color: #262626;
+    }
+
+    /* Детальные результаты */
+    #detailed-results {
+        margin-top: 40px;
+        text-align: left;
+    }
+
+    .question-review {
+        margin: 25px 0;
+        padding: 20px;
+        border-radius: 12px;
+        background: #f8f9fa;
+        border-left: 5px solid #4FA532;
+    }
+
+    .question-review.incorrect {
+        border-left-color: #D23F3F;
+    }
+
+    /* ПАНЕЛЬ ПРОФИЛЯ */
+    .profile-panel {
+        position: fixed;
+        top: 0;
+        right: -364px;
+        width: 364px;
+        height: 100vh;
+        background-color: #FFFFFF;
+        box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+        z-index: 2000;
+        transition: right 0.3s ease;
+        overflow-y: auto;
+    }
+
+    .profile-panel.active {
+        right: 0;
+    }
+
+    /* Информация о пользователе */
+    .profile-info {
+        padding: 24px;
+        text-align: center;
+    }
+
+    /* Аватар */
+    .user-avatar {
+        width: 194px;
+        height: 194px;
+        border-radius: 100px;
+        background-image: url('images/icon.png');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        margin: 30px auto 20px auto;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        border: 3px solid white;
+    }
+
+    /* Текст "Гость" в панели профиля */
+    .user-details h4 {
+        width: 89px;
+        height: 32px;
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 500;
+        font-size: 32px;
+        line-height: 100%;
+        color: #262626;
+        text-align: center;
+        margin: 0 auto 8px auto;
+        padding: 0;
+    }
+
+    /* Меню профиля */
+    .profile-menu {
+        padding: 24px;
+    }
+
+    .menu-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        padding: 16px;
+        background: none;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: left;
+        margin-bottom: 8px;
+        font-family: 'Montserrat', sans-serif;
+        font-size: 16px;
+        color: #262626;
+    }
+
+    .menu-item:hover {
+        background-color: #f8f9fa;
+    }
+
+    /* Яндекс Авторизация */
+    .yandex-auth-section {
+        padding: 20px 24px;
+        text-align: center;
+        margin-top: 170px;
+    }
+
+    .yandex-login-button {
+        width: 244px;
+        height: 80px;
+        border-radius: 77px;
+        background-color: #3F8FD2;
+        border: none;
+        color: white;
+        font-family: 'Montserrat', sans-serif;
+        font-size: 24px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(63, 143, 210, 0.2);
+    }
+
+    .yandex-login-button:hover {
+        background-color: #3579B0;
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(63, 143, 210, 0.3);
+    }
+
+    /* Оверлей */
+    .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1999;
+        display: none;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .overlay.active {
+        display: block;
+        opacity: 1;
+    }
+
+    /* Адаптивность */
+    @media (max-width: 1480px) {
+        .page-container,
+        main {
+            width: 100%;
+            max-width: 1440px;
+        }
+        
+        #exam-container,
+        #results-container {
+            width: 95%;
+            max-width: 1000px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .page-container {
+            width: 100%;
+            min-height: auto;
+        }
+        
+        main {
+            width: 100%;
+            padding-top: 60px;
+        }
+        
+        #exam-container,
+        #results-container {
+            padding: 20px;
+            width: 95%;
+        }
+        
+        .exam-header {
+            flex-direction: column;
+            gap: 15px;
+            text-align: center;
+        }
+        
+        .exam-controls {
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        #question-text {
+            font-size: 18px;
+        }
+        
+        .navigation-buttons {
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .button {
+            width: 100%;
+            max-width: 300px;
+        }
+        
+        .profile-panel {
+            width: 100%;
+            max-width: 364px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .button_documentation,
+        .button_simulation,
+        .button_trainer {
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+        
+        .button_documentation {
+            left: 20px;
+        }
+        
+        .button_simulation {
+            left: 140px;
+        }
+        
+        .button_trainer {
+            left: 220px;
+        }
+        
+        .skill-button,
+        .profile-button {
+            width: 40px;
+            height: 40px;
+            margin-left: 10px;
+        }
+        
+        .button_quit {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        
+        #timer {
+            font-size: 14px;
+            min-width: 140px;
+        }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-container">
+    <!-- ШАПКА (точно такая же как в index.html) -->
+    <header>
+      <nav>
+        <button class="button_documentation" onclick="navigateTo('documentation.html')">
+          Документация
+        </button>
+        <button class="button_simulation" onclick="navigateTo('simulation.html')" disabled>
+          Экзамен
+        </button>
+        <button class="button_trainer" onclick="navigateTo('trainer.html')">
+          Тренажёр
+        </button>
+        <button class="skill-button" onclick="navigateTo('skills.html')"></button>
+        <button class="profile-button" id="profile-btn"></button>
+      </nav>
+    </header>
+    
+    <main class="main-content">
+      <!-- ЭКЗАМЕН -->
+      <div id="exam-container">
+        <!-- Заголовок экзамена с кнопками -->
+        <div class="exam-header">
+          <div class="exam-title">
+            Симуляция экзамена: <span id="current-block-name">Загрузка...</span>
+          </div>
+          <div class="exam-controls">
+            <button class="button_quit" onclick="confirmExit()">Завершить досрочно</button>
+            <div id="timer">Осталось времени: 45:00</div>
+          </div>
+        </div>
+        
+        <div id="question-number">Вопрос 1 из 30</div>
+        <div id="question-text"></div>
+        <div id="question-image"></div>
+        <div id="options-container"></div>
+        
+        <div class="navigation-buttons">
+          <button id="prev-btn" class="button" onclick="prevQuestion()" style="display:none;">Назад</button>
+          <button id="next-btn" class="button" onclick="nextQuestion()">Следующий вопрос</button>
+          <button id="finish-btn" class="button" style="display:none;" onclick="finishExam()">Завершить экзамен</button>
+        </div>
+      </div>
+      
+      <div id="results-container" style="display:none;">
+        <h2>Результаты симуляции экзамена</h2>
+        <div class="block">
+          <p><strong>Правильных ответов:</strong> <span id="correct-answers" style="color: #64D23F; font-size: 24px;">0</span> из <span id="total-questions">30</span></p>
+          <p><strong>Оценка:</strong> <span id="grade" style="font-size: 24px;">0</span></p>
+          <p><strong>Затрачено времени:</strong> <span id="time-spent">00:00</span></p>
+        </div>
+        <button class="button" onclick="saveAttempt()" style="background-color: #2196F3; color: white; margin-top: 20px;">Сохранить и выйти</button>
+      </div>
+    </main>
+  </div>
+
+  <!-- ПАНЕЛЬ ПРОФИЛЯ (точно такая же как в index.html) -->
+  <div class="profile-panel" id="profile-panel">
+    <div class="profile-info">
+      <!-- Аватар -->
+      <div class="user-avatar"></div>
+      
+      <!-- Детали пользователя -->
+      <div class="user-details">
+        <h4>Гость</h4>
+      </div>
+    </div>
+    
+    <!-- Меню панели профиля -->
+    <div class="profile-menu">
+      <!-- Кнопка Яндекс Алиса -->
+      <button class="menu-item" onclick="navigateTo('yandex-alice.html')">
+        <span class="menu-text">Яндекс Алиса</span>
+      </button>
+      
+      <!-- Кнопка Прогресс -->
+      <button class="menu-item" onclick="navigateTo('progress.html')">
+        <span class="menu-text">Прогресс</span>
+      </button>
+      
+      <!-- Кнопка История попыток -->
+      <button class="menu-item" onclick="navigateTo('history.html')">
+        <span class="menu-text">История попыток</span>
+      </button>
+      
+      <!-- Кнопка База вопросов -->
+      <button class="menu-item" onclick="navigateTo('base.html')">
+        <span class="menu-text">База вопросов</span>
+      </button>
+      
+      <!-- Кнопка ВОЙТИ -->
+      <div class="yandex-auth-section">
+        <button class="yandex-login-button" onclick="loginWithYandex()">
+          ВОЙТИ
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ОВЕРЛЕЙ -->
+  <div class="overlay" id="overlay" onclick="closeProfilePanel()"></div>
+
+  <script src="api.js"></script>
+  <script src="data-loader.js"></script>
+  <script src="shuffler.js"></script>
+  <script src="simulation.js"></script>
+  
+  <script>
+    // Функции для навигации и управления панелью профиля (точно такие же как в index.html)
+    function navigateTo(page) {
+        closeProfilePanel();
+        // Если мы уже на странице симуляции и пытаемся перейти на другую страницу
+        if (page !== 'simulation.html' && typeof saveProgress === 'function') {
+            saveProgress();
+        }
+        setTimeout(() => {
+            window.location.href = page;
+        }, 300);
+    }
+
+    let isPanelOpen = false;
+    
+    function initProfilePanel() {
+        const profileBtn = document.getElementById('profile-btn');
+        const overlay = document.getElementById('overlay');
+        const panel = document.getElementById('profile-panel');
+        
+        if (profileBtn) {
+            profileBtn.onclick = toggleProfilePanel;
+        }
+        
+        // Закрытие по клику вне панели
+        document.addEventListener('click', function(event) {
+            if (isPanelOpen && panel && !panel.contains(event.target) && 
+                profileBtn && !profileBtn.contains(event.target)) {
+                closeProfilePanel();
+            }
+        });
+        
+        // Закрытие при нажатии ESC
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && isPanelOpen) {
+                closeProfilePanel();
+            }
+        });
+    }
+    
+    function toggleProfilePanel(event) {
+        if (event) {
+            event.stopPropagation();
+        }
+        
+        if (isPanelOpen) {
+            closeProfilePanel();
+        } else {
+            openProfilePanel();
+        }
+    }
+    
+    function openProfilePanel() {
+        const panel = document.getElementById('profile-panel');
+        const overlay = document.getElementById('overlay');
+        
+        if (panel) {
+            panel.classList.add('active');
+            if (overlay) overlay.classList.add('active');
+            isPanelOpen = true;
+        }
+    }
+    
+    function closeProfilePanel() {
+        const panel = document.getElementById('profile-panel');
+        const overlay = document.getElementById('overlay');
+        
+        if (panel) {
+            panel.classList.remove('active');
+            if (overlay) overlay.classList.remove('active');
+            isPanelOpen = false;
+        }
+    }
+    
+    function loginWithYandex() {
+        console.log('🔐 Вход через Яндекс...');
+        closeProfilePanel();
+        
+        const button = document.querySelector('.yandex-login-button');
+        if (button) {
+            const originalText = button.innerHTML;
+            button.innerHTML = 'Подключение...';
+            button.disabled = true;
+            
+            setTimeout(() => {
+                window.location.href = '/auth/yandex';
+            }, 500);
+        }
+    }
+    
+    // Инициализация при загрузке
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Simulation page loaded with exact index.html header and panel');
+        
+        // Проверяем авторизацию
+        const user = window.examAPI ? window.examAPI.getUserFromStorage() : null;
+        if (!user) {
+            console.log('❌ Пользователь не найден');
+        } else {
+            console.log('✅ Пользователь:', user.name, `(${user.userType})`);
+            
+            // Обновляем информацию в панели профиля
+            const userNameElement = document.querySelector('.user-details h4');
+            if (userNameElement && user.name !== 'Гость') {
+                userNameElement.textContent = user.name;
+            }
+        }
+        
+        // Инициализируем панель профиля
+        initProfilePanel();
+        
+        // Запускаем экзамен
+        function waitAndInit() {
+            if (typeof questionsData !== 'undefined' && !isLoading) {
+                initExam();
+            } else {
+                setTimeout(waitAndInit, 100);
+            }   
+        }
+        waitAndInit();
+    });
+    
+    // Обработка закрытия страницы
+    window.addEventListener('beforeunload', function (e) {
+        if (typeof currentBlock !== 'undefined' && currentBlock && 
+            typeof currentQuestions !== 'undefined' && currentQuestions.length > 0 && 
+            typeof timeLeft !== 'undefined' && timeLeft > 0 && 
+            typeof isExamFinished !== 'undefined' && !isExamFinished) {
+            
+            if (typeof saveCurrentAnswer === 'function') {
+                saveCurrentAnswer();
+            }
+            
+            if (typeof saveProgress === 'function') {
+                saveProgress();
+            }
+            
+            e.preventDefault();
+            e.returnValue = 'У вас есть несохраненный прогресс симуляции. Вы уверены, что хотите уйти?';
+        }
+    });
+  </script>
+</body>
+</html>
