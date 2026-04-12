@@ -228,7 +228,7 @@ function displayQuestion() {
         input.type = question.correctAnswers.length > 1 ? 'checkbox' : 'radio';
         input.name = 'answer';
         
-        const cyrillicLetters = ['А', 'Б', 'В', 'Г', 'Д', 'Е','Ж'];
+        const cyrillicLetters = ['А', 'Б', 'В', 'Г', 'Д', 'Е'];
         const letter = cyrillicLetters[index];
         input.value = letter;
         
@@ -243,7 +243,7 @@ function displayQuestion() {
         `;
         
         const label = document.createElement('label');
-        const cleanOption = option.replace(/^[А-Ж][\)\.]\s*/, '');
+        const cleanOption = option.replace(/^[А-Е][\)\.]\s*/, '');
         label.textContent = `${letter}) ${cleanOption}`;
         label.style.cursor = 'pointer';
         label.style.flex = '1';

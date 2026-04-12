@@ -1,4 +1,4 @@
-// shuffler.js - перемешивание вариантов ответов
+// shuffler.js - сделал перемешивание вопросов 
 
 function shuffleOptions(question) {
     if (!question.options || question.options.length === 0) return question;
