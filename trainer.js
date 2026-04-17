@@ -200,6 +200,42 @@ window.localProgress = new LocalProgressManager();
 // Инициализация тренажёра
 function initTrainer() {
     console.log('Инициализация тренажёра...');
+    // 🔥 РЕЖИМ ИЗБРАННОГО
+    const urlParams = new URLSearchParams(window.location.search);
+    const mode = urlParams.get('mode');
+
+    if (mode === 'favourites') {
+        console.log('Запуск режима избранного');
+
+        const fav = JSON.parse(localStorage.getItem('favourites_test') || '[]');
+
+        if (!fav.length) {
+            alert('Нет избранных вопросов');
+            window.location.href = 'favourites.html';
+            return;
+        }
+
+        // подменяем блок
+        currentBlock = 'Избранное';
+        document.getElementById('current-block-name').textContent = 'Избранные вопросы';
+
+        // загружаем вопросы
+        currentQuestions = fav.map(q => ({
+            question: q.question,
+            options: q.options,
+            correctAnswers: q.correctAnswers,
+            comment: q.comment,
+            image: q.image,
+            block: q.block
+        }));
+
+        userAnswers = new Array(currentQuestions.length).fill(null);
+
+        updateProgress();
+        displayQuestion();
+
+        return; // ❗ ВАЖНО — выходим, чтобы не загрузился обычный блок
+    }
     
     // Получаем выбранный блок
     currentBlock = localStorage.getItem('selectedBlock');
