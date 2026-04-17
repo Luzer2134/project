@@ -345,7 +345,7 @@ function displayQuestion() {
         optionElement.className = 'option';
         
         // Кириллические буквы
-        const cyrillicLetters = ['А', 'Б', 'В', 'Г', 'Д', 'Е'];
+        const cyrillicLetters = ['А', 'Б', 'В', 'Г', 'Д', 'Е','Ж'];
         const letter = cyrillicLetters[index];
         
         // Определяем состояние варианта
@@ -404,7 +404,7 @@ function displayQuestion() {
         
         const label = document.createElement('label');
         // Убрали жирные буквы, оставляем только букву и текст
-        let cleanOption = option.replace(/^[А-Е][\)\.]\s*/, '');
+        let cleanOption = option.replace(/^[А-Ж][\)\.]\s*/, '');
         label.textContent = `${letter}) ${cleanOption}`;
         label.style.cssText = `
             cursor: ${hasBeenAnswered ? 'default' : 'pointer'};
@@ -478,6 +478,8 @@ function displayQuestion() {
             nextBtn.style.display = 'inline-block';
         }
     }
+    // Обновляем состояние кнопки избранного
+    updateFavButton();
 }
 
 // Проверка ответа
@@ -565,7 +567,7 @@ function showResultModal(question, userAnswer, isCorrect) {
         const isCorrectOption = question.correctAnswers.includes(letter);
         
         // Убираем старую букву из текста варианта
-        const cleanOption = option.replace(/^[А-Е][\)\.]\s*/, '');
+        const cleanOption = option.replace(/^[А-Ж][\)\.]\s*/, '');
         
         let style = 'padding: 12px 15px; margin: 8px 0; border-radius: 8px; font-size: 15px;';
         
@@ -1111,4 +1113,109 @@ document.addEventListener('DOMContentLoaded', function() {
     if (continueButton) {
         continueButton.addEventListener('click', closeModal);
     }
+
+// ==================== ИЗБРАННОЕ ====================
+
+// Получить ключ для хранения избранного
+function getFavouritesKey() {
+    const user = window.localProgress.getUser();
+    return `user_favourites_${user.id || 'guest'}`;
+}
+
+// Загрузить избранное
+function loadFavourites() {
+    const key = getFavouritesKey();
+    const saved = localStorage.getItem(key);
+    return saved ? JSON.parse(saved) : [];
+}
+
+// Сохранить избранное
+function saveFavourites(favourites) {
+    const key = getFavouritesKey();
+    localStorage.setItem(key, JSON.stringify(favourites));
+}
+
+// Проверить, в избранном ли текущий вопрос
+function isCurrentInFavourites() {
+    if (!currentQuestions.length || !currentQuestions[currentQuestionIndex]) return false;
+    const q = currentQuestions[currentQuestionIndex];
+    const id = `${currentBlock}_${q.question}`;
+    return loadFavourites().some(f => f.id === id);
+}
+
+// Добавить/удалить из избранного
+window.toggleFavourite = function() {
+    if (!currentQuestions.length || !currentQuestions[currentQuestionIndex]) {
+        showToast('Нет активного вопроса');
+        return;
+    }
+    
+    const q = currentQuestions[currentQuestionIndex];
+    const id = `${currentBlock}_${q.question}`;
+    let favs = loadFavourites();
+    const exists = favs.some(f => f.id === id);
+    
+    if (exists) {
+        favs = favs.filter(f => f.id !== id);
+        saveFavourites(favs);
+    } else {
+        favs.push({
+            id: id,
+            block: currentBlock,
+            question: q.question,
+            options: q.options,
+            correctAnswers: q.correctAnswers,
+            comment: q.comment || '',
+            image: q.image || q.картинки || null,
+            timestamp: Date.now()
+        });
+        saveFavourites(favs);
+    }
+    
+    updateFavButton();
+}
+
+// Обновить внешний вид кнопки избранного
+function updateFavButton() {
+    const btn = document.getElementById('fav-btn');
+    if (!btn) return;
+    
+    if (isCurrentInFavourites()) {
+        btn.classList.add('active');
+        btn.innerHTML = '<span>★</span> В избранном';
+    } else {
+        btn.classList.remove('active');
+        btn.innerHTML = '<span>☆</span> В избранное';
+    }
+}
+
+// Показать всплывающее уведомление
+function showToast(message) {
+    let toast = document.getElementById('trainer-toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'trainer-toast';
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-family: 'Montserrat', sans-serif;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        `;
+        document.body.appendChild(toast);
+    }
+    toast.textContent = message;
+    toast.style.opacity = '1';
+    setTimeout(() => {
+        toast.style.opacity = '0';
+    }, 2000);
+}
 });
