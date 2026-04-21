@@ -703,6 +703,299 @@
                     border-radius: 60px;
                 }
             }
+
+
+            /* Добавь ЭТИ медиа-запросы в самый конец твоего <style> блока */
+
+/* Для экранов меньше 1440px */
+@media (max-width: 1440px) {
+    .page-container, main, .main-content {
+        width: 100%;
+        max-width: 1440px;
+    }
+    
+    .custom-heading {
+        width: auto;
+        margin-left: 10%;
+        margin-right: 10%;
+        text-align: center;
+    }
+}
+
+/* Для планшетов и маленьких ноутбуков (1024px - 1440px) */
+@media (max-width: 1200px) {
+    .custom-heading {
+        font-size: 40px;
+        margin-left: 5%;
+    }
+    
+    .image-block {
+        width: 90%;
+        padding: 0 20px;
+    }
+    
+    .image-block h4 {
+        font-size: 28px;
+    }
+    
+    .image-block p {
+        font-size: 16px;
+        padding: 0 15px;
+    }
+}
+
+/* Для планшетов (768px - 1024px) */
+@media (max-width: 1024px) {
+    header {
+        height: auto;
+        min-height: 80px;
+        position: relative;
+    }
+    
+    header nav {
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        height: auto;
+        padding: 10px 20px;
+    }
+    
+    /* Сохраняем абсолютное позиционирование для кнопок, но делаем их резиновыми */
+    .button_documentation {
+        position: static;
+        transform: none;
+        order: 1;
+        margin-right: auto;
+    }
+    
+    .button_simulation {
+        position: static;
+        transform: none;
+        order: 2;
+    }
+    
+    .button_trainer {
+        position: static;
+        transform: none;
+        order: 3;
+    }
+    
+    .skill-button {
+        order: 4;
+        margin-left: auto;
+    }
+    
+    .profile-button {
+        order: 5;
+        margin-left: 0;
+    }
+    
+    .favourite-button {
+        order: 6;
+    }
+    
+    .custom-heading {
+        font-size: 36px;
+        margin-top: 30px;
+    }
+    
+    .blocks {
+        margin-top: 60px;
+    }
+    
+    .image-block {
+        width: 85%;
+        min-height: 100px;
+        height: auto;
+        padding: 15px 25px;
+    }
+    
+    .image-block h4 {
+        font-size: 24px;
+        min-width: auto;
+    }
+    
+    .image-block p {
+        font-size: 14px;
+        padding: 0 10px;
+    }
+}
+
+/* Для мобильных устройств (до 768px) */
+@media (max-width: 768px) {
+    .page-container, main, .main-content {
+        width: 100%;
+        padding-top: 20px;
+    }
+    
+    header {
+        height: auto;
+        position: relative;
+    }
+    
+    header nav {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        padding: 10px;
+    }
+    
+    /* На мобильных убираем absolute и делаем flex-раскладку */
+    .button_documentation,
+    .button_simulation,
+    .button_trainer {
+        position: static;
+        transform: none;
+        padding: 8px 16px;
+        font-size: 14px;
+        min-height: 40px;
+    }
+    
+    .skill-button,
+    .profile-button,
+    .favourite-button {
+        width: 40px;
+        height: 40px;
+        margin-left: 5px;
+    }
+    
+    .custom-heading {
+        font-size: 28px;
+        width: 90%;
+        margin-left: auto;
+        margin-right: auto;
+        text-align: center;
+        height: auto;
+    }
+    
+    .blocks {
+        margin-top: 40px;
+        padding: 0 10px;
+    }
+    
+    .image-block {
+        width: 95%;
+        flex-direction: column;
+        align-items: flex-start;
+        height: auto;
+        padding: 20px;
+    }
+    
+    .image-block h4 {
+        font-size: 22px;
+        margin-bottom: 10px;
+    }
+    
+    .image-block p {
+        font-size: 14px;
+        padding: 0;
+        margin-bottom: 15px;
+    }
+    
+    .image-block .button {
+        padding: 8px 20px;
+        min-width: 140px;
+        font-size: 14px;
+    }
+    
+    .profile-panel {
+        width: 85%;
+        max-width: 320px;
+        right: -85%;
+    }
+    
+    .user-avatar {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .user-details h4 {
+        font-size: 24px;
+    }
+    
+    .yandex-login-button {
+        width: 200px;
+        height: 60px;
+        font-size: 18px;
+        padding: 15px 30px;
+    }
+}
+
+/* Для маленьких телефонов (до 480px) */
+@media (max-width: 480px) {
+    .button_documentation,
+    .button_simulation,
+    .button_trainer {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+    
+    .skill-button,
+    .profile-button,
+    .favourite-button {
+        width: 35px;
+        height: 35px;
+    }
+    
+    .custom-heading {
+        font-size: 22px;
+        margin-top: 20px;
+    }
+    
+    .image-block h4 {
+        font-size: 18px;
+    }
+    
+    .image-block p {
+        font-size: 12px;
+    }
+    
+    .image-block .button {
+        padding: 6px 15px;
+        min-width: 120px;
+        font-size: 12px;
+    }
+    
+    .profile-panel {
+        width: 100%;
+        max-width: none;
+        right: -100%;
+    }
+    
+    .alice-content {
+        width: 95%;
+        padding: 20px;
+    }
+    
+    .alice-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .alice-button {
+        width: 100%;
+    }
+}
+
+/* Для очень маленьких экранов (до 360px) */
+@media (max-width: 360px) {
+    .button_documentation,
+    .button_simulation,
+    .button_trainer {
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+    
+    .skill-button,
+    .profile-button,
+    .favourite-button {
+        width: 30px;
+        height: 30px;
+    }
+    
+    .custom-heading {
+        font-size: 18px;
+    }
+}
         </style>
     </head>
     <body>
