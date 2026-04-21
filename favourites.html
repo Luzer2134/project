@@ -463,7 +463,12 @@
     <main class="main-content">
         <div class="page-header">
             <h1>Избранные вопросы</h1>
-            <button class="clear-fav-btn" onclick="clearAllFavourites()">Очистить всё</button>
+             <div>
+                <button class="clear-fav-btn" onclick="clearAllFavourites()">Очистить всё</button>
+                <button class="clear-fav-btn" onclick="startFavouritesTest()" style="background:#3f8fd2; margin-left:10px;">
+                    Пройти тест
+                </button>
+             </div>
         </div>
 
         <div id="favourites-container" class="favourites-list"></div>
@@ -502,6 +507,18 @@
                 }
             } catch(e) {}
             return 'guest';
+        }
+        function startFavouritesTest() {
+            const favourites = loadFavourites();
+
+            if (!favourites.length) {
+                showToast('Нет избранных вопросов');
+                return;
+            }
+
+            localStorage.setItem('favourites_test', JSON.stringify(favourites));
+
+            window.location.href = 'trainer.html?mode=favourites';
         }
         
         function getFavouritesStorageKey() {
