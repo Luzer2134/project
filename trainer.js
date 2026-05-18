@@ -570,7 +570,7 @@ function showResultModal(question, userAnswer, isCorrect) {
     const modalTitle = document.getElementById('modal-title');
     const modalContent = document.getElementById('modal-content');
     
-    modalTitle.textContent = isCorrect ? 'ВЕРНО!' : 'НЕВЕРНО';
+    modalTitle.textContent = isCorrect ? 'ВЕРНО!' : 'НЕВЕРНО!';
     modalTitle.style.color = isCorrect ? '#64D23F' : '#D23F3F';
     modalTitle.style.fontSize = '24px';
     
@@ -1218,10 +1218,10 @@ function updateFavButton() {
     
     if (isCurrentInFavourites()) {
         btn.classList.add('active');
-        btn.innerHTML = '<span>★</span> В избранном';
+        btn.innerHTML = 'В избранном';
     } else {
         btn.classList.remove('active');
-        btn.innerHTML = '<span>☆</span> В избранное';
+        btn.innerHTML = ' В избранное';
     }
 }
 

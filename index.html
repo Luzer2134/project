@@ -2,10 +2,9 @@
 <html lang="ru">
     <head>
         <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
         <title>Веб‑платформа подготовки</title>
         <link rel="stylesheet" href="style.css" />
-        <!-- Импорт шрифта Montserrat -->
         <link
             href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap"
             rel="stylesheet"
@@ -163,9 +162,6 @@
                 box-sizing: border-box;
               
             }
-
-
-
 
             .skill-button {
                 width: 56px;
@@ -614,93 +610,443 @@
                 background-color: #e0e0e0;
             }
 
-            /* Адаптивность */
-            @media (max-width: 768px) {
-                .page-container {
-                    width: 100%;
-                    min-height: auto;
-                }
-
-                main {
-                    width: 100%;
-                    padding-top: 60px;
-                }
-
+            
+            /* Для экранов меньше 1440px */
+            @media (max-width: 1440px) {
+                .page-container,
+                main,
                 .main-content {
                     width: 100%;
-                    padding-top: 60px;
+                    max-width: 100%;
                 }
-
+                
                 .custom-heading {
-                    width: 90%;
-                    margin-left: 5%;
-                    font-size: 32px;
+                    width: auto;
+                    max-width: 90%;
+                    margin-left: auto;
+                    margin-right: auto;
                     text-align: center;
                 }
-
+                
                 .image-block {
-                    width: 95%;
+                    width: 90%;
+                    max-width: 1094px;
+                }
+            }
+            
+            /* Для планшетов и маленьких ноутбуков (до 1200px) */
+            @media (max-width: 1200px) {
+                .custom-heading {
+                    font-size: 42px;
+                    margin-left: auto;
+                    margin-right: auto;
+                }
+                
+                .image-block {
+                    width: 92%;
+                    padding: 0 20px;
+                }
+                
+                .image-block h4 {
+                    font-size: 28px;
+                    min-width: 70px;
+                }
+                
+                .image-block p {
+                    font-size: 16px;
+                    padding: 0 20px;
+                }
+            }
+            
+            /* Для планшетов (до 992px) */
+            @media (max-width: 992px) {
+                header {
+                    height: 70px;
+                }
+                
+                main,
+                .main-content {
+                    padding-top: 70px;
+                }
+                
+                .custom-heading {
+                    font-size: 36px;
+                    line-height: 42px;
+                    margin-top: 30px;
+                }
+                
+                .blocks {
+                    margin-top: 60px;
+                }
+                
+                .image-block {
+                    width: 94%;
                     height: auto;
                     min-height: 100px;
-                    padding: 20px;
+                    padding: 15px 20px;
+                    flex-wrap: wrap;
+                    gap: 10px;
+                }
+                
+                .image-block h4 {
+                    font-size: 26px;
+                    min-width: auto;
+                }
+                
+                .image-block p {
+                    padding: 0 10px;
+                    flex: 1;
+                    min-width: 200px;
+                }
+                
+                .image-block .button {
+                    min-width: 150px;
+                    padding: 8px 20px;
+                    font-size: 16px;
+                }
+                
+                .button_documentation,
+                .button_simulation,
+                .button_trainer {
+                    padding: 8px 16px;
+                    font-size: 14px;
+                }
+                
+                .button_documentation { left: 20px; }
+                .button_simulation { left: 160px; }
+                .button_trainer { left: 260px; }
+                
+                .skill-button,
+                .profile-button,
+                .favourite-button {
+                    width: 48px;
+                    height: 48px;
+                    margin-left: 12px;
+                }
+            }
+            
+            /* Для мобильных устройств (до 768px) */
+            @media (max-width: 768px) {
+                header {
+                    height: 60px;
+                }
+                
+                header nav {
+                    padding: 0 15px;
+                    gap: 10px;
+                }
+                
+                main,
+                .main-content {
+                    padding-top: 60px;
+                }
+                
+                .custom-heading {
+                    font-size: 28px;
+                    line-height: 34px;
+                    margin-top: 20px;
+                    width: 95%;
+                }
+                
+                .blocks {
+                    margin-top: 40px;
+                }
+                
+                .image-block {
+                    width: 95%;
                     flex-direction: column;
                     align-items: flex-start;
+                    text-align: left;
+                    padding: 20px;
+                    gap: 12px;
                 }
-
+                
                 .image-block h4 {
-                    margin-bottom: 10px;
+                    font-size: 24px;
+                    width: 100%;
                 }
-
+                
                 .image-block p {
                     padding: 0;
-                    margin-bottom: 10px;
+                    width: 100%;
+                    font-size: 15px;
                 }
-
-                .blocks {
-                    margin-top: 50px;
+                
+                .image-block .button {
+                    width: 100%;
+                    text-align: center;
+                    min-width: auto;
+                    padding: 10px 16px;
+                    font-size: 15px;
                 }
-
+                
+                /* Адаптация кнопок в шапке */
+                .button_documentation,
+                .button_simulation,
+                .button_trainer {
+                    padding: 6px 12px;
+                    font-size: 13px;
+                    white-space: nowrap;
+                }
+                
+                .button_documentation { left: 12px; }
+                .button_simulation { left: 130px; }
+                .button_trainer { left: 210px; }
+                
+                .skill-button,
+                .profile-button,
+                .favourite-button {
+                    width: 40px;
+                    height: 40px;
+                    margin-left: 8px;
+                }
+                
+                /* Панель профиля */
+                .profile-panel {
+                    width: 300px;
+                    right: -300px;
+                }
+                
+                .user-avatar {
+                    width: 120px;
+                    height: 120px;
+                }
+                
+                .user-details h4 {
+                    font-size: 24px;
+                    width: auto;
+                }
+                
+                .yandex-auth-section {
+                    margin-top: 100px;
+                }
+                
                 .yandex-login-button {
                     width: 200px;
                     height: 70px;
                     padding: 20px 40px;
                     font-size: 20px;
                 }
-
+                
+                /* Модальное окно */
                 .alice-content {
-                    padding: 20px;
+                    padding: 25px;
                     width: 95%;
                 }
-
+                
+                .alice-content h3 {
+                    font-size: 20px;
+                }
+                
+                .alice-message {
+                    font-size: 16px;
+                    padding: 15px;
+                }
+                
+                .alice-command {
+                    font-size: 18px;
+                }
+                
                 .alice-buttons {
                     flex-direction: column;
                     gap: 10px;
                 }
-
+                
                 .alice-button {
                     width: 100%;
+                    min-width: auto;
                 }
             }
-
-            @media (max-width: 480px) {
+            
+            /* Для очень маленьких телефонов (до 576px) */
+            @media (max-width: 576px) {
                 .custom-heading {
-                    font-size: 24px;
+                    font-size: 22px;
+                    line-height: 28px;
                 }
-
+                
+                .image-block {
+                    width: 96%;
+                    padding: 15px;
+                }
+                
                 .image-block h4 {
-                    font-size: 24px;
+                    font-size: 20px;
                 }
-
+                
                 .image-block p {
-                    font-size: 16px;
+                    font-size: 14px;
                 }
+                
+                .image-block .button {
+                    font-size: 14px;
+                    padding: 8px 12px;
+                }
+                
+                /* Скрываем текст кнопок, оставляем иконки/эмодзи */
+                .button_documentation span,
+                .button_simulation span,
+                .button_trainer span {
+                    display: none;
+                }
+                
+                .button_documentation::before {
+                    content: "";
+                    display: inline-block;
+                    width: 36px;
+                    height: 36px;
+                    background-image: url("images/documentation.png");
+                    background-size: contain;
+                    background-repeat: no-repeat;
+                    background-position: center;
+                    filter: brightness(0) saturate(100%) invert(0%);
+                }
+                
+                .button_simulation::before {
+                    content: "";
+                    display: inline-block;
+                    width: 36px;
+                    height: 36px;
+                    background-image: url("images/exam.png");
+                    background-size: contain;
+                    background-repeat: no-repeat;
+                    background-position: center;
+                    filter: brightness(0) saturate(100%) invert(0%);
+                }
+                
+                .button_trainer::before {
+                    content: "";
+                    display: inline-block;
+                    width: 36px;
+                    height: 36px;
+                    background-image: url("images/trainer.png");
+                    background-size: contain;
+                    background-repeat: no-repeat;
+                    background-position: center;
+            }
 
+             /* Кнопка Яндекс Алиса (skill-button) */
+            .skill-button {
+                background-image: url("images/alice.png") !important;
+                background-size: 36px 36px !important;
+                background-repeat: no-repeat !important;
+                background-position: center !important;
+                width: 48px !important;
+                height: 48px !important;
+                background-color: transparent !important;
+            }
+            
+            /* Кнопка Профиля */
+            .profile-button {
+                background-image: url("images/profile.png") !important;
+                background-size: 36px 36px !important;
+                background-repeat: no-repeat !important;
+                background-position: center !important;
+                width: 48px !important;
+                height: 48px !important;
+                background-color: transparent !important;
+            }
+                
+                .button_documentation,
+                .button_simulation,
+                .button_trainer {
+                    padding: 8px 10px;
+                    width: auto;
+                    min-width: 40px;
+                }
+                
+                .button_documentation { left: 8px; }
+                .button_simulation { left: 60px; }
+                .button_trainer { left: 110px; }
+                
+                .skill-button,
+                .profile-button,
+                .favourite-button {
+                    width: 36px;
+                    height: 36px;
+                }
+                
+                .profile-panel {
+                    width: 85%;
+                    right: -85%;
+                }
+                
                 .yandex-login-button {
                     width: 180px;
                     height: 60px;
-                    padding: 15px 30px;
                     font-size: 18px;
                     border-radius: 60px;
+                }
+                
+                .menu-item {
+                    padding: 12px;
+                    font-size: 14px;
+                }
+            }
+            
+            /* Для совсем крошечных экранов (до 380px) */
+            @media (max-width: 380px) {
+                .custom-heading {
+                    font-size: 18px;
+                    line-height: 24px;
+                }
+                
+                .button_documentation { left: 5px; }
+                .button_simulation { left: 50px; }
+                .button_trainer { left: 95px; }
+                
+                .skill-button,
+                .profile-button,
+                .favourite-button {
+                    width: 32px;
+                    height: 32px;
+                    margin-left: 5px;
+                }
+                
+                .image-block {
+                    width: 98%;
+                    padding: 12px;
+                }
+                
+                .image-block h4 {
+                    font-size: 18px;
+                }
+                
+                .image-block p {
+                    font-size: 13px;
+                }
+            }
+            
+            /* Альбомная ориентация на телефонах */
+            @media (max-width: 900px) and (orientation: landscape) {
+                header {
+                    height: 55px;
+                }
+                
+                main,
+                .main-content {
+                    padding-top: 55px;
+                }
+                
+                .custom-heading {
+                    margin-top: 15px;
+                    font-size: 24px;
+                }
+                
+                .blocks {
+                    margin-top: 30px;
+                }
+                
+                .image-block {
+                    padding: 12px 20px;
+                }
+                
+                .image-block h4 {
+                    font-size: 20px;
+                }
+                
+                .image-block p {
+                    font-size: 14px;
                 }
             }
         </style>
@@ -714,7 +1060,7 @@
                         class="button_documentation"
                         onclick="navigateTo('documentation.html')"
                     >
-                        Документация
+                        <span>Документация</span>
                     </button>
                     <button
                         class="button_simulation"
@@ -722,13 +1068,13 @@
                         onclick="navigateTo('simulation.html')"
                         disabled
                     >
-                        Экзамен
+                        <span>Экзамен</span>
                     </button>
                     <button
                         class="button_trainer"
                         onclick="navigateTo('trainer.html')"
                     >
-                        Тренажёр
+                        <span>Тренажёр</span>
                     </button>
                     <button
                         class="skill-button"
@@ -746,7 +1092,6 @@
                 </h3>
 
                 <div class="blocks">
-                    <!-- Каждый блок является кликабельным элементом -->
                     <div
                         class="image-block"
                         data-block="Блок 1"
@@ -804,42 +1149,33 @@
             <div class="profile-header"></div>
 
             <div class="profile-info">
-                <!-- Аватар -->
                 <div class="user-avatar"></div>
-
-                <!-- Детали пользователя -->
                 <div class="user-details">
                     <h4>Гость</h4>
                 </div>
             </div>
 
-            <!-- Меню панели профиля -->
             <div class="profile-menu">
-                <!-- Кнопка Яндекс Алиса -->
                 <button class="menu-item" onclick="openYandexAlice()">
                     <span class="menu-icon"></span>
                     <span class="menu-text">Яндекс Алиса</span>
                 </button>
 
-                <!-- Кнопка Прогресс -->
                 <button class="menu-item" onclick="navigateTo('progress.html')">
                     <span class="menu-icon"></span>
                     <span class="menu-text">Прогресс</span>
                 </button>
 
-                <!-- Кнопка История попыток -->
                 <button class="menu-item" onclick="navigateTo('history.html')">
                     <span class="menu-icon"></span>
                     <span class="menu-text">История попыток</span>
                 </button>
 
-                <!-- Кнопка База вопросов -->
                 <button class="menu-item" onclick="navigateTo('base.html')">
                     <span class="menu-icon"></span>
                     <span class="menu-text">База вопросов</span>
                 </button>
 
-                <!-- Кнопка ВОЙТИ -->
                 <div class="yandex-auth-section">
                     <button
                         class="yandex-login-button"
@@ -888,49 +1224,35 @@
             // URL для Яндекс Алисы
             const YANDEX_ALICE_URL =
                 "https://alice.yandex.ru/?ysclid=mk9kxjoadx551239628";
-            // ID вашего приложения Яндекс ID (нужно получить в Яндекс ID)
             const YANDEX_CLIENT_ID = "9f943128c774497789ae73ca00af10bf";
-            // Callback URL должен совпадать с тем, что указан в настройках приложения
-            const REDIRECT_URI = window.location.origin + "/callback";;
+            const REDIRECT_URI = window.location.origin + "/callback";
 
-            // Функция для открытия Яндекс Алисы с подсказкой
             function openYandexAlice() {
                 console.log("Открываем Яндекс Алису с подсказкой...");
-
-                // Закрываем панель профиля если открыта
                 closeProfilePanel();
-
-                // Показываем модальное окно с инструкцией
                 showAliceModal();
             }
 
-            // Показать модальное окно с инструкцией
             function showAliceModal() {
                 const modal = document.getElementById("alice-modal");
                 if (modal) {
                     modal.classList.add("active");
-                    document.body.style.overflow = "hidden"; // Блокируем прокрутку страницы
+                    document.body.style.overflow = "hidden";
                 }
             }
 
-            // Закрыть модальное окно
             function closeAliceModal() {
                 const modal = document.getElementById("alice-modal");
                 if (modal) {
                     modal.classList.remove("active");
-                    document.body.style.overflow = ""; // Восстанавливаем прокрутку
+                    document.body.style.overflow = "";
                 }
             }
 
-            // Прямой переход к Яндекс Алисе
             function openAliceDirectly() {
                 console.log("Переходим к Яндекс Алисе...");
                 closeAliceModal();
-
-                // Открываем Яндекс Алису в новой вкладке
                 window.open(YANDEX_ALICE_URL, "_blank");
-
-                // Показываем дополнительную подсказку
                 setTimeout(() => {
                     alert(
                         'После открытия Яндекс Алисы скажите:\n\n"Алиса, запусти навык Тренировка охраны труда"\n\nИли найдите наш навык в каталоге навыков Алисы',
@@ -938,20 +1260,15 @@
                 }, 500);
             }
 
-            // Функция выбора блока
             function selectBlock(element, blockName) {
                 console.log("Выбран блок:", blockName);
 
-                // Убираем выделение со всех блоков
                 const allBlocks = document.querySelectorAll(".image-block");
                 allBlocks.forEach((block) => {
                     block.classList.remove("selected");
                 });
 
-                // Добавляем выделение к выбранному блоку
                 element.classList.add("selected");
-
-                // Сохраняем выбранный блок
                 localStorage.setItem("selectedBlock", blockName);
 
                  if (blockName === 'Блок 5') {
@@ -959,7 +1276,6 @@
                      return;
                 }
 
-                // Включаем кнопку "Экзамен"
                 const simulationBtn = document.getElementById("simulation-btn");
                 if (simulationBtn) {
                     simulationBtn.disabled = false;
@@ -967,7 +1283,6 @@
                 }
             }
 
-            // Вход через Яндекс
             function loginWithYandex() {
                 console.log("🔐 Вход через Яндекс...");
                 closeProfilePanel();
@@ -979,11 +1294,6 @@
                 button.disabled = true;
                 button.classList.add("loading");
 
-                // Используем простой редирект без state (для тестирования)
-                const YANDEX_CLIENT_ID = "9f943128c774497789ae73ca00af10bf";
-                const REDIRECT_URI = window.location.origin + "/callback";
-
-                // Формируем URL для авторизации
                 const authUrl =
                     `https://oauth.yandex.ru/authorize?` +
                     `response_type=code&` +
@@ -992,27 +1302,21 @@
                     `force_confirm=true`;
 
                 console.log("Переходим по URL:", authUrl);
-
-                // Редирект в той же вкладке
                 window.location.href = authUrl;
             }
 
-            // Проверяем авторизацию при загрузке
             document.addEventListener("DOMContentLoaded", function () {
                 console.log("=== ПРОВЕРКА АВТОРИЗАЦИИ ===");
 
-                // Проверяем, есть ли код авторизации в URL (возврат от Яндекс)
                 const urlParams = new URLSearchParams(window.location.search);
                 const code = urlParams.get("code");
                 const state = urlParams.get("state");
 
                 if (code && state) {
-                    // Это возврат от Яндекс OAuth
                     handleYandexCallback(code, state);
                     return;
                 }
 
-                // Проверяем пользователя
                 const userJson = localStorage.getItem("currentUser");
                 let user = null;
 
@@ -1036,15 +1340,11 @@
                     return;
                 }
 
-                // Обновляем информацию в панели профиля
                 updateProfilePanel(user);
 
-                // Проверяем, выбран ли уже блок
                 const selectedBlock = localStorage.getItem("selectedBlock");
                 if (selectedBlock) {
                     console.log("📝 Ранее выбран блок:", selectedBlock);
-
-                    // Находим и выделяем соответствующий блок
                     const blockElement = document.querySelector(
                         `[data-block="${selectedBlock}"]`,
                     );
@@ -1052,36 +1352,23 @@
                         blockElement.classList.add("selected");
                         console.log(`✅ Блок "${selectedBlock}" выделен`);
                     }
-
-                    // Активируем кнопку "Экзамен"
-                    const simulationBtn =
-                        document.getElementById("simulation-btn");
+                    const simulationBtn = document.getElementById("simulation-btn");
                     if (simulationBtn) {
                         simulationBtn.disabled = false;
-                        console.log(
-                            '✅ Кнопка "Экзамен" активирована (ранее выбранный блок)',
-                        );
                     }
-                } else {
-                    console.log("📭 Блок еще не выбран");
                 }
 
-                // Инициализация панели профиля и модального окна
                 initProfilePanel();
                 initAliceModal();
 
-                // Назначаем обработчик на кнопку профиля
                 const profileBtn = document.getElementById("profile-btn");
                 if (profileBtn) {
                     profileBtn.onclick = toggleProfilePanel;
                 }
             });
 
-            // Обработка возврата от Яндекс OAuth
             function handleYandexCallback(code, receivedState) {
                 console.log("🔐 Обработка callback от Яндекс...");
-
-                // Проверяем state для защиты от CSRF
                 const savedState = localStorage.getItem("yandex_auth_state");
                 if (receivedState !== savedState) {
                     console.error("❌ Ошибка проверки state");
@@ -1089,23 +1376,12 @@
                     localStorage.removeItem("yandex_auth_state");
                     return;
                 }
-
                 localStorage.removeItem("yandex_auth_state");
-
-                // Отправляем код на сервер для получения токена
                 exchangeCodeForToken(code);
             }
 
-            // Обмен кода на токен
             function exchangeCodeForToken(code) {
-                // В реальном приложении здесь должен быть запрос к вашему серверу
-                // Сервер должен обменять код на токен через Яндекс API
-
                 console.log("Получен код авторизации:", code);
-
-                // Для демонстрации создаем фиктивного пользователя
-                // В реальном приложении нужно сделать запрос к вашему серверу
-
                 const mockUser = {
                     id: "yandex_user_" + Date.now(),
                     name: "Пользователь Яндекс",
@@ -1115,31 +1391,21 @@
                     accessToken: "dummy_token_" + code,
                     isAuthorized: true,
                 };
-
-                // Сохраняем пользователя
                 localStorage.setItem("currentUser", JSON.stringify(mockUser));
-
-                // Убираем параметры из URL
                 const cleanUrl = window.location.href.split("?")[0];
                 window.history.replaceState({}, document.title, cleanUrl);
-
-                // Обновляем страницу
                 alert("✅ Вы успешно вошли через Яндекс!");
                 location.reload();
             }
 
-            // Инициализация модального окна Яндекс Алисы
             function initAliceModal() {
                 const modal = document.getElementById("alice-modal");
                 if (modal) {
-                    // Закрытие по клику вне окна
                     modal.addEventListener("click", function (event) {
                         if (event.target === modal) {
                             closeAliceModal();
                         }
                     });
-
-                    // Закрытие по ESC
                     document.addEventListener("keydown", function (event) {
                         if (
                             event.key === "Escape" &&
@@ -1151,15 +1417,12 @@
                 }
             }
 
-            // Обновление информации в панели профиля
             function updateProfilePanel(user) {
                 const userNameElement =
                     document.querySelector(".user-details h4");
                 if (userNameElement && user.name) {
                     userNameElement.textContent = user.name;
                 }
-
-                // Обновляем аватар если есть
                 if (user.avatar) {
                     const avatarElement =
                         document.querySelector(".user-avatar");
@@ -1167,8 +1430,6 @@
                         avatarElement.style.backgroundImage = `url('${user.avatar}')`;
                     }
                 }
-
-                // Обновляем текст кнопки в зависимости от статуса
                 const loginButton = document.querySelector(
                     ".yandex-login-button",
                 );
@@ -1189,11 +1450,9 @@
             let isPanelOpen = false;
 
             function initProfilePanel() {
-                // Закрытие по клику вне панели
                 document.addEventListener("click", function (event) {
                     const panel = document.getElementById("profile-panel");
                     const profileBtn = document.getElementById("profile-btn");
-
                     if (
                         isPanelOpen &&
                         panel &&
@@ -1204,8 +1463,6 @@
                         closeProfilePanel();
                     }
                 });
-
-                // Закрытие при нажатии ESC
                 document.addEventListener("keydown", function (event) {
                     if (event.key === "Escape" && isPanelOpen) {
                         closeProfilePanel();
@@ -1217,7 +1474,6 @@
                 if (event) {
                     event.stopPropagation();
                 }
-
                 if (isPanelOpen) {
                     closeProfilePanel();
                 } else {
@@ -1228,13 +1484,10 @@
             function openProfilePanel() {
                 const panel = document.getElementById("profile-panel");
                 const overlay = document.getElementById("overlay");
-
                 if (panel) {
                     panel.classList.add("active");
                     if (overlay) overlay.classList.add("active");
                     isPanelOpen = true;
-
-                    // Обновляем информацию о пользователе при открытии панели
                     const userJson = localStorage.getItem("currentUser");
                     if (userJson) {
                         try {
@@ -1250,7 +1503,6 @@
             function closeProfilePanel() {
                 const panel = document.getElementById("profile-panel");
                 const overlay = document.getElementById("overlay");
-
                 if (panel) {
                     panel.classList.remove("active");
                     if (overlay) overlay.classList.remove("active");
@@ -1264,14 +1516,6 @@
                     window.location.href = "index.html";
                 }
             }
-
-
-            /* Здесь будет скрипт для кнопки Избранное */
-
-
-            
-            
-            
         </script>
     </body>
 </html>

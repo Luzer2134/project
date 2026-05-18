@@ -1,6 +1,6 @@
 // data-loader.js
 let questionsData = {
-  "Блок 1": [],
+  "Программа А": [],
   "Блок 2": [], 
   "Блок 3": [],
   "Блок 4": []
@@ -13,14 +13,14 @@ async function loadAllBlocks() {
         console.log('Начинаю загрузку вопросов...');
         
         // Загружаем все блоки
-        const [block1, block2, block3, block4] = await Promise.all([
-            loadBlock('data/block1.json', 'Блок 1'),
+        const [ПрограммаА, block2, block3, block4] = await Promise.all([
+            loadBlock('data/block1.json', 'Программа А'),
             loadBlock('data/block2.json', 'Блок 2'),
             loadBlock('data/block3.json', 'Блок 3'),
             loadBlock('data/block4.json', 'Блок 4')
         ]);
         
-        questionsData["Блок 1"] = block1;
+        questionsData["Программа А"] = ПрограммаА;
         questionsData["Блок 2"] = block2;
         questionsData["Блок 3"] = block3;
         questionsData["Блок 4"] = block4;
@@ -165,7 +165,7 @@ function extractLetters(text) {
     if (!text) return [];
     try {
         // Ищем только буквы которые стоят в начале варианта: "А)" или "А."
-        const matches = text.toString().match(/(?<![А-Яа-я])[А-Е](?=\)|\.|,|\s)/g);
+        const matches = text.toString().match(/(?<![А-Яа-я])[А-Ж](?=\)|\.|,|\s)/g);
         console.log(`Извлечение букв из "${text}":`, matches);
         // Убираем дубликаты
         return matches ? [...new Set(matches)] : [];
