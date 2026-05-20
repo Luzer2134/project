@@ -10,7 +10,6 @@
             rel="stylesheet"
         />
         <style>
-            /* Сброс стилей и базовые настройки */
             * {
                 margin: 0;
                 padding: 0;
@@ -1190,11 +1189,10 @@
     }
 }
 
-        </style>
+    </style>
     </head>
     <body>
         <div class="page-container">
-            <!-- Шапка -->
             <header>
                 <nav>
                     <button
@@ -1223,7 +1221,6 @@
                         title="Открыть Яндекс Алису"
                     ></button>
                     <button class="profile-button" id="profile-btn"></button>
-                    <!-- <button class="favourite-button" onclick="navigateTo('favourites.html')" title="Избранное"></button> -->
                 </nav>
             </header>
 
@@ -1289,8 +1286,6 @@
                 </div>
             </main>
         </div>
-
-        <!-- ПАНЕЛЬ ПРОФИЛЯ -->
         <div class="profile-panel" id="profile-panel">
             <div class="profile-header"></div>
 
@@ -1300,7 +1295,6 @@
                     <h4>Гость</h4>
                 </div>
             </div>
-
             <div class="profile-menu">
                 <button class="menu-item" onclick="openYandexAlice()">
                     <span class="menu-icon"></span>
@@ -1332,8 +1326,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- МОДАЛЬНОЕ ОКНО ДЛЯ ЯНДЕКС АЛИСЫ -->
         <div class="alice-modal" id="alice-modal">
             <div class="alice-content">
                 <h3>Запусти навык "Тренировка охраны труда"</h3>
@@ -1362,12 +1354,8 @@
                 </div>
             </div>
         </div>
-
-        <!-- ОВЕРЛЕЙ -->
         <div class="overlay" id="overlay" onclick="closeProfilePanel()"></div>
-
         <script>
-            // URL для Яндекс Алисы
             const YANDEX_ALICE_URL =
                 "https://alice.yandex.ru/?ysclid=mk9kxjoadx551239628";
             const YANDEX_CLIENT_ID = "9f943128c774497789ae73ca00af10bf";
