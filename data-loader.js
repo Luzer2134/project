@@ -3,9 +3,19 @@ let questionsData = {
   "Блок 1": [],
   "Блок 2": [], 
   "Блок 3": [],
-  "Блок 4": []
+  "Блок 4": [],
+  "Блок 5": [],   // будет объединять все 10 тем
+  "Блок 5 — Тема 1": [],
+  "Блок 5 — Тема 2": [],
+  "Блок 5 — Тема 3": [],
+  "Блок 5 — Тема 4": [],
+  "Блок 5 — Тема 5": [],
+  "Блок 5 — Тема 6": [],   
+  "Блок 5 — Тема 7": [],   
+  "Блок 5 — Тема 8": [],  
+  "Блок 5 — Тема 9": [],   
+  "Блок 5 — Тема 10": []   
 };
-
 let isLoading = true;
 
 async function loadAllBlocks() {
@@ -25,6 +35,32 @@ async function loadAllBlocks() {
         questionsData["Блок 3"] = block3;
         questionsData["Блок 4"] = block4;
         
+        const [t1, t2, t3, t4, t5] = await Promise.all([
+            loadBlock('data/Block5_1.json', 'Блок 5 — Тема 1'),
+            loadBlock('data/Block5_2.json', 'Блок 5 — Тема 2'),
+            loadBlock('data/Block5_3.json', 'Блок 5 — Тема 3'),
+            loadBlock('data/Block5_4.json', 'Блок 5 — Тема 4'),
+            loadBlock('data/Block5_5.json', 'Блок 5 — Тема 5'),
+            loadBlock('data/Block5_6.json', 'Блок 5 — Тема 6'),  
+            loadBlock('data/Block5_7.json', 'Блок 5 — Тема 7'), 
+            loadBlock('data/Block5_8.json', 'Блок 5 — Тема 8'),  
+            loadBlock('data/Block5_9.json', 'Блок 5 — Тема 9'),  
+            loadBlock('data/Block5_10.json', 'Блок 5 — Тема 10') 
+        ]);
+
+        questionsData["Блок 5 — Тема 1"] = t1;
+        questionsData["Блок 5 — Тема 2"] = t2;
+        questionsData["Блок 5 — Тема 3"] = t3;
+        questionsData["Блок 5 — Тема 4"] = t4;
+        questionsData["Блок 5 — Тема 5"] = t5;
+        questionsData["Блок 5 — Тема 6"] = t6;
+        questionsData["Блок 5 — Тема 7"] = t7;
+        questionsData["Блок 5 — Тема 8"] = t8;
+        questionsData["Блок 5 — Тема 9"] = t9;
+        questionsData["Блок 5 — Тема 10"] = t10;
+
+        // "Блок 5" = все темы вместе
+        questionsData["Блок 5"] = [...t1, ...t2, ...t3, ...t4, ...t5, ...t6, ...t7, ...t8, ...t9, ...t10];
         isLoading = false;
         
         console.log('Все вопросы загружены!');
