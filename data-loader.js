@@ -35,7 +35,7 @@ async function loadAllBlocks() {
         questionsData["Блок 3"] = block3;
         questionsData["Блок 4"] = block4;
         
-        const [t1, t2, t3, t4, t5] = await Promise.all([
+        const [t1, t2, t3, t4, t5, t6, t7, t8, t9, t10] = await Promise.all([
             loadBlock('data/Block5_1.json', 'Блок 5 — Тема 1'),
             loadBlock('data/Block5_2.json', 'Блок 5 — Тема 2'),
             loadBlock('data/Block5_3.json', 'Блок 5 — Тема 3'),
