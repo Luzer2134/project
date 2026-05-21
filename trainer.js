@@ -4,6 +4,30 @@ let currentQuestionIndex = 0;
 let userAnswers = [];
 let currentBlock = '';
 
+async function waitForQuestionsData() {
+    console.log('Ожидание загрузки вопросов...');
+    
+    // Максимальное время ожидания - 10 секунд
+    let attempts = 0;
+    const maxAttempts = 100; // 100 * 100мс = 10 секунд
+    
+    while (attempts < maxAttempts) {
+        // Проверяем, загрузились ли данные
+        if (typeof questionsData !== 'undefined' && questionsData && !isLoading) {
+            // Дополнительная проверка: есть ли хоть какие-то вопросы
+            const hasQuestions = Object.values(questionsData).some(arr => arr && arr.length > 0);
+            if (hasQuestions) {
+                console.log('✅ Вопросы загружены!');
+                return true;
+            }
+        }
+        await new Promise(resolve => setTimeout(resolve, 100)); // Ждём 100мс
+        attempts++;
+    }
+    console.error('❌ Таймаут загрузки вопросов');
+    return false;
+}
+
 // ЛОКАЛЬНАЯ СИСТЕМА СОХРАНЕНИЯ ПРОГРЕССА
 class LocalProgressManager {
     constructor() {
@@ -198,7 +222,7 @@ class LocalProgressManager {
 window.localProgress = new LocalProgressManager();
 
 // Инициализация тренажёра
-function initTrainer() {
+async function initTrainer() {
     console.log('Инициализация тренажёра...');
     // 🔥 РЕЖИМ ИЗБРАННОГО
     const urlParams = new URLSearchParams(window.location.search);
@@ -237,7 +261,76 @@ function initTrainer() {
         return; // ❗ ВАЖНО — выходим, чтобы не загрузился обычный блок
     }
     
-    // Получаем выбранный блок
+    // ========== ЖДЁМ ЗАГРУЗКУ ВОПРОСОВ ==========
+    async function waitForQuestions() {
+        console.log('Ожидание загрузки вопросов...');
+        let attempts = 0;
+        const maxAttempts = 50; // 5 секунд максимум
+        
+        while (attempts < maxAttempts) {
+            // Проверяем, загрузились ли данные
+            if (typeof questionsData !== 'undefined' && !isLoading) {
+                // Дополнительная проверка: есть ли хоть какие-то вопросы
+                const hasQuestions = Object.values(questionsData).some(arr => arr && arr.length > 0);
+                if (hasQuestions) {
+                    console.log('✅ Вопросы успешно загружены!');
+                    return true;
+                }
+            }
+            await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
+        }
+        console.error('❌ Таймаут загрузки вопросов');
+        return false;
+    }
+    
+    // Ждём загрузки вопросов
+    const questionsLoaded = await waitForQuestions();
+    
+    if (!questionsLoaded) {
+        alert('Ошибка: вопросы не загружены! Попробуйте обновить страницу (F5)');
+        setTimeout(() => {
+            window.location.href = 'index.html';
+        }, 2000);
+        return;
+    }
+    
+    // ========== РЕЖИМ ИЗБРАННОГО ==========
+    const urlParams = new URLSearchParams(window.location.search);
+    const mode = urlParams.get('mode');
+
+    if (mode === 'favourites') {
+        console.log('Запуск режима избранного');
+
+        const fav = JSON.parse(localStorage.getItem('favourites_test') || '[]');
+
+        if (!fav.length) {
+            alert('Нет избранных вопросов');
+            window.location.href = 'favourites.html';
+            return;
+        }
+
+        currentBlock = 'Избранное';
+        const blockNameElem = document.getElementById('current-block-name');
+        if (blockNameElem) blockNameElem.textContent = 'Избранные вопросы';
+
+        currentQuestions = fav.map(q => ({
+            question: q.question,
+            options: q.options,
+            correctAnswers: q.correctAnswers,
+            comment: q.comment,
+            image: q.image,
+            block: q.block
+        }));
+
+        userAnswers = new Array(currentQuestions.length).fill(null);
+
+        updateProgress();
+        displayQuestion();
+        return;
+    }
+    
+    // ========== ОБЫЧНЫЙ РЕЖИМ ==========
     currentBlock = localStorage.getItem('selectedBlock');
     
     if (!currentBlock) {
@@ -249,16 +342,8 @@ function initTrainer() {
     }
 
     console.log(`Выбран блок: ${currentBlock}`);
-    document.getElementById('current-block-name').textContent = currentBlock;
-    
-    // Проверяем загружены ли вопросы
-    if (typeof questionsData === 'undefined') {
-        alert('Ошибка: вопросы не загружены! Возвращаем на главную.');
-        setTimeout(() => {
-            window.location.href = 'index.html';
-        }, 2000);
-        return;
-    }
+    const blockNameElem = document.getElementById('current-block-name');
+    if (blockNameElem) blockNameElem.textContent = currentBlock;
     
     if (!questionsData[currentBlock]) {
         alert(`Вопросы для блока "${currentBlock}" не найдены! Возвращаем на главную.`);
@@ -270,7 +355,7 @@ function initTrainer() {
     
     const blockQuestions = questionsData[currentBlock];
     
-    if (blockQuestions.length === 0) {
+    if (!blockQuestions || blockQuestions.length === 0) {
         alert(`Для блока "${currentBlock}" нет вопросов! Возвращаем на главную.`);
         setTimeout(() => {
             window.location.href = 'index.html';
@@ -280,32 +365,23 @@ function initTrainer() {
     
     console.log(`Загружено вопросов: ${blockQuestions.length}`);
     
-    // Берем ВСЕ вопросы блока
     currentQuestions = [...blockQuestions];
     userAnswers = new Array(currentQuestions.length).fill(null);
     
-    // Инициализируем прогресс-бар
     const progressFill = document.getElementById('progress-fill');
-    if (progressFill) {
-        progressFill.style.width = '0%';
-    }
+    if (progressFill) progressFill.style.width = '0%';
+    
     const progressPercentage = document.getElementById('progress-percentage');
-    if (progressPercentage) {
-        progressPercentage.textContent = '0%';
-    }
+    if (progressPercentage) progressPercentage.textContent = '0%';
     
     loadProgress();
-    
-    // Сразу обновляем прогресс
     updateProgress();
-    
-    // Показываем первый вопрос
     displayQuestion();
     
     console.log('Тренажёр инициализирован:', {
         блок: currentBlock,
         вопросов: currentQuestions.length,
-        сохраненныхОтветов: userAnswers.filter(a => a !== null).length
+        отвеченных: userAnswers.filter(a => a !== null).length
     });
 }
 
@@ -570,7 +646,7 @@ function showResultModal(question, userAnswer, isCorrect) {
     const modalTitle = document.getElementById('modal-title');
     const modalContent = document.getElementById('modal-content');
     
-    modalTitle.textContent = isCorrect ? 'ВЕРНО!' : 'НЕВЕРНО';
+    modalTitle.textContent = isCorrect ? 'ВЕРНО!' : 'НЕВЕРНО!';
     modalTitle.style.color = isCorrect ? '#64D23F' : '#D23F3F';
     modalTitle.style.fontSize = '24px';
     
@@ -1218,10 +1294,10 @@ function updateFavButton() {
     
     if (isCurrentInFavourites()) {
         btn.classList.add('active');
-        btn.innerHTML = '<span>★</span> В избранном';
+        btn.innerHTML = 'В избранном';
     } else {
         btn.classList.remove('active');
-        btn.innerHTML = '<span>☆</span> В избранное';
+        btn.innerHTML = ' В избранное';
     }
 }
 
