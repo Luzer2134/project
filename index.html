@@ -1412,10 +1412,10 @@
                      return;
                 }
 
- 
+ adaptive_design
 
                 // Включаем кнопку "Экзамен"
- 
+ backend
                 const simulationBtn = document.getElementById("simulation-btn");
                 if (simulationBtn) {
                     simulationBtn.disabled = false;
@@ -1480,12 +1480,6 @@
 
                 updateProfilePanel(user);
 
-                // Если пользователь авторизован через Яндекс — активируем кнопку экзамена
-                if (user.userType === 'yandex') {
-                    const simulationBtn = document.getElementById("simulation-btn");
-                    if (simulationBtn) simulationBtn.disabled = false;
-                }
-                
                 const selectedBlock = localStorage.getItem("selectedBlock");
                 if (selectedBlock) {
                     const blockElement = document.querySelector(
@@ -1652,10 +1646,14 @@
 
             function logout() {
                 if (confirm("Вы уверены, что хотите выйти?")) {
-                    localStorage.clear();
-                    window.location.href = "index.html";
+                    localStorage.removeItem('currentUser');
+                    localStorage.removeItem('isAuthorized');
+                    localStorage.removeItem('userType');
+                    localStorage.removeItem('userName');
+                    localStorage.removeItem('userId');
+                    window.location.href = "login.html";
                 }
             }
-        </script>
+        </script>ё
     </body>
 </html>
