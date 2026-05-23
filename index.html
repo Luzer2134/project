@@ -1480,6 +1480,12 @@
 
                 updateProfilePanel(user);
 
+                // Если пользователь авторизован через Яндекс — активируем кнопку экзамена
+                if (user.userType === 'yandex') {
+                    const simulationBtn = document.getElementById("simulation-btn");
+                    if (simulationBtn) simulationBtn.disabled = false;
+                }
+                
                 const selectedBlock = localStorage.getItem("selectedBlock");
                 if (selectedBlock) {
                     const blockElement = document.querySelector(
