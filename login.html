@@ -240,9 +240,13 @@
     }
 
     function logout() {
-        if (confirm('Вы уверены, что хотите выйти?')) {
-            localStorage.clear();
-            window.location.href = 'login.html';
+        if (confirm("Вы уверены, что хотите выйти?")) {
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('isAuthorized');
+            localStorage.removeItem('userType');
+            localStorage.removeItem('userName');
+            localStorage.removeItem('userId');
+            window.location.href = "login.html";
         }
     }
 
