@@ -1040,7 +1040,7 @@ app.get('*.html', (req, res) => {
 
 // Для корня
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'login.html'));
+    res.sendFile(path.join(__dirname, '..', 'index.html'));
 });
 
 // Для API маршрутов - 404
