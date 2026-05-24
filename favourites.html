@@ -498,7 +498,8 @@
                 const userJson = localStorage.getItem('currentUser');
                 if (userJson) {
                     const user = JSON.parse(userJson);
-                    return user.id || user.email || 'guest';
+                    if (user.userType === 'guest') return 'guest';
+                    return user.id || 'guest'; // ← то же самое что в trainer.js
                 }
             } catch(e) {}
             return 'guest';
