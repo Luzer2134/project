@@ -699,7 +699,7 @@
         
         // Инициализация
         document.addEventListener('DOMContentLoaded', function() {
-            renderFavouritesList();
+            setTimeout(renderFavouritesList, 600);
             
             const profileBtn = document.getElementById('profile-btn');
             if (profileBtn) profileBtn.onclick = toggleProfilePanel;
