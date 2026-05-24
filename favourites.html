@@ -503,12 +503,8 @@
                 const userJson = localStorage.getItem('currentUser');
                 if (userJson) {
                     const user = JSON.parse(userJson);
-                    // Для Яндекс пользователей используем yandexId или email
-                    if (user.userType === 'yandex') {
-                        return user.yandexId || user.email || 'yandex_user';
-                    }
-                    // Для гостей — фиксированный ключ
-                    return 'guest';
+                    if (user.userType === 'guest') return 'guest';
+                    return String(user.id); // ← как у всех остальных
                 }
             } catch(e) {}
             return 'guest';
