@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Блок 5 — Выбор темы</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="trainer_style.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+ 
+    body {
+      font-family: 'Montserrat', Arial, sans-serif;
+      background: #f7f7f9;
+      color: #333;
+      min-height: 100vh;
+    }
+ 
+    /* ── Шапка (такая же как везде) ── */
+    header {
+      background: white;
+      box-shadow: 0 2px 10px rgba(0,0,0,.1);
+      position: sticky; top: 0; z-index: 1000;
+      height: 80px;
+    }
+    nav {
+      max-width: 1440px; margin: 0 auto; height: 100%;
+      display: flex; justify-content: flex-end; align-items: center;
+      gap: 20px; padding: 0 40px; position: relative;
+    }
+    .button_documentation, .button_simulation, .button_trainer {
+      font-family: 'Montserrat', sans-serif; font-weight: 500; font-size: 16px;
+      background: none; border: none; color: #262626; cursor: pointer;
+      white-space: nowrap; height: 56px; padding: 12px 8px;
+      display: flex; align-items: center; gap: 8px;
+      position: absolute; top: 50%; transform: translateY(-50%);
+      text-decoration: none;
+    }
+    .button_documentation { left: 40px; }
+    .button_simulation    { left: 200px; }
+    .button_trainer       { left: 320px; }
+    .skill-button, .profile-button {
+      width: 56px; height: 56px; background: none; border: none; cursor: pointer;
+      background-size: contain; background-repeat: no-repeat; background-position: center;
+    }
+    .skill-button   { background-image: url("images/skill-button.png"); }
+    .profile-button { background-image: url("images/profile-button.png"); }
+ 
+    /* ── Контент ── */
+    .page-wrap {
+      max-width: 860px;
+      margin: 48px auto;
+      padding: 0 20px;
+    }
+ 
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: none; border: none; color: #3f8fd2;
+      font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 500;
+      cursor: pointer; padding: 0; margin-bottom: 28px;
+    }
+    .back-btn:hover { color: #2176ae; }
+ 
+    .page-title {
+      font-size: 26px; font-weight: 700; color: #1a1a1a; margin-bottom: 6px;
+    }
+    .page-sub {
+      font-size: 14px; color: #999; margin-bottom: 36px;
+    }
+ 
+    /* ── Сетка карточек ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 18px;
+    }
+ 
+    .card {
+      background: white;
+      border: 2px solid #e8e8e8;
+      border-radius: 18px;
+      padding: 26px 26px 22px;
+      cursor: pointer;
+      transition: border-color .2s, box-shadow .2s, transform .2s;
+      position: relative;
+    }
+    .card:hover {
+      border-color: #3f8fd2;
+      box-shadow: 0 8px 24px rgba(63,143,210,.14);
+      transform: translateY(-2px);
+    }
+    /* карточка «Все темы» */
+    .card.all { border-style: dashed; border-color: #ccc; }
+    .card.all:hover { border-color: #888; box-shadow: 0 8px 20px rgba(0,0,0,.09); }
+ 
+    .card-num {
+      display: inline-block;
+      background: #eef5fb; color: #2a7abf;
+      font-size: 11px; font-weight: 700;
+      padding: 3px 10px; border-radius: 20px;
+      margin-bottom: 12px; letter-spacing: .5px;
+    }
+    .card.all .card-num { background: #f2f2f2; color: #888; }
+ 
+    .card-title {
+      font-size: 16px; font-weight: 600; color: #1a1a1a;
+      margin-bottom: 7px; line-height: 1.35;
+    }
+    .card-desc {
+      font-size: 13px; color: #888; line-height: 1.55; margin-bottom: 18px;
+    }
+ 
+    .card-footer {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .card-count {
+      font-size: 12px; color: #aaa; font-weight: 500;
+    }
+    .card-arrow {
+      color: #ccc; font-size: 20px; transition: transform .2s, color .2s;
+    }
+    .card:hover .card-arrow { transform: translateX(4px); color: #3f8fd2; }
+    .card.all:hover .card-arrow { color: #888; }
+ 
+    /* прогресс */
+    .prog-wrap {
+      margin-top: 14px; height: 4px;
+      background: #f0f0f0; border-radius: 2px; overflow: hidden;
+    }
+    .prog-fill {
+      height: 100%; background: #3f8fd2;
+      border-radius: 2px; transition: width .5s;
+    }
+    .prog-label {
+      font-size: 11px; color: #bbb; margin-top: 5px;
+    }
+ 
+    @media (max-width: 600px) {
+      .grid { grid-template-columns: 1fr; }
+      .page-title { font-size: 20px; }
+      nav { padding: 0 12px; }
+      .button_documentation, .button_simulation, .button_trainer { font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+ 
+<header>
+  <nav>
+    <button class="button_documentation" onclick="location.href='documentation.html'">Документация</button>
+    <button class="button_simulation"    onclick="location.href='simulation.html'">Экзамен</button>
+    <button class="button_trainer"       onclick="location.href='trainer.html'">Тренажёр</button>
+    <button class="skill-button"         onclick="location.href='skills.html'"></button>
+    <button class="profile-button"       id="profile-btn"></button>
+  </nav>
+</header>
+ 
+<main class="page-wrap">
+  <button class="back-btn" onclick="location.href='index.html'">← На главную</button>
+ 
+  <div class="page-title">Блок 5 — Выбор темы</div>
+  <div class="page-sub">Выберите тему для тренировки или пройдите все вопросы сразу</div>
+ 
+  <div class="grid" id="grid"></div>
+</main>
+ 
+<script>
+  // ─── Темы ────────────────────────────────────────────────────────────────
+  // block5-topics.html (внутри тега <script>)
+
+const TOPICS = [
+  {
+    key:   'Блок 5 — Тема 1',
+    num:   'Тема 1',
+    title: 'Работы повышенной опасности',
+    desc:  'Наряд-допуск, ответственные лица, виды работ повышенной опасности.'
+  },
+  {
+    key:   'Блок 5 — Тема 2',
+    num:   'Тема 2',
+    title: 'Электробезопасность',
+    desc:  'Правила работы с электроинструментом, защитное заземление.'
+  },
+  {
+    key:   'Блок 5 — Тема 3',
+    num:   'Тема 3',
+    title: 'Пожарная безопасность',
+    desc:  'Средства пожаротушения, эвакуация, действия при пожаре.'
+  },
+  {
+    key:   'Блок 5 — Тема 4',
+    num:   'Тема 4',
+    title: 'Работа на высоте',
+    desc:  'Страховочные системы, леса, стремянки.'
+  },
+  {
+    key:   'Блок 5 — Тема 5',
+    num:   'Тема 5',
+    title: 'Оказание первой помощи',
+    desc:  'Остановка кровотечения, реанимация, переломы.'
+  },
+  {
+    key:   'Блок 5 — Тема 6',
+    num:   'Тема 6',
+    title: 'Тема 6',      // ← замените на реальное название
+    desc:  'Описание темы 6.'
+  },
+  {
+    key:   'Блок 5 — Тема 7',
+    num:   'Тема 7',
+    title: 'Тема 7',
+    desc:  'Описание темы 7.'
+  },
+  {
+    key:   'Блок 5 — Тема 8',
+    num:   'Тема 8',
+    title: 'Тема 8',
+    desc:  'Описание темы 8.'
+  },
+  {
+    key:   'Блок 5 — Тема 9',
+    num:   'Тема 9',
+    title: 'Тема 9',
+    desc:  'Описание темы 9.'
+  },
+  {
+    key:   'Блок 5 — Тема 10',
+    num:   'Тема 10',
+    title: 'Тема 10',
+    desc:  'Описание темы 10.'
+  },
+  {
+    key:   'Блок 5',
+    num:   'Все темы',
+    title: 'Все вопросы Блока 5',
+    desc:  'Полный набор вопросов по всем 10 темам блока.',
+    isAll: true
+  }
+];
+  // ─── Прогресс из localStorage ────────────────────────────────────────────
+  function getProgress(key) {
+    try {
+      const userId = (() => {
+        const u = JSON.parse(localStorage.getItem('currentUser') || 'null');
+        return u ? (u.id || u.email || 'guest') : 'guest';
+      })();
+      const raw = localStorage.getItem(`trainerProgress_${userId}`);
+      if (!raw) return null;
+      return JSON.parse(raw)[key] || null;
+    } catch { return null; }
+  }
+ 
+  // ─── Рендер ──────────────────────────────────────────────────────────────
+  function render() {
+    const grid = document.getElementById('grid');
+    grid.innerHTML = TOPICS.map(t => {
+      const p    = getProgress(t.key);
+      const done = p ? (p.completed || 0) : 0;
+      const total = p ? (p.total || 0) : 0;
+      const pct  = total > 0 ? Math.round(done / total * 100) : 0;
+ 
+      return `
+        <div class="card ${t.isAll ? 'all' : ''}" onclick="go('${t.key.replace(/'/g,"\\'")}')">
+          <div class="card-num">${t.num}</div>
+          <div class="card-title">${t.title}</div>
+          <div class="card-desc">${t.desc}</div>
+          <div class="card-footer">
+            <span class="card-count">${done > 0 ? `${done} / ${total} отвечено` : 'Ещё не начато'}</span>
+            <span class="card-arrow">›</span>
+          </div>
+          ${done > 0 ? `
+            <div class="prog-wrap">
+              <div class="prog-fill" style="width:${pct}%"></div>
+            </div>
+            <div class="prog-label">${pct}% пройдено</div>
+          ` : ''}
+        </div>`;
+    }).join('');
+  }
+ 
+  // ─── Переход в тренажёр ──────────────────────────────────────────────────
+  function go(key) {
+    localStorage.setItem('selectedBlock', key);
+    location.href = 'trainer.html';
+  }
+ 
+  render();
+</script>
+ 
+</body>
+</html>
