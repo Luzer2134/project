@@ -27,21 +27,7 @@ async function checkAndMigrateData() {
     return false;
 }
 
-// Измени начало функции loadHistory
-async function loadHistory() {
-    console.log('=== ЗАГРУЗКА ИСТОРИИ ===');
-    
-    // Сначала проверяем и переносим данные если нужно
-    const shouldReload = await checkAndMigrateData();
-    if (shouldReload) {
-        console.log('Данные перенесены, перезагружаю страницу...');
-        location.reload();
-        return;
-    }
-    
-    const user = examAPI.getUserFromStorage();
-    console.log('Текущий пользователь:', user);
-}
+
 async function loadHistory() {
     console.log('ЗАГРУЗКА ИСТОРИИ ПОПЫТОК');
     
@@ -268,20 +254,43 @@ async function clearHistory() {
     }
     
     if (user.userType === 'guest') {
-        alert('В гостевом режиме история автоматически очищается. Войдите через email для сохранения истории.');
+
+        alert('В гостевом режиме история не очищается. Войдите через Яндекс для сохранения истории.');
         return;
     }
     
-    if (!confirm('Вы уверены, что хотите очистить всю историю попыток?')) {
+    if (!confirm('Вы уверены, что хотите очистить ВСЮ историю попыток? Это действие нельзя отменить!')) {
         return;
     }
     
-    // Очищаем локальное хранилище
-    localStorage.removeItem('examAttempts');
-    
-    // TODO: Добавить очистку на сервере
-    alert('История очищена локально!');
-    loadHistory();
+    try {
+        // Получаем все попытки пользователя
+        const result = await examAPI.getExamAttempts();
+        
+        if (result.success && result.attempts && result.attempts.length > 0) {
+            // Удаляем каждую попытку через API
+            for (const attempt of result.attempts) {
+                await fetch(`/api/exam-attempts/${user.id}/${attempt.id}`, {
+                    method: 'DELETE'
+                });
+                console.log('🗑️ Удалена попытка:', attempt.id);
+            }
+            
+            // Очищаем локальное хранилище
+            localStorage.removeItem(`examAttempts_${user.id}`);
+            localStorage.removeItem('examAttempts');
+            
+            alert(`✅ История очищена! Удалено ${result.attempts.length} попыток.`);
+            
+            // Перезагружаем страницу
+            location.reload();
+        } else {
+            alert('История уже пуста');
+        }
+    } catch (error) {
+        console.error('Ошибка очистки истории:', error);
+        alert('Ошибка при очистке истории');
+    }
 }
 
 // Загружаем историю при загрузке страницы

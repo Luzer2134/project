@@ -514,8 +514,8 @@ function displayQuestion() {
             nextBtn.style.display = 'inline-block';
         }
     }
-    // Обновляем состояние кнопки избранного
-    updateFavButton();
+        // Обновляем состояние кнопки избранного (асинхронно)
+        updateFavButton();
 }
 
 // Проверка ответа
@@ -1154,75 +1154,108 @@ document.addEventListener('DOMContentLoaded', function() {
 // ==================== ИЗБРАННОЕ ====================
 
 // Получить ключ для хранения избранного
-function getFavouritesKey() {
-    const user = window.localProgress.getUser();
-    return `user_favourites_${user.id || 'guest'}`;
+async function getCurrentUserId() {
+    try {
+        const userJson = localStorage.getItem('currentUser');
+        if (userJson) {
+            const user = JSON.parse(userJson);
+            return String(user.id);
+        }
+    } catch(e) {}
+    return null;
 }
 
 // Загрузить избранное
-function loadFavourites() {
-    const key = getFavouritesKey();
-    const saved = localStorage.getItem(key);
-    return saved ? JSON.parse(saved) : [];
-}
-
-// Сохранить избранное
-function saveFavourites(favourites) {
-    const key = getFavouritesKey();
-    localStorage.setItem(key, JSON.stringify(favourites));
-}
 
 // Проверить, в избранном ли текущий вопрос
-function isCurrentInFavourites() {
+// Проверить, в избранном ли текущий вопрос (через БД)
+async function isCurrentInFavourites() {
     if (!currentQuestions.length || !currentQuestions[currentQuestionIndex]) return false;
+    
+    const userId = await getCurrentUserId();
+    if (!userId) return false;
+    
     const q = currentQuestions[currentQuestionIndex];
-    const id = `${currentBlock}_${q.question}`;
-    return loadFavourites().some(f => f.id === id);
+    const questionId = `${currentBlock}_${q.question}`;
+    
+    try {
+        const response = await fetch(`/api/favourites/${userId}`);
+        const data = await response.json();
+        if (data.success) {
+            return data.favourites.some(fav => fav.id === questionId);
+        }
+    } catch(e) {
+        console.error('Ошибка проверки избранного:', e);
+    }
+    return false;
 }
 
 // Добавить/удалить из избранного
-window.toggleFavourite = function() {
+window.toggleFavourite = async function() {
     if (!currentQuestions.length || !currentQuestions[currentQuestionIndex]) {
         showToast('Нет активного вопроса');
         return;
     }
     
-    const q = currentQuestions[currentQuestionIndex];
-    const id = `${currentBlock}_${q.question}`;
-    let favs = loadFavourites();
-    const exists = favs.some(f => f.id === id);
-    
-    if (exists) {
-        favs = favs.filter(f => f.id !== id);
-        saveFavourites(favs);
-    } else {
-        favs.push({
-            id: id,
-            block: currentBlock,
-            question: q.question,
-            options: q.options,
-            correctAnswers: q.correctAnswers,
-            comment: q.comment || '',
-            image: q.image || q.картинки || null,
-            timestamp: Date.now()
-        });
-        saveFavourites(favs);
+    const userId = await getCurrentUserId();
+    if (!userId) {
+        showToast('Пользователь не найден');
+        return;
     }
     
-    updateFavButton();
+    const q = currentQuestions[currentQuestionIndex];
+    const questionId = `${currentBlock}_${q.question}`;
+    
+    try {
+        // Проверяем, в избранном ли уже
+        const checkRes = await fetch(`/api/favourites/${userId}`);
+        const checkData = await checkRes.json();
+        const isFav = checkData.favourites?.some(f => f.id === questionId);
+        
+        if (isFav) {
+            // Удаляем
+            await fetch(`/api/favourites/${userId}/${encodeURIComponent(questionId)}`, { method: 'DELETE' });
+            await updateFavButton();
+            showToast('❌ Вопрос удалён из избранного');
+        } else {
+            // Добавляем
+            await fetch('/api/favourites', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: userId,
+                    questionId: questionId,
+                    block: currentBlock,
+                    question: q.question,
+                    options: q.options,
+                    correctAnswers: q.correctAnswers,
+                    comment: q.comment || '',
+                    image: q.image || q.картинки || null
+                })
+            });
+            await updateFavButton();
+            showToast('⭐ Вопрос добавлен в избранное');
+        }
+    } catch(e) {
+        console.error('Ошибка:', e);
+        showToast('Ошибка при работе с избранным');
+    }
 }
 
 // Обновить внешний вид кнопки избранного
-function updateFavButton() {
+// Обновить внешний вид кнопки избранного
+async function updateFavButton() {
     const btn = document.getElementById('fav-btn');
     if (!btn) return;
     
-    if (isCurrentInFavourites()) {
+    const isFav = await isCurrentInFavourites();
+    
+    if (isFav) {
         btn.classList.add('active');
-        btn.innerHTML = '<span>★</span> В избранном';
+        btn.innerHTML = '⭐ В избранном';
     } else {
         btn.classList.remove('active');
-        btn.innerHTML = '<span>☆</span> В избранное';
+        btn.innerHTML = '☆ В избранное';
     }
 }
 
@@ -1253,5 +1286,12 @@ function showToast(message) {
     toast.style.opacity = '1';
     setTimeout(() => {
         toast.style.opacity = '0';
-    }, 2000);
+    }, 2000);  
+
+    // Делаем функции глобальными
+window.getCurrentUserId = getCurrentUserId;
+window.isCurrentInFavourites = isCurrentInFavourites;
+window.updateFavButton = updateFavButton;
+window.toggleFavourite = toggleFavourite;
+window.showToast = showToast;
 }

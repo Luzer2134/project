@@ -503,90 +503,145 @@
                 const userJson = localStorage.getItem('currentUser');
                 if (userJson) {
                     const user = JSON.parse(userJson);
-                    if (user.userType === 'guest') return 'guest';
-                    return String(user.id); // ← как у всех остальных
+
+                    return String(user.id);
                 }
             } catch(e) {}
-            return 'guest';
-        }
-        function startFavouritesTest() {
-            const favourites = loadFavourites();
-
-            if (!favourites.length) {
-                showToast('Нет избранных вопросов');
-                return;
-            }
-
-            localStorage.setItem('favourites_test', JSON.stringify(favourites));
-
-            window.location.href = 'trainer.html?mode=favourites';
+            return null;
         }
         
-        function getFavouritesStorageKey() {
-            const userId = getCurrentUserId();
-            return `${FAVOURITES_KEY}_${userId}`;
-        }
-        
-        function loadFavourites() {
-            const key = getFavouritesStorageKey();
-            const saved = localStorage.getItem(key);
-            if (saved) {
-                try {
-                    return JSON.parse(saved);
-                } catch(e) {
-                    return [];
+        async function loadFavourites() {
+            const userId = await getCurrentUserId();
+            if (!userId) return [];
+            
+            try {
+                const response = await fetch(`/api/favourites/${userId}`);
+                const data = await response.json();
+                if (data.success) {
+                    return data.favourites;
                 }
+            } catch(e) {
+                console.error('Ошибка загрузки избранного:', e);
             }
             return [];
         }
         
-        function saveFavourites(favourites) {
-            const key = getFavouritesStorageKey();
-            localStorage.setItem(key, JSON.stringify(favourites));
-            window.dispatchEvent(new CustomEvent('favouritesUpdated', { detail: { count: favourites.length } }));
-        }
-        
-        window.addToFavourites = function(question, blockName) {
-            const favourites = loadFavourites();
-            const questionId = `${blockName}_${question.question}`;
-            const exists = favourites.some(fav => fav.id === questionId);
-            
-            if (!exists) {
-                favourites.push({
-                    id: questionId,
-                    block: blockName,
-                    question: question.question,
-                    options: question.options,
-                    correctAnswers: question.correctAnswers,
-                    comment: question.comment || '',
-                    image: question.картинки || question.image || null,
-                    timestamp: Date.now()
-                });
-                saveFavourites(favourites);
-                return true;
+
+        window.addToFavourites = async function(question, blockName) {
+            const userId = await getCurrentUserId();
+            if (!userId) {
+                showToast('Ошибка: пользователь не найден');
+                return false;
             }
+            
+            const questionId = `${blockName}_${question.question}`;
+            
+            try {
+                const response = await fetch('/api/favourites', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: userId,
+                        questionId: questionId,
+                        block: blockName,
+                        question: question.question,
+                        options: question.options,
+                        correctAnswers: question.correctAnswers,
+                        comment: question.comment || '',
+                        image: question.картинки || question.image || null
+                    })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    await renderFavouritesList();
+                    showToast('⭐ Вопрос добавлен в избранное');
+                    return true;
+                }
+            } catch(e) {
+                console.error('Ошибка добавления:', e);
+            }
+            showToast('❌ Ошибка при добавлении');
             return false;
         };
         
-        window.removeFromFavourites = function(questionId) {
-            let favourites = loadFavourites();
-            favourites = favourites.filter(fav => fav.id !== questionId);
-            saveFavourites(favourites);
-            return favourites;
+        window.removeFromFavourites = async function(questionId) {
+            const userId = await getCurrentUserId();
+            if (!userId) return false;
+            
+            try {
+                const response = await fetch(`/api/favourites/${userId}/${encodeURIComponent(questionId)}`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+                if (data.success) {
+                    await renderFavouritesList();
+                    showToast('❌ Вопрос удалён из избранного');
+                    return true;
+                }
+            } catch(e) {
+                console.error('Ошибка удаления:', e);
+            }
+            showToast('⚠️ Ошибка при удалении');
+            return false;
         };
         
-        window.isInFavourites = function(question, blockName) {
-            const favourites = loadFavourites();
+        window.isInFavourites = async function(question, blockName) {
+            const favourites = await loadFavourites();
             const questionId = `${blockName}_${question.question}`;
             return favourites.some(fav => fav.id === questionId);
         };
         
-        function clearAllFavourites() {
-            if (confirm('Вы уверены, что хотите удалить ВСЕ избранные вопросы?')) {
-                saveFavourites([]);
-                renderFavouritesList();
-                showToast('Избранное очищено');
+
+        async function clearAllFavourites() {
+            if (!confirm('Вы уверены, что хотите удалить ВСЕ избранные вопросы?')) return;
+            
+            const userId = await getCurrentUserId();
+            if (!userId) {
+                showToast('Пользователь не найден');
+                return;
             }
+            
+            // Показываем индикатор загрузки
+            showToast('⏳ Очистка избранного...');
+            
+            try {
+                // Получаем все избранные вопросы
+                const res = await fetch(`/api/favourites/${userId}`);
+                const data = await res.json();
+                
+                if (data.favourites && data.favourites.length > 0) {
+                    // Удаляем каждый вопрос по одному (гарантированно работает)
+                    let deleted = 0;
+                    for (const fav of data.favourites) {
+                        const delRes = await fetch(`/api/favourites/${userId}/${encodeURIComponent(fav.id)}`, {
+                            method: 'DELETE'
+                        });
+                        if (delRes.ok) deleted++;
+                    }
+                    
+                    // Перерисовываем список
+                    await renderFavouritesList();
+                    showToast(`✅ Избранное очищено (удалено ${deleted} вопросов)`);
+                } else {
+                    showToast('Избранное уже пусто');
+                }
+            } catch (e) {
+                console.error('Ошибка очистки:', e);
+                showToast('❌ Ошибка при очистке');
+            }
+        }
+        
+        async function startFavouritesTest() {
+            const favourites = await loadFavourites();
+            
+            if (!favourites.length) {
+                showToast('Нет избранных вопросов');
+                return;
+            }
+            
+            localStorage.setItem('favourites_test', JSON.stringify(favourites));
+            window.location.href = 'trainer.html?mode=favourites';
+
         }
         
         // ==================== ОТОБРАЖЕНИЕ ====================
@@ -601,10 +656,10 @@
             });
         }
         
-        function removeFavouriteItem(questionId) {
-            window.removeFromFavourites(questionId);
-            renderFavouritesList();
-            showToast('Вопрос удалён из избранного');
+
+        async function removeFavouriteItem(questionId) {
+            await window.removeFromFavourites(questionId);
+
         }
         
         function showToast(message) {
@@ -622,9 +677,11 @@
             }, 2000);
         }
         
-        function renderFavouritesList() {
+
+        async function renderFavouritesList() {
             const container = document.getElementById('favourites-container');
-            const favourites = loadFavourites();
+            const favourites = await loadFavourites();
+
             
             if (!favourites.length) {
                 container.innerHTML = `
@@ -679,7 +736,9 @@
         };
         
         window.loginWithYandex = function() {
-            alert('Функция входа через Яндекс (демо)');
+
+            window.location.href = '/auth/yandex';
+
         };
         
         let isPanelOpen = false;
@@ -715,8 +774,10 @@
         }
         
         // Инициализация
-        document.addEventListener('DOMContentLoaded', function() {
-            renderFavouritesList();
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            await renderFavouritesList();
+
             
             const profileBtn = document.getElementById('profile-btn');
             if (profileBtn) profileBtn.onclick = toggleProfilePanel;
@@ -728,11 +789,19 @@
             });
             
             window.addEventListener('storage', function(e) {
-                if (e.key && e.key.includes(FAVOURITES_KEY)) {
+
+                if (e.key && e.key.includes('user_favourites')) {
+
                     renderFavouritesList();
                 }
             });
         });
     </script>
+
+            
+       
+        
+    
+>>>>>>> master
 </body>
 </html>

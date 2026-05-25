@@ -109,6 +109,21 @@ const db = new sqlite3.Database(DB_PATH, (err) => {
 // Функция создания таблиц
 function createTables() {
     const tables = [
+
+        `CREATE TABLE IF NOT EXISTS favourites (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            question_id TEXT NOT NULL,
+            block TEXT NOT NULL,
+            question TEXT NOT NULL,
+            options TEXT,
+            correct_answers TEXT,
+            comment TEXT,
+            image TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(user_id, question_id),
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        )`,
         // Таблица пользователей
         `CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -500,26 +515,28 @@ app.get('/api/test', (req, res) => {
     });
 });
 
-// Гостевой вход
+// Гостевой вход - постоянный гость (один на всех)
 app.post('/api/guest', async (req, res) => {
     try {
-        const guestUser = {
-            email: 'guest_' + Date.now() + '@temp.com',
-            name: 'Гость',
-            user_type: 'guest',
-            is_authorized: 0
-        };
+        // Ищем существующего гостя в базе
+        let users = await dbQuery('SELECT * FROM users WHERE user_type = "guest" LIMIT 1');
         
-        console.log(`👤 Гостевой вход: ${guestUser.email}`);
+        let user;
         
-        // Создаем запись гостя в базе
-        const result = await dbRun(
-            `INSERT INTO users (email, name, user_type, is_authorized) VALUES (?, ?, ?, ?)`,
-            [guestUser.email, guestUser.name, guestUser.user_type, guestUser.is_authorized]
-        );
+        if (users.length === 0) {
+            // Создаем одного постоянного гостя
+            const result = await dbRun(
+                `INSERT INTO users (email, name, user_type, is_authorized) VALUES (?, ?, ?, ?)`,
+                ['guest@permanent.com', 'Гость', 'guest', 0]
+            );
+            user = await dbQuery('SELECT * FROM users WHERE id = ?', [result.id]);
+            console.log('✅ Создан постоянный гость, ID:', user[0].id);
+        } else {
+            user = users;
+            console.log('✅ Используем существующего гостя, ID:', user[0].id);
+        }
         
-        const user = await dbQuery('SELECT * FROM users WHERE id = ?', [result.id]);
-        
+        // Отправляем данные пользователя на фронт
         res.json({
             success: true,
             user: {
@@ -714,6 +731,51 @@ app.get('/api/trainer-progress/:userId', async (req, res) => {
     }
 });
 
+// Удалить прогресс тренажера для конкретного блока
+app.delete('/api/trainer-progress/:userId/:block', async (req, res) => {
+    try {
+        const { userId, block } = req.params;
+        
+        console.log(`🗑️ Удаление прогресса: user=${userId}, block=${decodeURIComponent(block)}`);
+        
+        const result = await dbRun(
+            'DELETE FROM trainer_progress WHERE user_id = ? AND block = ?',
+            [userId, decodeURIComponent(block)]
+        );
+        
+        if (result.changes > 0) {
+            console.log(`✅ Удален прогресс для блока: ${decodeURIComponent(block)}`);
+        } else {
+            console.log(`⚠️ Прогресс не найден для блока: ${decodeURIComponent(block)}`);
+        }
+        
+        res.json({ success: true, deleted: result.changes });
+    } catch (error) {
+        console.error('❌ Ошибка удаления прогресса:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Удалить ВЕСЬ прогресс пользователя (все блоки)
+app.delete('/api/trainer-progress/all/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        
+        console.log(`🗑️ Удаление ВСЕГО прогресса для user=${userId}`);
+        
+        const result = await dbRun(
+            'DELETE FROM trainer_progress WHERE user_id = ?',
+            [userId]
+        );
+        
+        console.log(`✅ Удалено ${result.changes} записей прогресса`);
+        
+        res.json({ success: true, deletedCount: result.changes });
+    } catch (error) {
+        console.error('❌ Ошибка удаления всего прогресса:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
 // === ПОПЫТКИ ЭКЗАМЕНА ===
 
 // Сохранить попытку экзамена
@@ -964,7 +1026,88 @@ app.delete('/api/simulation-progress/:userId/:block', async (req, res) => {
         });
     }
 });
+// === ИЗБРАННОЕ API ===
 
+// Получить избранное
+app.get('/api/favourites/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const favourites = await dbQuery(
+            'SELECT * FROM favourites WHERE user_id = ? ORDER BY created_at DESC',
+            [userId]
+        );
+        
+        const formatted = favourites.map(fav => ({
+            id: fav.question_id,
+            block: fav.block,
+            question: fav.question,
+            options: JSON.parse(fav.options || '[]'),
+            correctAnswers: JSON.parse(fav.correct_answers || '[]'),
+            comment: fav.comment,
+            image: fav.image,
+            timestamp: new Date(fav.created_at).getTime()
+        }));
+        
+        res.json({ success: true, favourites: formatted });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Добавить в избранное
+app.post('/api/favourites', async (req, res) => {
+    try {
+        const { userId, questionId, block, question, options, correctAnswers, comment, image } = req.body;
+        
+        await dbRun(
+            `INSERT OR REPLACE INTO favourites 
+            (user_id, question_id, block, question, options, correct_answers, comment, image) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [userId, questionId, block, question, JSON.stringify(options), JSON.stringify(correctAnswers), comment || '', image || '']
+        );
+        
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Удалить из избранного
+app.delete('/api/favourites/:userId/:questionId', async (req, res) => {
+    try {
+        const { userId, questionId } = req.params;
+        await dbRun('DELETE FROM favourites WHERE user_id = ? AND question_id = ?', [userId, questionId]);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Очистить всё избранное
+// Очистить всё избранное
+app.delete('/api/favourites/all/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        
+        // Проверяем, сколько записей было до удаления
+        const before = await dbQuery('SELECT COUNT(*) as count FROM favourites WHERE user_id = ?', [userId]);
+        console.log(`📊 До очистки: ${before[0].count} записей`);
+        
+        // Выполняем удаление
+        const result = await dbRun('DELETE FROM favourites WHERE user_id = ?', [userId]);
+        
+        console.log(`🗑️ Удалено записей: ${result.changes}`);
+        
+        res.json({ 
+            success: true, 
+            deletedCount: result.changes,
+            message: `Удалено ${result.changes} записей`
+        });
+    } catch (error) {
+        console.error('❌ Ошибка очистки избранного:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
 // === СТАТИСТИКА ===
 
 // Получить статистику пользователя

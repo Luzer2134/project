@@ -139,7 +139,7 @@
             color: #262626;
             cursor: pointer;
             text-decoration: none;
-            box-sizing border-box;
+            box-sizing: border-box;
             white-space: nowrap;
             position: absolute;
             left: 320px;
@@ -786,7 +786,10 @@
 
     <!-- Оверлей -->
     <div class="overlay" id="overlay" onclick="closeProfilePanel()"></div>
+<<<<<<< HEAD
 
+=======
+>>>>>>> master
     <script>
         // Количество вопросов в каждом блоке
         const BLOCK_QUESTIONS = {
@@ -812,125 +815,75 @@
             'Блок 4': 'program-d'
         };
 
-        // Получаем прогресс для блока
-        function getBlockProgress(block) {
-            let userId = 'guest';
+
+        // Получаем прогресс для блока ИЗ БД
+        async function getBlockProgress(block) {
+            const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            if (!user.id) {
+                return { completed: 0, total: BLOCK_QUESTIONS[block], percentage: 0, hasProgress: false, name: PROGRAM_NAMES[block], colorClass: PROGRAM_COLORS[block] };
+            }
             
             try {
-                const user = window.examAPI ? window.examAPI.getUserFromStorage() : null;
-                if (user && user.id) {
-                    userId = user.id;
+                const res = await fetch(`/api/trainer-progress/${user.id}/${encodeURIComponent(block)}`);
+                const data = await res.json();
+                
+                if (data.success && data.progress) {
+                    const userAnswers = data.progress.userAnswers || [];
+                    const answered = userAnswers.filter(a => a && a.length > 0).length;
+                    const total = BLOCK_QUESTIONS[block];
+                    const percentage = total > 0 ? Math.round((answered / total) * 100) : 0;
+                    
+                    return {
+                        completed: answered,
+                        total: total,
+                        percentage: percentage,
+                        hasProgress: answered > 0,
+                        name: PROGRAM_NAMES[block],
+                        colorClass: PROGRAM_COLORS[block]
+                    };
                 }
-            } catch (e) {
-                console.log('Используем гостевой режим');
+            } catch(e) {
+                console.error('Ошибка загрузки прогресса для блока', block, e);
             }
             
-            let completed = 0;
-            let total = BLOCK_QUESTIONS[block];
-            let percentage = 0;
-            
-            // Пробуем разные ключи для поиска прогресса
-            const keys = [
-                `trainerProgress_${userId}`,
-                `trainer_${userId}_${block}`,
-                `progress_${userId}_${block}`,
-                `simpleProgress_${block}`
-            ];
-            
-            for (const key of keys) {
-                const data = localStorage.getItem(key);
-                if (data) {
-                    try {
-                        const parsed = JSON.parse(data);
-                        
-                        // Формат 1: Объект с блоками
-                        if (parsed[block]) {
-                            const blockData = parsed[block];
-                            completed = blockData.completed || 0;
-                            total = blockData.total || total;
-                            percentage = blockData.percentage || 0;
-                            break;
-                        }
-                        // Формат 2: Массив ответов
-                        else if (Array.isArray(parsed)) {
-                            completed = parsed.filter(answer => 
-                                answer && answer.length > 0
-                            ).length;
-                            total = parsed.length || total;
-                            break;
-                        }
-                        // Формат 3: Объект с userAnswers
-                        else if (parsed.userAnswers && Array.isArray(parsed.userAnswers)) {
-                            completed = parsed.userAnswers.filter(answer => 
-                                answer && answer.length > 0
-                            ).length;
-                            total = BLOCK_QUESTIONS[block] || parsed.userAnswers.length;
-                            break;
-                        }
-                        // Формат 4: Простой объект
-                        else if (parsed.completed !== undefined) {
-                            completed = parsed.completed || 0;
-                            total = parsed.total || total;
-                            percentage = parsed.percentage || 0;
-                            break;
-                        }
-                    } catch (e) {
-                        console.warn(`Ошибка парсинга ${key}:`, e);
-                    }
-                }
-            }
-            
-            // Рассчитываем процент
-            if (percentage === 0 && total > 0) {
-                percentage = Math.round((completed / total) * 100);
-            }
-            
-            return {
-                completed: completed,
-                total: total,
-                percentage: percentage,
-                hasProgress: completed > 0,
-                name: PROGRAM_NAMES[block],
-                colorClass: PROGRAM_COLORS[block]
-            };
+            return { completed: 0, total: BLOCK_QUESTIONS[block], percentage: 0, hasProgress: false, name: PROGRAM_NAMES[block], colorClass: PROGRAM_COLORS[block] };
         }
 
         // Инициализация страницы
-        function initProgressPage() {
-            displayPrograms();
-            setInterval(displayPrograms, 2000);
+        async function initProgressPage() {
+            await displayPrograms();
+            setInterval(async () => await displayPrograms(), 3000);
         }
 
         // Отображение списка программ
-        function displayPrograms() {
+        async function displayPrograms() {
             const blocks = ['Блок 1', 'Блок 2', 'Блок 3', 'Блок 4'];
             const container = document.getElementById('programs-list');
             
             if (!container) return;
             
-            // Если уже есть элементы, обновляем их
             if (container.querySelector('.program-item')) {
-                updatePrograms(blocks);
+                await updatePrograms(blocks);
             } else {
-                createProgramsList(blocks, container);
+                await createProgramsList(blocks, container);
             }
         }
 
         // Создание списка программ
-        function createProgramsList(blocks, container) {
+        async function createProgramsList(blocks, container) {
             container.innerHTML = '';
             
-            blocks.forEach(block => {
-                const progress = getBlockProgress(block);
+            for (const block of blocks) {
+                const progress = await getBlockProgress(block);
                 const programElement = createProgramElement(block, progress);
                 container.appendChild(programElement);
-            });
+            }
         }
 
         // Обновление существующих программ
-        function updatePrograms(blocks) {
-            blocks.forEach(block => {
-                const progress = getBlockProgress(block);
+        async function updatePrograms(blocks) {
+            for (const block of blocks) {
+                const progress = await getBlockProgress(block);
                 const programElement = document.querySelector(`[data-block="${block}"]`);
                 
                 if (programElement) {
@@ -942,33 +895,31 @@
                         progressFill.style.width = `${progress.percentage}%`;
                     }
                     
-                    // Если есть прогресс
+
                     if (progress.hasProgress && progress.percentage > 0) {
-                        // Скрываем текст "Пока не начато"
                         if (progressText) {
                             progressText.style.opacity = '0';
                             progressText.style.visibility = 'hidden';
                         }
-                        
-                        // Показываем процент справа
+
                         if (progressPercent) {
                             progressPercent.textContent = `${progress.percentage}%`;
                             progressPercent.classList.add('show');
                         }
                     } else {
-                        // Показываем текст "Пока не начато"
+           // Показываем текст "Пока не начато"
                         if (progressText) {
                             progressText.style.opacity = '1';
                             progressText.style.visibility = 'visible';
                         }
-                        
-                        // Скрываем процент
+
                         if (progressPercent) {
                             progressPercent.classList.remove('show');
                         }
                     }
                 }
-            });
+
+            }
         }
 
         // Создание элемента программы
@@ -997,26 +948,27 @@
             return element;
         }
 
-        // Удалить весь прогресс
-        function clearAllProgress() {
-            if (confirm('ВЫ УВЕРЕНЫ, ЧТО ХОТИТЕ УДАЛИТЬ ВЕСЬ ПРОГРЕСС?\n\nЭто действие нельзя будет отменить!')) {
-                const keysToRemove = [];
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key.includes('trainer') || 
-                        key.includes('progress') || 
-                        key.includes('simpleProgress')) {
-                        keysToRemove.push(key);
-                    }
-                }
-                
-                keysToRemove.forEach(key => {
-                    localStorage.removeItem(key);
-                });
-                
-                alert('Весь прогресс успешно удален!');
-                displayPrograms();
+        // Удалить весь прогресс (через БД)
+        async function clearAllProgress() {
+            if (!confirm('ВЫ УВЕРЕНЫ, ЧТО ХОТИТЕ УДАЛИТЬ ВЕСЬ ПРОГРЕСС?\n\nЭто действие нельзя будет отменить!')) {
+                return;
             }
+            
+            const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            if (!user.id) {
+                alert('Пользователь не найден');
+                return;
+            }
+            
+            const blocks = ['Блок 1', 'Блок 2', 'Блок 3', 'Блок 4'];
+            for (const block of blocks) {
+                await fetch(`/api/trainer-progress/${user.id}/${encodeURIComponent(block)}`, {
+                    method: 'DELETE'
+                });
+            }
+            
+            alert('Весь прогресс успешно удален!');
+            await displayPrograms();
         }
 
         // ===== ФУНКЦИИ ДЛЯ ПАНЕЛИ ПРОФИЛЯ =====
@@ -1104,28 +1056,25 @@
 
         // Загружаем при загрузке страницы
         document.addEventListener('DOMContentLoaded', function() {
-            // Назначаем обработчик на кнопку профиля
+
             const profileBtn = document.getElementById('profile-btn');
             if (profileBtn) {
                 profileBtn.onclick = toggleProfilePanel;
             }
             
-            // Проверяем доступ к экзамену
+
             checkSimulationAccess();
-            
-            // Инициализация панели профиля
             initProfilePanel();
             
-            // Инициализация страницы прогресса
-            setTimeout(() => {
+            setTimeout(async () => {
                 try {
-                    initProgressPage();
+                    await initProgressPage();
                 } catch (error) {
                     console.error('Ошибка инициализации:', error);
                     const container = document.getElementById('programs-list');
                     if (container) {
-                        container.innerHTML = 
-                            '<div class="loading" style="color: #666;">Ошибка загрузки прогресса</div>';
+
+                        container.innerHTML = '<div class="loading" style="color: #666;">Ошибка загрузки прогресса</div>';
                     }
                 }
             }, 200);
