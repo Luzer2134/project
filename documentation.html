@@ -1278,17 +1278,35 @@
 <body>
     <div class="page-container">
         <header>
-            <nav>
-                <button class="button_documentation" onclick="navigateTo('documentation.html')">
-                </button>
-                <button class="button_simulation" onclick="navigateTo('simulation.html')">
-                </button>
-                <button class="button_trainer" onclick="navigateTo('trainer.html')">
-                </button>
-                <button class="skill-button" onclick="navigateTo('skills.html')"></button>
-                <button class="profile-button" id="profile-btn"></button>
-            </nav>
-        </header>
+                <nav>
+                    <button
+                        class="button_documentation"
+                        onclick="navigateTo('documentation.html')"
+                    >
+                        <span>Документация</span>
+                    </button>
+                    <button
+                        class="button_simulation"
+                        id="simulation-btn"
+                        onclick="navigateTo('simulation.html')"
+                        disabled
+                    >
+                        <span>Экзамен</span>
+                    </button>
+                    <button
+                        class="button_trainer"
+                        onclick="navigateTo('trainer.html')"
+                    >
+                        <span>Тренажёр</span>
+                    </button>
+                    <button
+                        class="skill-button"
+                        onclick="openYandexAlice()"
+                        title="Открыть Яндекс Алису"
+                    ></button>
+                    <button class="profile-button" id="profile-btn"></button>
+                </nav>
+            </header>
 
         <main class="main-content">
             <div class="links-container">

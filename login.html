@@ -6,7 +6,7 @@
     <title>Вход в систему охраны труда</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* ========== БАЗОВЫЕ СТИЛИ (как в главной index) ========== */
+        /* ========== БАЗОВЫЕ СТИЛИ ========== */
         * {
             margin: 0;
             padding: 0;
@@ -30,7 +30,7 @@
             background-color: white;
         }
 
-        /* ========== ШАПКА (десктопная версия, текст) ========== */
+        /* ========== ШАПКА ========== */
         header {
             position: absolute;
             top: 0;
@@ -54,7 +54,6 @@
             position: relative;
         }
 
-        /* Кнопки навигации (как в главной) */
         .button_documentation,
         .button_simulation,
         .button_trainer {
@@ -156,7 +155,7 @@
             margin-left: 20px;
         }
 
-        /* ========== ОСНОВНОЙ КОНТЕНТ (страница логина) ========== */
+        /* ========== ОСНОВНОЙ КОНТЕНТ ========== */
         main {
             position: relative;
             width: 100%;
@@ -182,15 +181,10 @@
             font-weight: 600;
             font-size: 48px;
             line-height: 1.2;
-            color: #4CA1E9;
+            color: #262626;
             margin-bottom: 24px;
-            background: linear-gradient(135deg, #4CA1E9, #4CA1E9);
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
         }
 
-        /* Стиль для подписи — по умолчанию виден на всех экранах */
         .login-subtitle {
             font-family: "Montserrat", sans-serif;
             font-size: 18px;
@@ -242,101 +236,44 @@
             opacity: 0.8;
         }
 
-        .guest-button:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-        }
-
-        /* ========== НОВЫЙ БЛОК МОБИЛЬНЫХ КНОПОК (дубликаты с картинками) ========== */
+        /* ========== МОБИЛЬНЫЕ КНОПКИ — ПРОСТО КАРТИНКИ ========== */
         .mobile-nav-buttons {
             display: none;
             flex-direction: column;
-            gap: 16px;
+            align-items: center;
+            gap: 20px;
             margin: 32px 0 24px;
             width: 100%;
         }
 
-        .mobile-nav-item-documentation {
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            gap: 16px;
-            background-image: url("images/док кнопа.png");
-            border: 1px solid #e2e8f0;
-            border-radius: 60px;
-            padding: 12px 24px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
+        /* Кнопка как чистая картинка — никаких фонов, рамок, теней */
+        .mobile-image-btn {
+            display: block;
             width: 100%;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        }
-        .mobile-nav-item-simulation {
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            gap: 16px;
-            background-image: url("images/экз кнопа.png");
-            border: 1px solid #e2e8f0;
-            border-radius: 60px;
-            padding: 12px 24px;
+            max-width: 380px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            width: 100%;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        }
-        .mobile-nav-item-trainer {
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            gap: 16px;
-            background-image: url("images/трен кнопа.png");
-            border: 1px solid #e2e8f0;
-            border-radius: 60px;
-            padding: 12px 24px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            width: 100%;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease, opacity 0.2s ease;
+            border: none;
+            background: none;
+            padding: 0;
         }
 
-        /* .mobile-nav-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            border-color: #4CA1E9;
-        } */
-
-        .mobile-nav-item:active {
-            transform: scale(0.98);
+        .mobile-image-btn img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 16px;
         }
 
-        .mobile-nav-item.disabled {
+        .mobile-image-btn:active {
+            transform: scale(0.97);
+        }
+
+        .mobile-image-btn.disabled {
             opacity: 0.5;
             cursor: not-allowed;
             pointer-events: none;
         }
-
-        .mobile-nav-icon {
-            width: 40px;
-            height: 40px;
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-        }
-
-        /* .mobile-nav-icon.documentation {
-            background-image: url("images/док кнопа.png");
-        }
-
-        .mobile-nav-icon.simulation {
-            background-image: url("images/экз кнопа.png");
-        }
-
-        .mobile-nav-icon.trainer {
-            background-image: url("images/трен кнопа.png");
-        } */
 
         .info-section {
             padding: 20px 24px;
@@ -455,103 +392,99 @@
             opacity: 1;
         }
 
-        /* ========== АДАПТИВ ДЛЯ МОБИЛЬНЫХ ========== */
+        /* ========== АДАПТИВ ========== */
+        /* Нижние кнопки (внизу шапки) — мобильная версия */
         @media (max-width: 768px) {
-            header {
-                position: fixed;
-                top: auto;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                height: 63px;
-                background-color: white;
-                box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-                border-radius: 15px 15px 0 0;
-                z-index: 1000;
-            }
+    header {
+        position: fixed;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 63px;
+        background: white;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        border-radius: 15px 15px 0 0;
+        z-index: 1000;
+    }
+
+    header nav {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        height: 100%;
+        padding: 0 10px;
+    }
+
+    .button_documentation,
+    .button_simulation,
+    .button_trainer {
+        position: static !important;
+        transform: none !important;
+        flex-direction: column;
+        gap: 2px;
+        padding: 6px 0;
+        font-size: 10px;
+        background: none !important;
+        border: none !important;
+        box-shadow: none !important;
+        width: auto !important;
+        min-width: 60px;
+    }
+
+    .button_documentation span,
+    .button_simulation span,
+    .button_trainer span {
+        display: none !important;
+    }
+
+    .button_documentation::before,
+    .button_simulation::before,
+    .button_trainer::before {
+        content: "";
+        display: block;
+        width: 28px;
+        height: 28px;
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        filter: brightness(0) saturate(100%) invert(0%);
+    }
+
+    .button_documentation::before {
+        background-image: url("images/documentation.png");
+    }
+    .button_simulation::before {
+        background-image: url("images/exam.png");
+    }
+    .button_trainer::before {
+        background-image: url("images/trainer.png");
+    }
+
+    /* МОБИЛЬНЫЕ ИКОНКИ — ДРУГИЕ ФАЙЛЫ */
+    .skill-button {
+        background-image: url("images/alice.png") !important;
+        background-size: 32px 32px !important;
+        background-repeat: no-repeat !important;
+        background-position: center !important;
+        width: 44px !important;
+        height: 44px !important;
+        background-color: transparent !important;
+        margin-left: 0 !important;
+    }
+
+    .profile-button {
+        background-image: url("images/profile.png") !important;
+        background-size: 32px 32px !important;
+        background-repeat: no-repeat !important;
+        background-position: center !important;
+        width: 44px !important;
+        height: 44px !important;
+        background-color: transparent !important;
+        margin-left: 0 !important;
+    }
+}
             
-            header nav {
-                justify-content: space-around;
-                padding: 0 10px;
-                height: 63px;
-            }
-            
-            /* Кнопки шапки (иконки) */
-            .button_documentation,
-            .button_simulation,
-            .button_trainer {
-                position: static !important;
-                transform: none !important;
-                left: auto !important;
-                padding: 8px 12px;
-                font-size: 12px;
-                width: auto;
-                height: auto;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 4px;
-            }
-            
-            .button_documentation span,
-            .button_simulation span,
-            .button_trainer span {
-                display: none;
-            }
-            
-            .button_documentation::before {
-                content: "";
-                display: inline-block;
-                width: 28px;
-                height: 28px;
-                background-image: url("images/documentation.png");
-                background-size: contain;
-                background-repeat: no-repeat;
-                background-position: center;
-                filter: brightness(0) saturate(100%) invert(0%);
-            }
-            
-            .button_simulation::before {
-                content: "";
-                display: inline-block;
-                width: 28px;
-                height: 28px;
-                background-image: url("images/exam.png");
-                background-size: contain;
-                background-repeat: no-repeat;
-                background-position: center;
-                filter: brightness(0) saturate(100%) invert(0%);
-            }
-            
-            .button_trainer::before {
-                content: "";
-                display: inline-block;
-                width: 28px;
-                height: 28px;
-                background-image: url("images/trainer.png");
-                background-size: contain;
-                background-repeat: no-repeat;
-                background-position: center;
-                filter: brightness(0) saturate(100%) invert(0%);
-            }
-            
-            .skill-button {
-                background-image: url("images/alice.png") !important;
-                background-size: 32px 32px !important;
-                width: 44px !important;
-                height: 44px !important;
-                margin-left: 0 !important;
-            }
-            
-            .profile-button {
-                background-image: url("images/profile.png") !important;
-                background-size: 32px 32px !important;
-                width: 44px !important;
-                height: 44px !important;
-                margin-left: 0 !important;
-            }
-            
-            /* Основной контент */
             main {
                 padding-top: 20px;
                 padding-bottom: 80px;
@@ -561,24 +494,16 @@
                 font-size: 32px;
             }
             
-            /* Скрываем подпись на мобильных устройствах */
             .login-subtitle {
                 display: none;
             }
             
-            /* Скрываем обычную кнопку НАЧАТЬ на мобильных */
             .auth-buttons {
                 display: none;
             }
             
-            /* Показываем новый блок с мобильными кнопками */
             .mobile-nav-buttons {
                 display: flex;
-            }
-            
-            .guest-button {
-                font-size: 18px;
-                padding: 14px 36px;
             }
             
             .info-section {
@@ -596,134 +521,133 @@
                 height: 60px;
                 font-size: 18px;
             }
-        }
 
-        /* Для очень маленьких экранов */
-        @media (max-width: 576px) {
-            .mobile-nav-item {
-                padding: 10px 20px;
-            }
-            
-            .mobile-nav-icon {
-                width: 32px;
-                height: 32px;
-            }
-            
-            .login-title {
-                font-size: 26px;
-            }
-            
-            .info-section {
-                font-size: 11px;
+        @media (max-width: 480px) {
+            .mobile-image-btn {
+                max-width: 90%;
             }
         }
 
-        /* Для экранов до 380px */
-        @media (max-width: 380px) {
-            .login-title {
-                font-size: 22px;
-            }
-            
-            .mobile-nav-icon {
-                width: 28px;
-                height: 28px;
-            }
-        }
-
-        /* Десктопная версия — подпись видна, мобильные кнопки скрыты */
-        @media (min-width: 769px) {
-            /* На десктопе подпись видна */
-            .login-subtitle {
-                display: block !important;
-            }
-            
-            .button_documentation,
-            .button_simulation,
-            .button_trainer {
-                position: absolute !important;
-                top: 50% !important;
-                transform: translateY(-50%) !important;
-                width: auto !important;
-                height: 56px !important;
-                padding: 12px 8px !important;
-                display: flex !important;
-                align-items: center !important;
-                gap: 8px !important;
-                background: none !important;
-                border: none !important;
-                color: #262626 !important;
-                font-family: "Montserrat", sans-serif !important;
-                font-weight: 500 !important;
-                font-size: 16px !important;
-                white-space: nowrap !important;
-            }
-            
-            .button_documentation::before,
-            .button_simulation::before,
-            .button_trainer::before {
-                display: none !important;
-            }
-            
-            .button_documentation span,
-            .button_simulation span,
-            .button_trainer span {
-                display: inline !important;
-            }
-            
-            .button_documentation {
-                left: 40px !important;
-            }
-            
-            .button_simulation {
-                left: 200px !important;
-            }
-            
-            .button_trainer {
-                left: 320px !important;
-            }
-            
-            .skill-button,
-            .profile-button {
-                position: relative !important;
-                margin-left: 20px !important;
-                width: 56px !important;
-                height: 56px !important;
-            }
-            
-            /* На десктопе показываем обычную кнопку НАЧАТЬ, скрываем мобильные */
-            .auth-buttons {
-                display: block !important;
-            }
-            
-            .mobile-nav-buttons {
-                display: none !important;
-            }
-        }
+        /* ========== ДЕСКТОПНАЯ ВЕРСИЯ (исправленные размеры иконок) ========== */
+@media (min-width: 769px) {
+    .login-subtitle {
+        display: block !important;
+    }
+    
+    .button_documentation,
+    .button_simulation,
+    .button_trainer {
+        position: absolute !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: auto !important;
+        height: 56px !important;
+        padding: 12px 8px !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        background: none !important;
+        border: none !important;
+        color: #262626 !important;
+        font-family: "Montserrat", sans-serif !important;
+        font-weight: 500 !important;
+        font-size: 16px !important;
+        white-space: nowrap !important;
+    }
+    
+    .button_documentation::before,
+    .button_simulation::before,
+    .button_trainer::before {
+        display: none !important;
+    }
+    
+    .button_documentation span,
+    .button_simulation span,
+    .button_trainer span {
+        display: inline !important;
+    }
+    
+    .button_documentation {
+        left: 40px !important;
+    }
+    
+    .button_simulation {
+        left: 200px !important;
+    }
+    
+    .button_trainer {
+        left: 320px !important;
+    }
+    
+    /* ИСПРАВЛЕНО: кнопки Алиса и профиль 56×56px как в эталоне */
+    .skill-button,
+    .profile-button {
+        position: relative !important;
+        margin-left: 20px !important;
+        width: 56px !important;
+        height: 56px !important;
+        background-size: contain !important;
+        background-repeat: no-repeat !important;
+        background-position: center !important;
+        flex-shrink: 0 !important;
+    }
+    
+    /* Убеждаемся, что навигация корректно отображается */
+    header nav {
+        position: relative !important;
+        display: flex !important;
+        justify-content: flex-end !important;
+        align-items: center !important;
+        height: 100% !important;
+    }
+    
+    .auth-buttons {
+        display: block !important;
+    }
+    
+    .mobile-nav-buttons {
+        display: none !important;
+    }
+}
     </style>
 </head>
 <body>
     <div class="page-container">
         <header>
-            <nav>
-                <button class="button_documentation" onclick="navigateTo('documentation.html')">
-                    <span>Документация</span>
-                </button>
-                <button class="button_simulation" id="simulation-btn" onclick="navigateTo('simulation.html')" disabled>
-                    <span>Экзамен</span>
-                </button>
-                <button class="button_trainer" onclick="navigateTo('trainer.html')">
-                    <span>Тренажёр</span>
-                </button>
-                <button class="skill-button" id="skill-alice-btn" title="Яндекс Алиса"></button>
-                <button class="profile-button" id="profile-btn"></button>
-            </nav>
-        </header>
+                <nav>
+                    <button
+                        class="button_documentation"
+                        onclick="navigateTo('documentation.html')"
+                    >
+                        <span>Документация</span>
+                    </button>
+                    <button
+                        class="button_simulation"
+                        id="simulation-btn"
+                        onclick="navigateTo('simulation.html')"
+                        disabled
+                    >
+                        <span>Экзамен</span>
+                    </button>
+                    <button
+                        class="button_trainer"
+                        onclick="navigateTo('trainer.html')"
+                    >
+                        <span>Тренажёр</span>
+                    </button>
+                    <button
+                        class="skill-button"
+                        onclick="openYandexAlice()"
+                        title="Открыть Яндекс Алису"
+                    ></button>
+                    <button class="profile-button" id="profile-btn"></button>
+                </nav>
+            </header>
         
         <main>
             <div class="login-container">
                 <h1 class="login-title">Здравствуйте, Гость!</h1>
                 
-                <!-- Подпись теперь показывается ТОЛЬКО на десктопе (ширина >= 769px) -->
                 <p class="login-subtitle">
                     Здесь Вы можете подготовиться к аттестации по охране труда. 
                     Используйте тренажер, чтобы проработать все вопросы базы ЕИСОТ. 
@@ -734,24 +658,21 @@
                 
                 <div id="error-message" class="error-message"></div>
                 
-                <!-- Обычная кнопка НАЧАТЬ (для десктопа) -->
                 <div class="auth-buttons">
-                    <button class="guest-button" id="guest-button">
-                        НАЧАТЬ
-                    </button>
+                    <button class="guest-button" id="guest-button">НАЧАТЬ</button>
                 </div>
                 
-                <!-- НОВЫЙ БЛОК: Мобильные кнопки-дубликаты (с картинками из папки images) -->
+                <!-- МОБИЛЬНЫЕ КНОПКИ - ПРОСТО КАРТИНКИ -->
                 <div class="mobile-nav-buttons">
-                    <div class="mobile-nav-item-documentation" id="mobile-doc-btn">
-                        <div class="mobile-nav-icon documentation"></div>
-                    </div>
-                    <div class="mobile-nav-item-simulation" id="mobile-sim-btn">
-                        <div class="mobile-nav-icon simulation"></div>
-                    </div>
-                    <div class="mobile-nav-item-trainer" id="mobile-trainer-btn">
-                        <div class="mobile-nav-icon trainer"></div>
-                    </div>
+                    <button class="mobile-image-btn" id="mobile-doc-btn">
+                        <img src="images/док кнопа.png">
+                    </button>
+                    <button class="mobile-image-btn" id="mobile-sim-btn">
+                        <img src="images/экз кнопа.png">
+                    </button>
+                    <button class="mobile-image-btn" id="mobile-trainer-btn">
+                        <img src="images/трен кнопа.png">
+                    </button>
                 </div>
                 
                 <div class="info-section">
@@ -772,30 +693,23 @@
         </div>
         <div class="profile-menu">
             <button class="menu-item" id="panel-alice-btn">
-                <span class="menu-icon"></span>
                 <span class="menu-text">Яндекс Алиса</span>
             </button>
             <button class="menu-item" onclick="navigateTo('progress.html')">
-                <span class="menu-icon"></span>
                 <span class="menu-text">Прогресс</span>
             </button>
             <button class="menu-item" onclick="navigateTo('history.html')">
-                <span class="menu-icon"></span>
                 <span class="menu-text">История попыток</span>
             </button>
             <button class="menu-item" onclick="navigateTo('base.html')">
-                <span class="menu-icon"></span>
                 <span class="menu-text">База вопросов</span>
             </button>
             <div class="yandex-auth-section">
-                <button class="yandex-login-button" id="yandex-login-btn">
-                    ВОЙТИ
-                </button>
+                <button class="yandex-login-button" id="yandex-login-btn">ВОЙТИ</button>
             </div>
         </div>
     </div>
 
-    <!-- ОВЕРЛЕЙ -->
     <div class="overlay" id="overlay" onclick="closeProfilePanel()"></div>
 
     <!-- Модальное окно для Яндекс Алисы -->
